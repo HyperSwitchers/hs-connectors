@@ -1,0 +1,115 @@
+/* CSS for CurlRequestExecutor component */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+textarea {
+    width: 90%;
+    margin: 0 auto; /* Center the textarea horizontally */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+  }
+
+button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    max-width: 250px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+h2 {
+    color: #333;
+    margin-top: 20px;
+}
+
+#responseFields {
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#responseFields>div {
+    margin-bottom: 5px;
+}
+
+strong {
+    color: #007bff;
+}
+
+select {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Styling dropdown options */
+select option {
+    padding: 5px;
+}
+
+/* Updated CSS for the loader covering the entire component */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loader {
+    border: 4px solid rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #007bff;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+  }
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 26px;
+  }
+  
+  /* CSS for each quadrant section */
+  .curl-input-section,
+  .request-body-section,
+  .response-fields-left,
+  .response-fields-right {
+    max-width: 50%;
+    flex-basis: calc(50% - 36px);
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  .curl-input-section {
+    align-items: center;
+  }
+  #responseContent {
+    white-space: break-spaces;
+  }
