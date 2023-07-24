@@ -113,3 +113,8 @@ select option {
   #responseContent {
     white-space: break-spaces;
   }
+  .json-request-editor-container,
+  .json-response-editor-container,
+  .json-editor-container {
+    height: 400px;
+  }

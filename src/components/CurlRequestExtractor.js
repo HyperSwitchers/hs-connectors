@@ -2,10 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { parse_curl } from 'curl-parser';
 import $ from 'jquery';
 import "../styles.css";
-import JSONEditor, { JSONEditorOptions } from "jsoneditor";
+import JSONEditor from "jsoneditor";
 import "jsoneditor/dist/jsoneditor.css";
-import _ from 'lodash';
-import FieldsAutocomplete from "./FieldsAutocomplete";
 import mapFieldName from '../utils/search_utils'
 
 const CurlRequestExecutor = () => {
@@ -27,58 +25,61 @@ const CurlRequestExecutor = () => {
       "currency": "EUR",
       "description":"asdasd"
   }`);
+  const suggestions = [
+    "amount",
+    "billing_address_firstname",
+    "billing_address_lastname",
+    "billing_address_line1",
+    "billing_address_line2",
+    "billing_address_line3",
+    "billing_address_city",
+    "billing_address_state",
+    "billing_address_zip",
+    "browser_accept_header",
+    "browser_java_enabled",
+    "browser_language",
+    "browser_color_depth",
+    "browser_screen_height",
+    "browser_screen_width",
+    "browser_time_zone",
+    "browser_user_agent",
+    "browser_javascript_enabled",
+    "browser_ip_address",
+    "card_expiry_year_month",
+    "card_exp_month",
+    "card_exp_year",
+    "card_number",
+    "card_cvc",
+    "card_holder_name",
+    "capture",
+    "country",
+    "currency",
+    "description",
+    "email",
+    "payment_id",
+    "phone_number",
+    "setup_future_usage",
+    "return_url"
+  ];
   const [curlRequest, setCurlRequest] = useState({});
   const [originalData, setOriginalData] = useState(null);
   const [responseFields, setResponseFields] = useState([]);
   const jsonEditorRef = useRef(null);
   const requestEditorRef = useRef(null);
   const reponseEditorRef = useRef(null);
+  
   const [loading, setLoading] = useState(false);
   const options = {
     mode: "tree",
     modes: ["tree", "code"],
     autocomplete: {
-      getOptions: function () {
-        return [
-          "amount",
-          "billing_address_firstname",
-          "billing_address_lastname",
-          "billing_address_line1",
-          "billing_address_line2",
-          "billing_address_line3",
-          "billing_address_city",
-          "billing_address_state",
-          "billing_address_zip",
-          "browser_accept_header",
-          "browser_java_enabled",
-          "browser_language",
-          "browser_color_depth",
-          "browser_screen_height",
-          "browser_screen_width",
-          "browser_time_zone",
-          "browser_user_agent",
-          "browser_javascript_enabled",
-          "browser_ip_address",
-          "card_expiry_year_month",
-          "card_exp_month",
-          "card_exp_year",
-          "card_number",
-          "card_cvc",
-          "card_holder_name",
-          "capture",
-          "country",
-          "currency",
-          "description",
-          "email",
-          "payment_id",
-          "phone_number",
-          "setup_future_usage",
-          "return_url"
-        ];
+      filter: 'contain',
+      trigger: 'focus',
+      getOptions: function (text, path, input, editor) {
+        return suggestions.map((s) => '$'+s);
       }
     }
   }
-  const [bodyFields, setBodyFields] = useState({});
   let isLoaded = false;
 
   useEffect(() => {
@@ -87,7 +88,20 @@ const CurlRequestExecutor = () => {
       const requestEditor = new JSONEditor(requestEditorRef.current, options);
       const responseEditor = new JSONEditor(reponseEditorRef.current, options);
       const jsonEditor = new JSONEditor(jsonEditorRef.current, options);
-      requestEditor.set({});
+      requestEditor.set({
+        "amount": 499,
+        "card": {
+            "number": "4012000100000007",
+            "expMonth": "03",
+            "expYear": "25",
+            "cvc": "123",
+            "cardholderName": "john"
+        },
+        "captured": true,
+        "currency": "EUR",
+        "description":"asdasd"
+    });
+      requestEditor.expandAll();
       responseEditor.set({});
       jsonEditor.set({
         "Array": [1, 2, 3],
@@ -109,7 +123,6 @@ const CurlRequestExecutor = () => {
       setCurlRequest(fetchRequest);
       displayResponseFields(requestEditorRef, mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
     }catch(e) {
-
     }
   }
 
@@ -134,12 +147,8 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    console.log(requestOptions);
     let url = '/cors/'+curlRequest.url;
-
     let req_content = {
-      // async: true,
-      // crossDomain: true,
       type: requestOptions.method,
       url: url,
       headers: requestOptions.headers,
@@ -195,6 +204,7 @@ const CurlRequestExecutor = () => {
           const jsonData = JSON.parse(jsonString);
           const jsonEditor = new JSONEditor(jsonEditorRef.current, options);
           jsonEditor.set(jsonData);
+          jsonEditor.expandAll();
         } catch (error) {
           console.error("Error parsing JSON:", error);
         }
@@ -228,7 +238,7 @@ const CurlRequestExecutor = () => {
         )}
 
         <div className="curl-input-section">
-          <h1>cURL Request</h1>
+          <h3>cURL Request</h3>
           <textarea
             rows={20}
             value={curlCommand}
@@ -240,24 +250,18 @@ const CurlRequestExecutor = () => {
           </button>
         </div>
         <div className="request-body-section">
-          <h2>Request Body Fields:</h2>
+          <h3>Request Body Fields:</h3>
           <div className="json-request-editor-container" ref={requestEditorRef}></div>
         </div>
 
         <div id="responseFieldsLeft" className="response-fields-left">
-          <h2>Response Fields (Dropdowns):</h2>
+          <h3>Response</h3>
           <div className="json-response-editor-container" ref={reponseEditorRef}></div>
         </div>
 
         <div id="responseFieldsRight" className="response-fields-right">
-          <h2>Response Fields (Dropdowns):</h2>
+          <h3>Response Fields Mapping</h3>
           <div className="json-editor-container" ref={jsonEditorRef}></div>
-          {/* {responseFields.map((field, index) => (
-          <div key={index}>
-            <strong>{field.parentKey ? `${field.parentKey}.${field.key}: ` : `${field.key}: `}</strong>
-            {createDropdown(field.key, originalData)}
-          </div>
-        ))} */}
         </div></div>
     </div>
   );
