@@ -39,7 +39,42 @@ const CurlRequestExecutor = () => {
     modes: ["tree", "code"],
     autocomplete: {
       getOptions: function () {
-        return ['apple', 'cranberry', 'raspberry', 'pie', 'mango', 'mandarine', 'melon', 'appleton'];
+        return [
+          "amount",
+          "billing_address_firstname",
+          "billing_address_lastname",
+          "billing_address_line1",
+          "billing_address_line2",
+          "billing_address_line3",
+          "billing_address_city",
+          "billing_address_state",
+          "billing_address_zip",
+          "browser_accept_header",
+          "browser_java_enabled",
+          "browser_language",
+          "browser_color_depth",
+          "browser_screen_height",
+          "browser_screen_width",
+          "browser_time_zone",
+          "browser_user_agent",
+          "browser_javascript_enabled",
+          "browser_ip_address",
+          "card_expiry_year_month",
+          "card_exp_month",
+          "card_exp_year",
+          "card_number",
+          "card_cvc",
+          "card_holder_name",
+          "capture",
+          "country",
+          "currency",
+          "description",
+          "email",
+          "payment_id",
+          "phone_number",
+          "setup_future_usage",
+          "return_url"
+        ];
       }
     }
   }
@@ -71,7 +106,7 @@ const CurlRequestExecutor = () => {
     const fetchRequest = parse_curl(ss);
     setCurlCommand(request);
     setCurlRequest(fetchRequest);
-    displayResponseFields(requestEditorRef, mapFieldName(JSON.parse(fetchRequest?.data?.ascii|| "{}")));
+    displayResponseFields(requestEditorRef, mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
   }
 
   const isObject = (value) => {
@@ -146,23 +181,6 @@ const CurlRequestExecutor = () => {
     return newObj;
   }
 
-  const handleDropdownChange = (event, parentKey) => {
-    const fieldName = event.target.name;
-    const fieldValue = event.target.value;
-
-    console.log(responseFields);
-
-    // Update the responseFields state
-    const updatedResponseFields = responseFields.map((field) => {
-      if (field.key === fieldName) {
-        return { ...field, value: fieldValue };
-      }
-      return field;
-    });
-    console.log(updatedResponseFields);
-    setResponseFields(updatedResponseFields);
-  };
-
   function displayResponseFields(jsonEditorRef, data, parentKey = null) {
     if (jsonEditorRef.current) {
       jsonEditorRef.current.innerHTML = "";
@@ -177,26 +195,6 @@ const CurlRequestExecutor = () => {
         }
       }
     }
-  }
-
-  function createDropdown(key, currentValue, parentKey) {
-    const dropdown = document.createElement('select');
-    dropdown.name = parentKey ? `${parentKey}.${key}` : key; // Use dot notation for nested keys
-
-    const defaultOption = document.createElement('option');
-    defaultOption.text = currentValue;
-    dropdown.add(defaultOption);
-
-    const colors = ['red', 'blue', 'green'];
-    for (const color of colors) {
-      if (color !== currentValue) {
-        const option = document.createElement('option');
-        option.text = color;
-        dropdown.add(option);
-      }
-    }
-
-    return dropdown;
   }
 
   const buildUpdatedResponse = (data, fields) => {
@@ -214,13 +212,6 @@ const CurlRequestExecutor = () => {
       return data;
     }
   };
-
-  // useEffect(() => {
-  //   if (originalData && responseFields.length > 0) {
-  //     const updatedResponse = buildUpdatedResponse(originalData, responseFields);
-  //     console.log('Updated JSON:', updatedResponse);
-  //   }
-  // }, [responseFields, originalData]);
 
   return (
     <div>
