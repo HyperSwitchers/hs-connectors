@@ -103,10 +103,14 @@ const CurlRequestExecutor = () => {
 
   const updateCurlRequest = (request) => {
     let ss = request.replace(/\s*\\\s*/g, ' ').replace(/\n/g, '').replace(/--data-raw|--data-urlencode/g, '-d');
-    const fetchRequest = parse_curl(ss);
     setCurlCommand(request);
-    setCurlRequest(fetchRequest);
-    displayResponseFields(requestEditorRef, mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
+    try {
+      const fetchRequest = parse_curl(ss);
+      setCurlRequest(fetchRequest);
+      displayResponseFields(requestEditorRef, mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
+    }catch(e) {
+
+    }
   }
 
   const isObject = (value) => {
@@ -131,12 +135,13 @@ const CurlRequestExecutor = () => {
     };
 
     console.log(requestOptions);
+    let url = '/cors/'+curlRequest.url;
 
     let req_content = {
-      async: true,
-      crossDomain: true,
+      // async: true,
+      // crossDomain: true,
       type: requestOptions.method,
-      url: curlRequest.url,
+      url: url,
       headers: requestOptions.headers,
       data: requestOptions.body,
       success: (data) => {
@@ -146,7 +151,7 @@ const CurlRequestExecutor = () => {
       },
       error: (data) => { console.log(data) }
     };
-    $.ajax(curlRequest.url, req_content).always(() => setLoading(false));
+    $.ajax(url, req_content).always(() => setLoading(false));
 
   };
 
