@@ -10,6 +10,7 @@
     "curlconverter": "^4.8.0",
     "jquery": "^3.7.0",
     "jsoneditor": "^9.10.2",
+    "jsonpath": "^1.1.1",
     "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
