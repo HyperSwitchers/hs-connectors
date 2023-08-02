@@ -6,6 +6,9 @@ import JSONEditor from "jsoneditor";
 import "jsoneditor/dist/jsoneditor.css";
 import mapFieldName from "../utils/search_utils";
 import jsonpath from "jsonpath";
+import Dropdown from './Dropdown';
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
@@ -326,9 +329,53 @@ const CurlRequestExecutor = () => {
       return data;
     }
   };
+  const [selectedFlowOption, setSelectedFlowOption] = useState('');
+  const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
+
+  const handleFlowOptionChange = (event) => {
+    setSelectedFlowOption(event.target.value);
+  };
+
+  const handlePaymentMethodOptionChange = (event) => {
+    setSelectedPaymentMethodOption(event.target.value);
+  };
+
+  const flowOptions = ["Authorize", "Capture", "Void", "Refund", "PSync", "RSync"];
+  const paymentMethodOptions = ["Card", "Wallet", "BankRedirects"];
+
+  const generateCodeSnippet = () => {
+    return `fn main() {
+    let name: &str = "John";
+    let age: u32 = 30;
+
+    println!("Name: {}, Age: {}", name, age);
+}
+    impl TryFrom<&types::ConnectorAuthType> for ZenAuthType {
+      type Error = error_stack::Report<errors::ConnectorError>;
+      fn try_from(auth_type: &types::ConnectorAuthType) -> Result<Self, Self::Error> {
+          if let types::ConnectorAuthType::HeaderKey { api_key } = auth_type {
+              Ok(Self {
+                  api_key: api_key.to_owned(),
+              })
+          } else {
+              Err(errors::ConnectorError::FailedToObtainAuthType.into())
+          }
+      }
+  }`;
+
+    // In a real scenario, you might generate the code dynamically based on some logic
+  };
+
+  const codeSnippet = generateCodeSnippet();
 
   return (
     <div>
+      <div className='dropdown-wrapper'>
+        <label htmlFor="dropdown">Connector: </label>
+        <input className='conector' type="text" placeholder="Connector Name" />
+        <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='FLOW TYPE' />
+        <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='PAYMENT METHOD' />
+      </div>
       <div className="container">
         {loading && (
           <div className="page-loader">
@@ -369,6 +416,18 @@ const CurlRequestExecutor = () => {
           <div className="json-editor-container" ref={jsonEditorRef}></div>
         </div>
       </div>
+      <div>
+        <button>
+          Generate Code
+        </button>
+      </div>
+      <div>
+      <h3>Generated Code Snippet</h3>
+      <SyntaxHighlighter language="rust" style={tomorrow}>
+        {codeSnippet}
+      </SyntaxHighlighter>
+      </div>
+
     </div>
   );
 };

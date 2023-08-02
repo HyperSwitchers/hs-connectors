@@ -1,9 +1,9 @@
 /* CSS for CurlRequestExecutor component */
 body {
+    padding: 20px;
     font-family: Arial, sans-serif;
     background-color: #f2f2f2;
     margin: 0;
-    padding: 0;
 }
 
 h1 {
@@ -118,3 +118,70 @@ select option {
   .json-editor-container {
     height: 400px;
   }
+
+.dropdown-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 0;
+}
+
+.dropdown {
+  margin-right: 10px;
+}
+
+.dropdown-label {
+  color: rgb(0, 99, 247);
+}
+
+.dropdown-select {
+  font-size: 16px;
+  padding: 10px;
+}
+
+.code-snippet{
+  padding: 10px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 300px; /* Set the maximum height for the code snippet */
+  overflow-y: auto; 
+}
+
+/* Optional: Add a monospaced font for better code representation */
+pre {
+  font-family: "Courier New", monospace;
+}
+
+/* Optional: Set a background color to the code snippet container */
+.code-snippet {
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+/* Optional: Add a box-shadow to give the code snippet some depth */
+.code-snippet {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Customize token colors */
+.react-syntax-highlighter-line-number {
+  color: #999;
+}
+
+.react-syntax-highlighter .code-keyword {
+  color: #007bff; /* Customize keyword color */
+}
+
+.react-syntax-highlighter .code-variable {
+  color: #2e8b57; /* Customize variable color */
+}
+
+.react-syntax-highlighter .code-literal {
+  color: #e83e8c; /* Customize literal color */
+}
+
+.react-syntax-highlighter .code-type {
+  color: #6a737d; /* Customize type color */
+}
