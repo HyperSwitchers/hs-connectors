@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { parse_curl } from "curl-parser";
 import $ from "jquery";
 import "../styles.css";
-import JSONEditor from "jsoneditor";
-import "jsoneditor/dist/jsoneditor.css";
-import mapFieldName from "../utils/search_utils";
-import jsonpath from "jsonpath";
+import mapFieldName, { synonymMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import React from "react";
+import AuthType from "./AuthType";
+import JsonEditor from "./JsonEditor";
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
@@ -30,48 +30,21 @@ const CurlRequestExecutor = () => {
       "currency": "EUR",
       "description":"asdasd"
   }`);
-  const suggestions = [
-    "amount",
-    "billing_address_firstname",
-    "billing_address_lastname",
-    "billing_address_line1",
-    "billing_address_line2",
-    "billing_address_line3",
-    "billing_address_city",
-    "billing_address_state",
-    "billing_address_zip",
-    "browser_accept_header",
-    "browser_java_enabled",
-    "browser_language",
-    "browser_color_depth",
-    "browser_screen_height",
-    "browser_screen_width",
-    "browser_time_zone",
-    "browser_user_agent",
-    "browser_javascript_enabled",
-    "browser_ip_address",
-    "card_expiry_year_month",
-    "card_exp_month",
-    "card_exp_year",
-    "card_number",
-    "card_cvc",
-    "card_holder_name",
-    "capture",
-    "country",
-    "currency",
-    "description",
-    "email",
-    "payment_id",
-    "phone_number",
-    "setup_future_usage",
-    "return_url",
-  ];
+  const suggestions = Object.keys(synonymMapping);
+  const staticResponse = {
+    status: "",
+    response: {
+      response_id: "",
+      card: {
+        number: "",
+      },
+    },
+  };
   const [curlRequest, setCurlRequest] = useState({});
-  const [originalData, setOriginalData] = useState(null);
-  const [responseFields, setResponseFields] = useState([]);
-  const jsonEditorRef = useRef(null);
-  const requestEditorRef = useRef(null);
-  const reponseEditorRef = useRef(null);
+  const [responseFields, setResponseFields] = useState({});
+  const [hsResponseFields, setHsResponseFields] = useState({});
+  const [requestFields, setRequestFields] = useState({});
+  const [requestHeaderFields, setRequestHeaderFields] = useState({});
 
   const [loading, setLoading] = useState(false);
   const options = {
@@ -87,28 +60,10 @@ const CurlRequestExecutor = () => {
   };
   let isLoaded = false;
 
-  //for options
-  const activationChar = "$";
-
   useEffect(() => {
-    if (!isLoaded && jsonEditorRef.current) {
+    if (!isLoaded) {
       isLoaded = true;
-      const requestEditor = new JSONEditor(requestEditorRef.current, options);
-      const responseEditor = new JSONEditor(reponseEditorRef.current, options);
-      const jsonEditor = new JSONEditor(jsonEditorRef.current, options);
-
-      let rr = curlCommand
-        .replace(/\s*\\\s*/g, " ")
-        .replace(/\n/g, "")
-        .replace(/--data-raw|--data-urlencode/g, "-d");
-      setCurlCommand(rr);
-
-      var ss = parse_curl(rr);
-      setCurlRequest(ss);
-      requestEditor.set(mapFieldName(JSON.parse(ss.data.ascii)));
-      requestEditor.expandAll();
-      responseEditor.set({});
-      jsonEditor.set({}); // Set an initial empty JSON object
+      updateCurlRequest(curlCommand);
     }
   }, []);
 
@@ -121,11 +76,13 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      displayResponseFields(
-        requestEditorRef,
-        mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}"))
-      );
-    } catch (e) {}
+      setRequestFields(mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
+      setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
+        let header = item.split(":");
+        result[header[0]] = header[1];
+        return result;
+      },{})));
+    } catch (e) { }
   };
 
   const isObject = (value) => {
@@ -149,17 +106,18 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "/cors/" + curlRequest.url;
+    let url = curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
       headers: requestOptions.headers,
       data: requestOptions.body,
       success: (data) => {
-        console.log(data);
-        setOriginalData(data);
-        displayResponseFields(reponseEditorRef, data);
-        displayResponseFields2(jsonEditorRef, addFieldsToLeafNodes(data));
+        setResponseFields(data);
+        setHsResponseFields(undefined);
+        setTimeout(() => {
+          setHsResponseFields(addFieldsToLeafNodes(data));
+        }, 100);
       },
       error: (data) => {
         console.log(data);
@@ -199,136 +157,7 @@ const CurlRequestExecutor = () => {
     return newObj;
   }
 
-  function displayResponseFields(jsonEditorRef, data, parentKey = null) {
-    if (jsonEditorRef.current) {
-      jsonEditorRef.current.innerHTML = "";
-      if (jsonEditorRef.current && data) {
-        const jsonString = JSON.stringify(data, null, 2);
-        try {
-          const jsonData = JSON.parse(jsonString);
-          const jsonEditor = new JSONEditor(jsonEditorRef.current, options);
-          jsonEditor.set(jsonData);
-          jsonEditor.expandAll();
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-        }
-      }
-    }
-  }
 
-  function displayResponseFields2(jsonEditorRef, data, parentKey = null) {
-    const jsonString = JSON.stringify(data, null, 2);
-    const jsonData = JSON.parse(jsonString);
-
-    const options2 = {
-      autocomplete: {
-        confirmKeys: [39, 35, 9, 190], // Confirm Autocomplete Keys: [right, end, tab, '.']  // By default are only [right, end, tab]
-        caseSensitive: false,
-
-        getOptions: function (text, path, input, editor) {
-          if (!text.startsWith(activationChar) || input !== "value") return [];
-          let data = {};
-          let startFrom = 0;
-          const lastPoint = text.lastIndexOf(".");
-          const jsonObj = jsonData;
-          if (lastPoint > 0 && text.length > 1) {
-            data = jsonpath.query(
-              jsonObj,
-              "$." + text.substring(activationChar.length, lastPoint)
-            );
-            if (data.length > 0) {
-              data = data[0];
-            } else {
-              data = {};
-            }
-            // Indicate that autocompletion should start after the . (ignoring the first part)
-            startFrom = text.lastIndexOf(".") + 1;
-          } else {
-            data = jsonObj;
-          }
-
-          const optionsStr = YaskON.stringify(data, null, activationChar);
-          const options = optionsStr.split("\n");
-          return { startFrom: startFrom, options: options };
-        },
-      },
-    };
-
-    // helper function to auto complete paths of a JSON object
-    const YaskON = {
-      // Return first level json paths by the node 'o'
-      stringify: function (o, prefix, activationChar) {
-        prefix = prefix || "";
-        switch (typeof o) {
-          case "object":
-            let output = "";
-            if (Array.isArray(o)) {
-              o.forEach(
-                function (e, index) {
-                  output += activationChar + prefix + "[" + index + "]" + "\n";
-                }.bind(this)
-              );
-              return output;
-            }
-            output = "";
-            for (let k in o) {
-              if (o.hasOwnProperty(k)) {
-                if (prefix === "")
-                  output += this.stringify(o[k], k, activationChar);
-              }
-            }
-            if (prefix !== "") output += activationChar + prefix + "\n";
-            return output;
-          case "function":
-            return "";
-          default:
-            return prefix + "\n";
-        }
-      },
-    };
-
-    if (jsonEditorRef.current) {
-      jsonEditorRef.current.innerHTML = "";
-      if (jsonEditorRef.current && data) {
-        const jsonString = JSON.stringify(data, null, 2);
-        try {
-          const jsonData = JSON.parse(jsonString);
-          const jsonEditor = new JSONEditor(jsonEditorRef.current, options2);
-          jsonEditor.set({
-            status: "",
-            response: {
-              response_id: "",
-              card: {
-                number: "",
-              },
-            },
-          });
-          jsonEditor.expandAll();
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-        }
-      }
-    }
-  }
-
-  const buildUpdatedResponse = (data, fields) => {
-    if (isObject(data)) {
-      const updatedResponse = {};
-      for (const field of fields) {
-        if (isObject(field.value)) {
-          updatedResponse[field.key] = buildUpdatedResponse(
-            data[field.key],
-            field.contentElement.props.value
-          );
-        } else {
-          updatedResponse[field.key] = field.contentElement.props.value;
-        }
-      }
-      return updatedResponse;
-    } else {
-      return data;
-    }
-  };
   const [selectedFlowOption, setSelectedFlowOption] = useState('');
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
 
@@ -340,7 +169,7 @@ const CurlRequestExecutor = () => {
     setSelectedPaymentMethodOption(event.target.value);
   };
 
-  const flowOptions = ["Authorize", "Capture", "Void", "Refund", "PSync", "RSync"];
+  const flowOptions = ["AuthType", "Authorize", "Capture", "Void", "Refund", "PSync", "RSync"];
   const paymentMethodOptions = ["Card", "Wallet", "BankRedirects"];
 
   const generateCodeSnippet = () => {
@@ -376,58 +205,58 @@ const CurlRequestExecutor = () => {
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='FLOW TYPE' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='PAYMENT METHOD' />
       </div>
-      <div className="container">
-        {loading && (
-          <div className="page-loader">
-            <div className="loader"></div>
+      {selectedFlowOption === 'AuthType' ? <AuthType></AuthType> :
+        <div>
+          <div className="container">
+            {loading && (
+              <div className="page-loader">
+                <div className="loader"></div>
+              </div>
+            )}
+
+            <div className="curl-input-section">
+              <h3>cURL Request</h3>
+              <textarea
+                rows={20}
+                value={curlCommand}
+                onChange={(e) => updateCurlRequest(e.target.value)}
+                placeholder="Enter your cURL request here..."
+              />
+              <button onClick={sendRequest} disabled={loading}>
+                {loading ? <div className="loader"></div> : "Send Request"}
+              </button>
+            </div>
+            <div className="request-body-section">
+              <h3>Request Header Fields:</h3>
+              <JsonEditor content={requestHeaderFields} options={options}></JsonEditor>
+              <h3>Request Body Fields:</h3>
+              <JsonEditor content={requestFields} options={options}></JsonEditor>
+            </div>
+
+            <div id="responseFieldsLeft" className="response-fields-left">
+              <h3>Response</h3>
+              <JsonEditor content={responseFields}></JsonEditor>
+            </div>
+
+            <div id="responseFieldsRight" className="response-fields-right">
+              <h3>Response Fields Mapping</h3>
+              {
+                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields}></JsonEditor>
+              }
+            </div>
           </div>
-        )}
-
-        <div className="curl-input-section">
-          <h3>cURL Request</h3>
-          <textarea
-            rows={20}
-            value={curlCommand}
-            onChange={(e) => updateCurlRequest(e.target.value)}
-            placeholder="Enter your cURL request here..."
-          />
-          <button onClick={sendRequest} disabled={loading}>
-            {loading ? <div className="loader"></div> : "Send Request"}
-          </button>
-        </div>
-        <div className="request-body-section">
-          <h3>Request Body Fields:</h3>
-          <div
-            className="json-request-editor-container"
-            ref={requestEditorRef}
-          ></div>
-        </div>
-
-        <div id="responseFieldsLeft" className="response-fields-left">
-          <h3>Response</h3>
-          <div
-            className="json-response-editor-container"
-            ref={reponseEditorRef}
-          ></div>
-        </div>
-
-        <div id="responseFieldsRight" className="response-fields-right">
-          <h3>Response Fields Mapping</h3>
-          <div className="json-editor-container" ref={jsonEditorRef}></div>
-        </div>
-      </div>
-      <div>
-        <button>
-          Generate Code
-        </button>
-      </div>
-      <div>
-      <h3>Generated Code Snippet</h3>
-      <SyntaxHighlighter language="rust" style={tomorrow}>
-        {codeSnippet}
-      </SyntaxHighlighter>
-      </div>
-
+          <div>
+            <button>
+              Generate Code
+            </button>
+          </div>
+          <div>
+            <h3>Generated Code Snippet</h3>
+            <SyntaxHighlighter language="rust" style={tomorrow}>
+              {codeSnippet}
+            </SyntaxHighlighter>
+          </div>
+        </div>}
     </div>
   );
 };

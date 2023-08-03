@@ -185,3 +185,7 @@ pre {
 .react-syntax-highlighter .code-type {
   color: #6a737d; /* Customize type color */
 }
+
+.error-message {
+  color: red;
+}

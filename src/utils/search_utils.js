@@ -1,7 +1,11 @@
 import _ from 'lodash';
 
-const synonymMapping = {
+export const synonymMapping = {
     amount: ["amount", "authorization_amount"],
+    auth_type_api_key: [],
+    auth_type_key1: [],
+    auth_type_secret_key: [],
+    auth_type_key2: [],
     billing_address_firstname: ["name", "first_name", "firstname", "firstName", "username"],
     billing_address_lastname: ["last_name", "lastname", "lastName"],
     billing_address_line1: ["line1", "address_line_1"],

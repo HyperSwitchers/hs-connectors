@@ -1,5 +1,5 @@
-[[redirects]]
-  from = "/cors/*"
-  to = "https://hs-connectors.jagan-elavarasan.workers.dev/?url=:splat"
-  status = 200
-  force = true
+# [[redirects]]
+#   from = "/cors/*"
+#   to = "https://hs-connectors.jagan-elavarasan.workers.dev/?url=:splat"
+#   status = 200
+#   force = true
