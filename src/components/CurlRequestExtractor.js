@@ -9,10 +9,37 @@ import React from "react";
 import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
 import { defaultConnectorProps } from "./ConnectorTemplates";
+import StatusMappingPopup from "./StatusMappingPopup";
+
+const initialStatusMapping = {
+  Started: "",
+  AuthenticationFailed: "",
+  RouterDeclined: "",
+  AuthenticationPending: "",
+  AuthenticationSuccessful: "",
+  Authorized: "",
+  AuthorizationFailed: "",
+  Charged: "",
+  Authorizing: "",
+  CodInitiated: "",
+  Voided: "",
+  VoidInitiated: "",
+  CaptureInitiated: "",
+  CaptureFailed: "",
+  VoidFailed: "",
+  AutoRefunded: "",
+  PartialCharged: "",
+  Unresolved: "",
+  Pending: "",
+  Failure: "",
+  PaymentMethodAwaited: "",
+  ConfirmationAwaited: "",
+  DeviceDataCollectionPending: "",
+};
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST 'http://localhost:5050/https://api.shift4.com/charges' \
+    useState(`curl --location --request POST 'https://api.shift4.com/charges' \
   --header 'X-router;' \
   --header 'Authorization: Basic c2tfdGVzdF93cjhMYjdqd1FNTEp1STJCMHBoSFJMVDQ6' \
   --header 'Content-Type: application/json' \
@@ -76,7 +103,8 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
+      setRequestFields(addFieldsToLeafNodes(mapFieldName( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
+
       setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
         let header = item.split(":");
         result[header[0]] = header[1];
@@ -157,7 +185,7 @@ const CurlRequestExecutor = () => {
     };
     $.ajax(url, req_content).always(() => setLoading(false));
   };
-
+  const typesList = ["string", "number", "boolean", "array", "object"];
   function addFieldsToLeafNodes(jsonObj) {
     // Helper function to check if a value is an object (excluding arrays)
     function isObject(val) {
@@ -169,14 +197,15 @@ const CurlRequestExecutor = () => {
       for (const key in obj) {
         if (isObject(obj[key])) {
           traverse(obj[key]); // Recursively traverse nested objects
-        } else {
+        } 
+
           // Add fields to leaf nodes
           obj[key] = {
             value: obj[key],
             optional: false, // Set this to true or false based on your requirement
             secret: false, // Set this to true or false based on your requirement
+            type : typesList[0],
           };
-        }
       }
     }
 
@@ -227,6 +256,20 @@ const CurlRequestExecutor = () => {
     // In a real scenario, you might generate the code dynamically based on some logic
   };
 
+  const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
+  const handleStatusMappingButtonClick = () => {
+    setStatusMappingPopupOpen(true);
+  };
+
+  const handleCloseStatusMappingPopup = () => {
+    setStatusMappingPopupOpen(false);
+  };
+
+  const handleStatusMappingSubmit = (jsonData) => {
+    // Do something with the submitted JSON data (jsonData)
+    console.log("Submitted JSON Data:", jsonData);
+  };
+
   const codeSnippet = generateCodeSnippet();
 
   return (
@@ -262,6 +305,7 @@ const CurlRequestExecutor = () => {
               <h3>Request Header Fields:</h3>
               <JsonEditor content={requestHeaderFields} options={options}></JsonEditor>
               <h3>Request Body Fields:</h3>
+              {/* <div>{JSON.stringify(requestFields)}</div> */}
               <JsonEditor content={requestFields} options={options}></JsonEditor>
             </div>
 
@@ -271,9 +315,17 @@ const CurlRequestExecutor = () => {
             </div>
 
             <div id="responseFieldsRight" className="response-fields-right">
-              <h3>Response Fields Mapping</h3>
+              <div className="responseButtonStatus">
+                <h3>Response Fields Mapping</h3> 
+               <button id="responseStatusMapping" onClick={handleStatusMappingButtonClick}>
+          Status Mapping
+        </button>
+              </div>
               {
                 hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields}></JsonEditor>
+              }
+              {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
+              {isStatusMappingPopupOpen && ( <StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
               }
             </div>
           </div>

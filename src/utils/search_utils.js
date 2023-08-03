@@ -38,7 +38,10 @@ export const synonymMapping = {
     payment_id: ["reference", "reference_id", "payment_id", "order_id"],
     phone_number: ["phone", "contact_number", "phone_number"],
     setup_future_usage: ["storePaymentMethod"],
-    return_url: ["returnUrl", ""]
+    return_url: ["returnUrl", ""],
+    type_i64:[],
+    type_i32:[],
+
 };
 
 export default function mapFieldNames(input) {
