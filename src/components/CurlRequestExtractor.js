@@ -9,6 +9,33 @@ import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import React from "react";
 import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
+import StatusMappingPopup from "./StatusMappingPopup";
+
+const initialStatusMapping = {
+  Started: "",
+  AuthenticationFailed: "",
+  RouterDeclined: "",
+  AuthenticationPending: "",
+  AuthenticationSuccessful: "",
+  Authorized: "",
+  AuthorizationFailed: "",
+  Charged: "",
+  Authorizing: "",
+  CodInitiated: "",
+  Voided: "",
+  VoidInitiated: "",
+  CaptureInitiated: "",
+  CaptureFailed: "",
+  VoidFailed: "",
+  AutoRefunded: "",
+  PartialCharged: "",
+  Unresolved: "",
+  Pending: "",
+  Failure: "",
+  PaymentMethodAwaited: "",
+  ConfirmationAwaited: "",
+  DeviceDataCollectionPending: "",
+};
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
@@ -76,7 +103,8 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}")));
+      setRequestFields(mapFieldName(addFieldsToLeafNodes( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
+
       setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
         let header = item.split(":");
         result[header[0]] = header[1];
@@ -143,6 +171,7 @@ const CurlRequestExecutor = () => {
             value: obj[key],
             optional: false, // Set this to true or false based on your requirement
             secret: false, // Set this to true or false based on your requirement
+            type: false,
           };
         }
       }
@@ -195,6 +224,20 @@ const CurlRequestExecutor = () => {
     // In a real scenario, you might generate the code dynamically based on some logic
   };
 
+  const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
+  const handleStatusMappingButtonClick = () => {
+    setStatusMappingPopupOpen(true);
+  };
+
+  const handleCloseStatusMappingPopup = () => {
+    setStatusMappingPopupOpen(false);
+  };
+
+  const handleStatusMappingSubmit = (jsonData) => {
+    // Do something with the submitted JSON data (jsonData)
+    console.log("Submitted JSON Data:", jsonData);
+  };
+
   const codeSnippet = generateCodeSnippet();
 
   return (
@@ -239,9 +282,17 @@ const CurlRequestExecutor = () => {
             </div>
 
             <div id="responseFieldsRight" className="response-fields-right">
-              <h3>Response Fields Mapping</h3>
+              <div className="responseButtonStatus">
+                <h3>Response Fields Mapping</h3> 
+               <button id="responseStatusMapping" onClick={handleStatusMappingButtonClick}>
+          Status Mapping
+        </button>
+              </div>
               {
                 hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields}></JsonEditor>
+              }
+              {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
+              {isStatusMappingPopupOpen && ( <StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
               }
             </div>
           </div>
