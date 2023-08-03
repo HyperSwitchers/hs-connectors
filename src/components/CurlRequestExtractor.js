@@ -5,10 +5,10 @@ import "../styles.css";
 import mapFieldName, { synonymMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
-import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import React from "react";
 import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
+import { defaultConnectorProps } from "./ConnectorTemplates";
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
@@ -82,8 +82,32 @@ const CurlRequestExecutor = () => {
         result[header[0]] = header[1];
         return result;
       },{})));
-    } catch (e) { }
+      saveFlowDetails(fetchRequest);
+    } catch (e) { 
+      console.error(e);
+    }
   };
+
+  const saveFlowDetails = (curl) => {
+    let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+    let flow = props.flows[selectedFlowOption];
+    if(flow) {
+      flow.url_path = new URL(curl.url).pathname;
+      flow.http_method = curl.method;
+      let headers = getHeaders(curl.headers);
+      props.content_type = headers['Content-Type'] || headers['content-type'];
+      flow.headers = Object.keys(headers).map((key) => convertToValidVariableName(key));
+      // if request body is present then build request body
+      if(curl.data.ascii) {
+        flow.enabled.push('get_request_body')
+      }
+      else {
+        flow.enabled = flow.enabled.filter(item => item !== 'get_request_body')
+      }
+      props.flows[selectedFlowOption] = flow;
+    }
+    localStorage.props = JSON.stringify(props);
+  }
 
   const isObject = (value) => {
     return value && typeof value === "object" && value.constructor === Object;
@@ -93,16 +117,24 @@ const CurlRequestExecutor = () => {
     return typeof value === "string" || value instanceof String;
   };
 
+  function convertToValidVariableName(str) {
+    return str
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9_]/g, '_');
+  }
+  const getHeaders = (headers) => {
+    return headers.reduce((acc, item) => {
+      const [key, value] = item.split(":").map((item) => item.trim());
+      acc[key] = value;
+      return acc;
+    }, {});
+  }
   const sendRequest = () => {
     setLoading(true);
     // Transforming the fetchRequest object into a valid JavaScript fetch request
     const requestOptions = {
       method: curlRequest.method,
-      headers: curlRequest.headers.reduce((acc, item) => {
-        const [key, value] = item.split(":").map((item) => item.trim());
-        acc[key] = value;
-        return acc;
-      }, {}),
+      headers: getHeaders(curlRequest.headers),
       body: curlRequest.data.ascii,
     };
 
@@ -201,7 +233,7 @@ const CurlRequestExecutor = () => {
     <div>
       <div className='dropdown-wrapper'>
         <label htmlFor="dropdown">Connector: </label>
-        <input className='conector' type="text" placeholder="Connector Name" />
+        <input className='conector' type="text" placeholder="Connector Name" onChange={(e) => {localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value));}} />
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='FLOW TYPE' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='PAYMENT METHOD' />
       </div>
@@ -252,7 +284,7 @@ const CurlRequestExecutor = () => {
           </div>
           <div>
             <h3>Generated Code Snippet</h3>
-            <SyntaxHighlighter language="rust" style={tomorrow}>
+            <SyntaxHighlighter language="rust">
               {codeSnippet}
             </SyntaxHighlighter>
           </div>

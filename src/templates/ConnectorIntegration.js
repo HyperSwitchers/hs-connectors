@@ -1,0 +1,207 @@
+import handlebars from 'handlebars';
+handlebars.registerHelper('contains', function (array, value, options) {
+    if (Array.isArray(array) && array.includes(value)) {
+        return options.fn(this);
+    } else {
+        return options.inverse(this);
+    }
+});
+export const ConnectorCommon = `
+mod transformers;
+
+use std::fmt::Debug;
+
+use error_stack::{IntoReport, ResultExt};
+use masking::ExposeInterface;
+use transformers as {{connector_name}};
+
+use crate::{
+    configs::settings,
+    core::errors::{self, CustomResult},
+    headers,
+    services::{
+        self,
+        request::{self, Mask},
+        ConnectorIntegration,
+    },
+    types::{
+        self,
+        api::{self, ConnectorCommon, ConnectorCommonExt},
+        ErrorResponse, Response,
+    },
+    utils::{self, BytesExt},
+};
+
+#[derive(Debug, Clone)]
+pub struct {{struct_name}};
+
+impl api::Payment for {{struct_name}} {}
+impl api::PaymentSession for {{struct_name}} {}
+impl api::ConnectorAccessToken for {{struct_name}} {}
+impl api::PreVerify for {{struct_name}} {}
+impl api::PaymentAuthorize for {{struct_name}} {}
+impl api::PaymentSync for {{struct_name}} {}
+impl api::PaymentCapture for {{struct_name}} {}
+impl api::PaymentVoid for {{struct_name}} {}
+impl api::Refund for {{struct_name}} {}
+impl api::RefundExecute for {{struct_name}} {}
+impl api::RefundSync for {{struct_name}} {}
+impl api::PaymentToken for {{struct_name}} {}
+impl<Flow, Request, Response> ConnectorCommonExt<Flow, Request, Response> for {{struct_name}}
+where
+    Self: ConnectorIntegration<Flow, Request, Response>,
+{
+    fn build_headers(
+        &self,
+        _req: &types::RouterData<Flow, Request, Response>,
+        _connectors: &settings::Connectors,
+    ) -> CustomResult<Vec<(String, request::Maskable<String>)>, errors::ConnectorError> {
+
+        let headers = vec![
+            {{#contains headers "content_type"}}
+            (
+                headers::CONTENT_TYPE.to_string(),
+                Self::get_content_type(self).to_string().into(),
+            )
+            {{/contains}}
+            {{#contains headers "accept"}}
+            (
+                headers::ACCEPT.to_string(),
+                Self::get_content_type(self).to_string().into(),
+            )
+            {{/contains}}
+        ];
+        {{#contains headers "authorization"}}
+        let mut api_key = self.get_auth_header(&req.connector_auth_type)?;
+        headers.append(&mut api_key);
+        {{/contains}}
+        Ok(headers)
+    }
+}
+impl ConnectorCommon for {{struct_name}} {
+    fn id(&self) -> &'static str {
+        "{{connector_name}}"
+    }
+
+    fn common_get_content_type(&self) -> &'static str {
+        "{{content_type}}"
+    }
+
+    fn validate_auth_type(
+        &self,
+        val: &types::ConnectorAuthType,
+    ) -> Result<(), error_stack::Report<errors::ConnectorError>> {
+        {{connector_name}}::{{struct_name}}AuthType::try_from(val)?;
+        Ok(())
+    }
+
+    fn base_url<'a>(&self, connectors: &'a settings::Connectors) -> &'a str {
+        connectors.{{connector_name}}.base_url.as_ref()
+    }
+}
+`
+export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {{data_type}}, {{response_data}}> for {{struct_name}} {
+    {{#contains enabled "get_headers"}}
+    fn get_headers(
+        &self,
+        req: &{{{router_type}}},
+        connectors: &settings::Connectors,
+    ) -> CustomResult<Vec<(String, request::Maskable<String>)>, errors::ConnectorError> {
+        self.build_headers(req, connectors)
+    }
+    {{/contains}}
+    {{#contains enabled "get_content_type"}}
+    fn get_content_type(&self) -> &'static str {
+        self.common_get_content_type()
+    }
+    {{/contains}}
+    {{#contains enabled "get_url"}}
+    fn get_url(&self, _req: &{{{router_type}}}, _connectors: &settings::Connectors,) -> CustomResult<String,errors::ConnectorError> {
+        {{#if url_path}}
+            Ok(format!(
+                "{}{{url_path}}",
+                self.base_url(connectors)
+            ))
+        {{else}}
+            Err(errors::ConnectorError::NotImplemented("get_url method".to_string()).into())
+        {{/if}}
+    }
+    {{/contains}}
+    {{#contains enabled "get_request_body"}}
+    fn get_request_body(&self, req: &{{{router_type}}}) -> CustomResult<Option<types::RequestBody>, errors::ConnectorError> {
+        let req_obj = {{connector_name}}::{{struct_name}}{{request_type}}::try_from(req)?;
+        let {{connector_name}}_req = types::RequestBody::log_and_get_request_body(&req_obj, utils::Encode::<{{connector_name}}::{{struct_name}}{{request_type}}>::encode_to_string_of_json)
+            .change_context(errors::ConnectorError::RequestEncodingFailed)?;
+        Ok(Some({{connector_name}}_req))
+    }
+    {{/contains}}
+    {{#contains enabled "build_request"}}
+    fn build_request(
+        &self,
+        req: &{{{router_type}}},
+        connectors: &settings::Connectors,
+    ) -> CustomResult<Option<services::Request>, errors::ConnectorError> {
+        Ok(Some(
+            services::RequestBuilder::new()
+                .method(services::Method::{{http_method}})
+                .url(&{{flow_type}}::get_url(
+                    self, req, connectors,
+                )?)
+                .attach_default_headers()
+                .headers({{flow_type}}::get_headers(
+                    self, req, connectors,
+                )?)
+                {{#contains enabled "get_request_body"}}
+                .body({{flow_type}}::get_request_body(self, req)?)
+                {{/contains}}
+                .build(),
+        ))
+    }
+    {{/contains}}
+    {{#contains enabled "handle_response"}}
+    fn handle_response(
+        &self,
+        data: &{{{router_type}}},
+        res: types::Response,
+    ) -> CustomResult<{{{router_type}}},errors::ConnectorError> {
+        let response: {{connector_name}}::{{struct_name}}{{response_type}} = res.response.parse_struct("{{struct_name}}{{response_type}}").change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
+        types::{{router_data_type}}::try_from(types::ResponseRouterData {
+            response,
+            data: data.clone(),
+            http_code: res.status_code,
+        })
+    }
+    {{/contains}}
+    {{#contains enabled "get_error_response"}}
+    fn get_error_response(&self, res: types::Response) -> CustomResult<ErrorResponse,errors::ConnectorError> {
+        self.build_error_response(res)
+    }
+    {{/contains}}
+}
+
+`;
+
+export const ConnectorWebhook = `
+#[async_trait::async_trait]
+impl api::IncomingWebhook for {{struct_name}} {
+    fn get_webhook_object_reference_id(
+        &self,
+        _request: &api::IncomingWebhookRequestDetails<'_>,
+    ) -> CustomResult<api::webhooks::ObjectReferenceId, errors::ConnectorError> {
+        Err(errors::ConnectorError::WebhooksNotImplemented).into_report()
+    }
+
+    fn get_webhook_event_type(
+        &self,
+        _request: &api::IncomingWebhookRequestDetails<'_>,
+    ) -> CustomResult<api::IncomingWebhookEvent, errors::ConnectorError> {
+        Err(errors::ConnectorError::WebhooksNotImplemented).into_report()
+    }
+
+    fn get_webhook_resource_object(
+        &self,
+        _request: &api::IncomingWebhookRequestDetails<'_>,
+    ) -> CustomResult<serde_json::Value, errors::ConnectorError> {
+        Err(errors::ConnectorError::WebhooksNotImplemented).into_report()
+    }
+}`;

@@ -5,12 +5,11 @@
   "dependencies": {
     "@babel/core": "^7.22.9",
     "@babel/plugin-transform-react-jsx": "^7.22.5",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.4.0",
     "curl-parser": "^0.0.2",
     "curlconverter": "^4.8.0",
+    "fs": "^0.0.1-security",
     "jquery": "^3.7.0",
     "jsoneditor": "^9.10.2",
     "jsonpath": "^1.1.1",
@@ -44,5 +43,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^14.0.0",
+    "handlebars": "^4.7.8"
   }
 }
