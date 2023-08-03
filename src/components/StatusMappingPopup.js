@@ -6,8 +6,10 @@ import React, { useState } from "react";
     const handleSubmit = () => {
       // Parse the edited JSON and submit it
       const editedJson = JSON.parse(jsonInput);
+      localStorage.status = JSON.stringify(editedJson);
       console.log(editedJson);
       onSubmit(editedJson);
+      onClose();
     };
 
   return (

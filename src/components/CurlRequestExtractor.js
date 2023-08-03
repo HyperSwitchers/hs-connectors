@@ -103,7 +103,7 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(mapFieldName(addFieldsToLeafNodes( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
+      setRequestFields(addFieldsToLeafNodes(mapFieldName( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
 
       setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
         let header = item.split(":");
@@ -153,7 +153,7 @@ const CurlRequestExecutor = () => {
     };
     $.ajax(url, req_content).always(() => setLoading(false));
   };
-
+  const typesList = ["string", "number", "boolean", "array", "object"];
   function addFieldsToLeafNodes(jsonObj) {
     // Helper function to check if a value is an object (excluding arrays)
     function isObject(val) {
@@ -165,15 +165,15 @@ const CurlRequestExecutor = () => {
       for (const key in obj) {
         if (isObject(obj[key])) {
           traverse(obj[key]); // Recursively traverse nested objects
-        } else {
+        } 
+
           // Add fields to leaf nodes
           obj[key] = {
             value: obj[key],
             optional: false, // Set this to true or false based on your requirement
             secret: false, // Set this to true or false based on your requirement
-            type: false,
+            type : typesList[0],
           };
-        }
       }
     }
 
@@ -273,6 +273,7 @@ const CurlRequestExecutor = () => {
               <h3>Request Header Fields:</h3>
               <JsonEditor content={requestHeaderFields} options={options}></JsonEditor>
               <h3>Request Body Fields:</h3>
+              {/* <div>{JSON.stringify(requestFields)}</div> */}
               <JsonEditor content={requestFields} options={options}></JsonEditor>
             </div>
 
