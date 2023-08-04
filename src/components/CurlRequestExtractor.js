@@ -348,7 +348,7 @@ const CurlRequestExecutor = () => {
           <div>
             <button onClick={(e) => { 
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
-              setCodeSnippet(generateRustCode(localStorage.props.connector, inputJson)) }}>
+              setCodeSnippet(generateRustCode(props.connector, inputJson)) }}>
               Generate Code
             </button>
           </div>
