@@ -417,7 +417,8 @@ function printTemplateCode(nestedStructs2) {
         }
     }    `;
 
-    let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
+    let output = `${connectorImports}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
+    // let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
     console.log(output);
     return output;
@@ -428,7 +429,7 @@ export const generateRustCode = (connector, inputJson2) => {
     connectorName = connector;
     const inputObject2 = JSON.parse(inputJson2);
     const nestedStructs = generateNestedStructs(inputObject2[connectorName]?.body, connectorName);
-    const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${connectorName}PaymentsRequest`);
+    const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${toPascalCase(connectorName)}PaymentsRequest`);
     // console.log(`${[...nestedStructsMap.values()]}`);
     // console.log(`${[...structOccurrences.values()]}`);
     return printTemplateCode(nestedStructs2);
