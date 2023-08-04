@@ -425,10 +425,8 @@ function printTemplateCode(nestedStructs2) {
 
 export const generateRustCode = (connector, inputJson2) => {
     // const inputObject = JSON.parse(inputJson);
-    console.log(`sssssss ${connector}`);
     connectorName = connector;
     const inputObject2 = JSON.parse(inputJson2);
-    console.log(inputObject2);
     const nestedStructs = generateNestedStructs(inputObject2[connectorName]?.body, connectorName);
     const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${connectorName}PaymentsRequest`);
     // console.log(`${[...nestedStructsMap.values()]}`);
