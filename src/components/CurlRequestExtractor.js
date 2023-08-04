@@ -8,8 +8,9 @@ import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import React from "react";
 import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
-import { defaultConnectorProps } from "./ConnectorTemplates";
+import ConnectorTemplates, { defaultConnectorProps } from "./ConnectorTemplates";
 import StatusMappingPopup from "./StatusMappingPopup";
+import { generateRustCode } from "utils/Parser";
 
 const initialStatusMapping = {
   Started: "",
@@ -39,7 +40,7 @@ const initialStatusMapping = {
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST 'https://api.shift4.com/charges' \
+    useState(`curl --location --request POST 'http://localhost:5050/https://api.shift4.com/charges' \
   --header 'X-router;' \
   --header 'Authorization: Basic c2tfdGVzdF93cjhMYjdqd1FNTEp1STJCMHBoSFJMVDQ6' \
   --header 'Content-Type: application/json' \
@@ -67,11 +68,34 @@ const CurlRequestExecutor = () => {
       },
     },
   };
+  const generateCodeSnippet = () => {
+    return `fn main() {
+    let name: &str = "John";
+    let age: u32 = 30;
+
+    println!("Name: {}, Age: {}", name, age);
+}
+    impl TryFrom<&types::ConnectorAuthType> for ZenAuthType {
+      type Error = error_stack::Report<errors::ConnectorError>;
+      fn try_from(auth_type: &types::ConnectorAuthType) -> Result<Self, Self::Error> {
+          if let types::ConnectorAuthType::HeaderKey { api_key } = auth_type {
+              Ok(Self {
+                  api_key: api_key.to_owned(),
+              })
+          } else {
+              Err(errors::ConnectorError::FailedToObtainAuthType.into())
+          }
+      }
+  }`;
+
+    // In a real scenario, you might generate the code dynamically based on some logic
+  };
   const [curlRequest, setCurlRequest] = useState({});
   const [responseFields, setResponseFields] = useState({});
   const [hsResponseFields, setHsResponseFields] = useState({});
   const [requestFields, setRequestFields] = useState({});
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
+  const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
 
   const [loading, setLoading] = useState(false);
   const options = {
@@ -103,7 +127,7 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(addFieldsToLeafNodes(mapFieldName( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
+      setRequestFields(addFieldsToNodes(mapFieldName( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
 
       setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
         let header = item.split(":");
@@ -176,7 +200,7 @@ const CurlRequestExecutor = () => {
         setResponseFields(data);
         setHsResponseFields(undefined);
         setTimeout(() => {
-          setHsResponseFields(addFieldsToLeafNodes(data));
+          setHsResponseFields(addFieldsToNodes(data));
         }, 100);
       },
       error: (data) => {
@@ -186,7 +210,7 @@ const CurlRequestExecutor = () => {
     $.ajax(url, req_content).always(() => setLoading(false));
   };
   const typesList = ["string", "number", "boolean", "array", "object"];
-  function addFieldsToLeafNodes(jsonObj) {
+  function addFieldsToNodes(jsonObj) {
     // Helper function to check if a value is an object (excluding arrays)
     function isObject(val) {
       return typeof val === "object" && !Array.isArray(val);
@@ -211,6 +235,7 @@ const CurlRequestExecutor = () => {
 
     // Make a deep copy of the JSON object to avoid modifying the original object
     const newObj = JSON.parse(JSON.stringify(jsonObj));
+    console.log(JSON.stringify(jsonObj));
 
     // Start traversing the object
     traverse(newObj);
@@ -233,29 +258,6 @@ const CurlRequestExecutor = () => {
   const flowOptions = ["AuthType", "Authorize", "Capture", "Void", "Refund", "PSync", "RSync"];
   const paymentMethodOptions = ["Card", "Wallet", "BankRedirects"];
 
-  const generateCodeSnippet = () => {
-    return `fn main() {
-    let name: &str = "John";
-    let age: u32 = 30;
-
-    println!("Name: {}, Age: {}", name, age);
-}
-    impl TryFrom<&types::ConnectorAuthType> for ZenAuthType {
-      type Error = error_stack::Report<errors::ConnectorError>;
-      fn try_from(auth_type: &types::ConnectorAuthType) -> Result<Self, Self::Error> {
-          if let types::ConnectorAuthType::HeaderKey { api_key } = auth_type {
-              Ok(Self {
-                  api_key: api_key.to_owned(),
-              })
-          } else {
-              Err(errors::ConnectorError::FailedToObtainAuthType.into())
-          }
-      }
-  }`;
-
-    // In a real scenario, you might generate the code dynamically based on some logic
-  };
-
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
     setStatusMappingPopupOpen(true);
@@ -270,13 +272,27 @@ const CurlRequestExecutor = () => {
     console.log("Submitted JSON Data:", jsonData);
   };
 
-  const codeSnippet = generateCodeSnippet();
+  const [connectorName, setConnectorName] = useState(""); // State variable to store the input value
+
+  // // Function to handle changes in the input field
+  // const handleConnectorNameChange = (event) => {
+  //   setConnectorName(event.target.value);
+  // };
+  const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
+
+  
+  const inputJson = JSON.stringify({[connector_name]:{
+    "body":{
+      "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
+    }
+  }});
+  console.log(inputJson)
 
   return (
     <div>
       <div className='dropdown-wrapper'>
         <label htmlFor="dropdown">Connector: </label>
-        <input className='conector' type="text" placeholder="Connector Name" onChange={(e) => {localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value));}} />
+        <input className='conector' type="text" placeholder="Connector Name" onChange={(e) => {localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value));}}/>
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='FLOW TYPE' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='PAYMENT METHOD' />
       </div>
@@ -330,15 +346,24 @@ const CurlRequestExecutor = () => {
             </div>
           </div>
           <div>
-            <button>
+            <button onClick={(e) => { 
+              let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+              setCodeSnippet(generateRustCode(localStorage.props.connector, inputJson)) }}>
               Generate Code
             </button>
           </div>
-          <div>
-            <h3>Generated Code Snippet</h3>
-            <SyntaxHighlighter language="rust">
-              {codeSnippet}
-            </SyntaxHighlighter>
+          <div style={{display: 'flex'}}>
+            <div style={{width: '50%', padding:'10px'}}>
+              <h3>Generated Code Snippet</h3>
+              <SyntaxHighlighter language="rust">
+                {codeSnippet}
+              </SyntaxHighlighter>
+            </div>
+            <div style={{ padding:'10px'}}>
+            <div style={{width: '50%'}}>
+              <ConnectorTemplates></ConnectorTemplates>
+            </div>
+            </div>
           </div>
         </div>}
     </div>

@@ -9,7 +9,6 @@ function App() {
   return (
     <div className="App">
       <CurlRequestExecutor></CurlRequestExecutor>
-      <ConnectorTemplates></ConnectorTemplates>
     </div>
   );
 }

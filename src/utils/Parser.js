@@ -220,7 +220,7 @@ function removeQuotes(jsonString) {
 }
 
 function typeReplacement(fieldTypeValue) {
-    if (fieldTypeValue.toLowerCase() == "base_string" || fieldTypeValue.toLowerCase() == "decimal_string") {
+    if (fieldTypeValue?.toLowerCase() == "base_string" || fieldTypeValue?.toLowerCase() == "decimal_string") {
         return 'String';
     }
     else {
@@ -465,7 +465,7 @@ function generateNestedInitStructs(inputObject, parentName) {
     function processObject(inputObj, parentName) {
         const nestedFields = {};
         // [[key, Value], [key, Value]]
-        const a = Object.entries(inputObj).forEach(([structName, structFields]) => {
+        const a = inputObj ? Object.entries(inputObj).forEach(([structName, structFields]) => {
             // console.log(`${structName}-----${structFields}`);
             if (typeof structFields.value === 'object') {
                 //Get [key, value] of nested objects, the map will return Array([key, value])
@@ -517,7 +517,7 @@ function generateNestedInitStructs(inputObject, parentName) {
                 // }
                 nestedFields[toSnakeCase(structName)] = variableValue;
             }
-        });
+        }) : '';
 
         return nestedFields;
     }
@@ -541,21 +541,22 @@ function printTemplateCode(nestedStructs2) {
     }    `;
 
     // console.log(`${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`);
-    console.log(`${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`);
+    let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
+    console.log(output);
+    return output;
 }
 
-function generateRustCode(inputJson, inputJson2) {
-    const inputObject = JSON.parse(inputJson);
+export const generateRustCode = (connector, inputJson2) => {
+    // const inputObject = JSON.parse(inputJson);
     const inputObject2 = JSON.parse(inputJson2);
-    const nestedStructs = generateNestedStructs(inputObject2, "checkout");
-    const nestedStructs2 = generateNestedInitStructs(inputObject2.paymentsRequest, "CheckoutPaymentsRequest");
+    const nestedStructs = generateNestedStructs(inputObject2, connector);
+    const nestedStructs2 = generateNestedInitStructs(inputObject2?.[connector]?.body?.paymentsRequest, `${connector}PaymentsRequest`);
     // console.log(`${[...nestedStructsMap.values()]}`);
     // console.log(`${[...structOccurrences.values()]}`);
-    printTemplateCode(nestedStructs2);
+    return printTemplateCode(nestedStructs2);
     // console.log(nestedStructs2.join('\n'))
 
     // return nestedStructs.join('\n');
-    return 0;
 }
 
 // Test case with nested structures

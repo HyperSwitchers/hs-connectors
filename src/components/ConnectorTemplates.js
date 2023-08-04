@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import handlebars from 'handlebars';
 import { ConnectorCommon, ConnectorIntegration, ConnectorWebhook } from 'templates/ConnectorIntegration';
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 
 function toPascalCase(str) {
   return str
@@ -157,9 +158,10 @@ const ConnectorTemplate = ({ context = {
 
   return (
     <div>
-      <h1>Connectors.rs </h1>
+      <h3>Connectors.rs </h3>
       <div data-testid="generated-code">
-        <pre>{generatedCode}</pre>
+      <SyntaxHighlighter language="rust">
+        {generatedCode}</SyntaxHighlighter>
       </div>
     </div>
   );
