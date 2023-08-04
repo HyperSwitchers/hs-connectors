@@ -194,7 +194,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "" + curlRequest.url;
+    let url = "/cors/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
