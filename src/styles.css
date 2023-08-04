@@ -136,7 +136,7 @@ select option {
 
 .dropdown-select {
   font-size: 16px;
-  padding: 10px;
+  padding: 5px;
 }
 
 .code-snippet{
@@ -270,4 +270,8 @@ pre {
 
 .popup button:hover {
   opacity: 0.8;
+}
+
+#responseStatusMapping {
+  margin-bottom: 10px;
 }

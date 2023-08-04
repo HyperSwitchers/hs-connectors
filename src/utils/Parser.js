@@ -1,7 +1,7 @@
 const nestedStructsMap = new Map();
 const structOccurrences = new Map();
 var nestedFields = {}
-var connectorName = localStorage.props.connector;
+var connectorName = localStorage.props ? JSON.parse(localStorage.props)?.connector : '';
 // const c_name = localStorage.props.connector;
 
 const connectorImports = `use api_models::payments::Card;
@@ -208,7 +208,7 @@ function toSnakeCase(str) {
 //     return str ? str.replace(/[A-Z]/g, (letter, index) => (index === 0 ? letter.toLowerCase() : `_${letter.toLowerCase()}`)) : '';
 // }
 
-function toPascalCase(str) {
+export const toPascalCase = (str) => {
     return str
         ? str.replace(/(?:^|_)([a-z0-9])/g, (_, letter) => letter.toUpperCase())
         : '';

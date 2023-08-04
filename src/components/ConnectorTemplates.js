@@ -62,6 +62,7 @@ export const defaultConnectorProps = (connector) => {
         response_data: 'types::PaymentsResponseData',
         router_data_type: 'RouterData',
         flow_type: 'types::PaymentsVoidType',
+        http_method: 'Post',
         struct_name: connectorPascalCase,
         connector_name: connector,
         enabled: []
@@ -71,6 +72,7 @@ export const defaultConnectorProps = (connector) => {
         router_type: 'types::PaymentsSyncRouterData',
         response_data: 'types::PaymentsResponseData',
         router_data_type: 'RouterData',
+        http_method: 'Get',
         flow_type: 'types::PaymentsSyncType',
         struct_name: connectorPascalCase,
         connector_name: connector,
@@ -82,6 +84,7 @@ export const defaultConnectorProps = (connector) => {
         router_data_type: 'RouterData',
         response_data: 'types::PaymentsResponseData',
         flow_type: 'types::PaymentsCaptureType',
+        http_method: 'Post',
         struct_name: connectorPascalCase,
         connector_name: connector,
         enabled: ['get_headers', 'get_content_type', 'get_url', 'build_request', 'handle_response', 'get_error_response']
@@ -101,6 +104,7 @@ export const defaultConnectorProps = (connector) => {
         response_type: 'RefundResponse',
         router_data_type: 'RefundsRouterData',
         response_data: 'types::RefundsResponseData',
+        http_method: 'Post',
         flow_type: 'types::RefundExecuteType',
         struct_name: connectorPascalCase,
         connector_name: connector,
@@ -113,6 +117,7 @@ export const defaultConnectorProps = (connector) => {
         response_type: 'RefundResponse',
         router_data_type: 'RefundsRouterData',
         response_data: 'types::RefundsResponseData',
+        http_method: 'Get',
         flow_type: 'types::RefundSyncType',
         struct_name: connectorPascalCase,
         connector_name: connector,
@@ -121,7 +126,6 @@ export const defaultConnectorProps = (connector) => {
     }
   }
 };
-
 const ConnectorTemplate = ({ context = {
   trait_name: 'api::PSync',
   data_type: 'types::PaymentsSyncData',
@@ -132,7 +136,18 @@ const ConnectorTemplate = ({ context = {
 } }) => {
   const [templateContent] = useState(ConnectorIntegration);
   const [generatedCode, setGeneratedCode] = useState('');
+  const findCommonHeaders = (data) => {
+    let maxHeaders = [];
+    let maxHeadersCount = 0;
 
+    for (const key in data) {
+      if (data[key].headers && data[key].headers.length > maxHeadersCount) {
+        maxHeaders = data[key].headers;
+        maxHeadersCount = data[key].headers.length;
+      }
+    }
+    return maxHeaders;
+  }
   useEffect(() => {
     if (templateContent) {
       const template = handlebars.compile(ConnectorIntegration);
@@ -145,7 +160,7 @@ const ConnectorTemplate = ({ context = {
         connector_common_template({
           struct_name: toPascalCase(props.connector),
           connector_name: props.connector,
-          headers: props.headers,
+          headers: findCommonHeaders(props.flows),
           content_type: props.content_type
         }) +
         Object.values(flows).map((flow) => template(flow)).join("\n")
@@ -154,14 +169,14 @@ const ConnectorTemplate = ({ context = {
         });
       setGeneratedCode(renderedTemplate);
     }
-  }, [templateContent]);
+  }, [templateContent, context]);
 
   return (
     <div>
       <h3>Connectors.rs </h3>
       <div data-testid="generated-code">
-      <SyntaxHighlighter language="rust">
-        {generatedCode}</SyntaxHighlighter>
+        <SyntaxHighlighter language="rust">
+          {generatedCode}</SyntaxHighlighter>
       </div>
     </div>
   );

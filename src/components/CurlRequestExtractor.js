@@ -10,7 +10,7 @@ import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
 import ConnectorTemplates, { defaultConnectorProps } from "./ConnectorTemplates";
 import StatusMappingPopup from "./StatusMappingPopup";
-import { generateRustCode } from "utils/Parser";
+import { generateRustCode, toPascalCase } from "utils/Parser";
 
 const initialStatusMapping = {
   Started: "",
@@ -96,6 +96,7 @@ const CurlRequestExecutor = () => {
   const [requestFields, setRequestFields] = useState({});
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
+  const [connectorContext, setConnectorContext] = useState({});
 
   const [loading, setLoading] = useState(false);
   const options = {
@@ -182,6 +183,7 @@ const CurlRequestExecutor = () => {
     }, {});
   }
   const sendRequest = () => {
+    saveFlowDetails(curlRequest);
     setLoading(true);
     // Transforming the fetchRequest object into a valid JavaScript fetch request
     const requestOptions = {
@@ -292,11 +294,13 @@ const CurlRequestExecutor = () => {
 
   return (
     <div>
-      <div className='dropdown-wrapper'>
-        <label htmlFor="dropdown">Connector: </label>
-        <input className='conector' type="text" placeholder="Connector Name" onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} />
-        <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='FLOW TYPE' />
-        <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='PAYMENT METHOD' />
+      <div className='dropdown-wrapper hs-headers'>
+        <div style={{paddingRight: '10px'}}>
+          <label htmlFor="dropdown">Connector: </label>
+          <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} />
+        </div>
+        <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='Flow Type' />
+        <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='Payment Method' />
       </div>
       {selectedFlowOption === 'AuthType' ? <AuthType></AuthType> :
         <div>
@@ -310,7 +314,7 @@ const CurlRequestExecutor = () => {
             <div className="curl-input-section">
               <h3>cURL Request</h3>
               <textarea
-                rows={20}
+                style={{ height: '100%' }}
                 value={curlCommand}
                 onChange={(e) => updateCurlRequest(e.target.value)}
                 placeholder="Enter your cURL request here..."
@@ -350,7 +354,8 @@ const CurlRequestExecutor = () => {
           <div>
             <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
-              setCodeSnippet(generateRustCode(props.connector, inputJson))
+              setCodeSnippet(generateRustCode(props.connector, inputJson));
+              setConnectorContext({});
             }}>
               Generate Code
             </button>
@@ -364,7 +369,7 @@ const CurlRequestExecutor = () => {
             </div>
             <div style={{ padding: '10px' }}>
               <div style={{ width: '50%' }}>
-                <ConnectorTemplates></ConnectorTemplates>
+                <ConnectorTemplates context={connectorContext}></ConnectorTemplates>
               </div>
             </div>
           </div>
