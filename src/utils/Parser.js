@@ -1,7 +1,8 @@
 const nestedStructsMap = new Map();
 const structOccurrences = new Map();
 var nestedFields = {}
-const connectorName = "Checkout"
+var connectorName = localStorage.props.connector;
+// const c_name = localStorage.props.connector;
 
 const connectorImports = `use api_models::payments::Card;
 use serde::{Deserialize, Serialize};
@@ -272,59 +273,6 @@ function generateRustStructField(fieldName, fieldValue, parentName) {
         fieldType = `Option<${fieldType}>`
     }
 
-
-    // let fieldType = 'String';
-    // if (typeof fieldValue === 'number') {
-    //     fieldType = 'i32';
-    // } else if (typeof fieldValue === 'boolean') {
-    //     fieldType = 'bool';
-    // } else if (Array.isArray(fieldValue)) {
-    //     fieldType = `Vec<${toPascalCase(`${parentName}_${fieldName}`)}>`;
-
-    //     //Get the first element as vectors/arrays as homogenous
-    //     let fieldValueItem = fieldValue[0];
-
-    //     if (typeof fieldValueItem.value === 'object') {
-    //         const structName = toPascalCase(`${parentName}_${fieldName}_item`);
-    //         fieldType = `Vec<${structName}>`;
-    //         const structFields = Object.entries(fieldValueItem.value);
-    //         if (!nestedStructsMap.has(structName)) {
-    //             nestedStructsMap.set(structName, generateRustStruct(structName, structFields));
-    //         }
-    //     }
-    //     else {
-    //         fieldType = `Vec<${typeReplacement(fieldValueItem.type)}>`;
-    //     }
-    //     if (fieldValueItem.isSecret) {
-    //         fieldType = `Secret<${fieldType}>`
-    //     }
-    //     if (fieldValueItem.isOption) {
-    //         fieldType = `Option<${fieldType}>`
-    //     }
-    // } else if (typeof fieldValue === 'object') {
-
-    //     if (fieldValue.hasOwnProperty("isOption") || fieldValue.hasOwnProperty("isSecret")) {
-    //         fieldType = typeReplacement(fieldValue.type);
-    //         if (fieldValue.isSecret) {
-    //             fieldType = `Secret<${fieldType}>`
-    //         }
-    //         if (fieldValue.isOption) {
-    //             fieldType = `Option<${fieldType}>`
-    //         }
-    //     }
-    //     else {
-    //         const structName = toPascalCase(`${parentName}_${fieldName}`);
-    //         fieldType = structName;
-    //         const structFields = Object.entries(fieldValue);
-    //         if (!nestedStructsMap.has(structName)) {
-    //             // console.log(`${structName}\n---------\n`)
-    //             nestedStructsMap.set(structName, generateRustStruct(structName, structFields));
-    //         }
-    //     }
-    // } else if (fieldValue === undefined) {
-    //     fieldType = 'Option<String>';
-    // }
-
     if (fieldName == "type") {
         fieldName = `${parentName}_${fieldName}`
         return `    #[serde(rename = "type")]
@@ -356,45 +304,6 @@ ${structFields.join('\n')}
 }
 `;
 
-    // console.log(JSON.stringify(nestedFields));
-    // function handleNestedObject(obj, parentKey) {
-    //     // Object to store the field_name and its value after replacing the dynamic fields
-    //     const nestedFields = {};
-    //     for (const key in obj) {
-    //         if (Object.hasOwnProperty.call(obj, key)) {
-    //             const value = obj[key];
-    //             if (typeof value === "object" && value !== null) {
-    //                 // Continue recursion for nested objects
-    //                 nestedFields[key] = handleNestedObject(value, toPascalCase(`${parentKey}_${key}`));
-    //             } else if (typeof value === "string" && value.startsWith("$")) {
-    //                 // Extract the dynamic value name without the "$" prefix
-    //                 const dynamicValueName = value.substring(1);
-
-    //                 // Check if a replacement is available for the dynamic value
-    //                 const replacement = replacements[dynamicValueName] || value;
-
-    //                 // Store the replacement value for this field
-    //                 nestedFields[key] = replacement;
-    //             } else {
-    //                 // If the value is not a dynamic value or nested object, treat it as a regular value
-    //                 nestedFields[key] = value;
-    //             }
-    //         }
-    //     }
-    //     // Check if this struct is already encountered
-    //     const structString = JSON.stringify(nestedFields);
-    //     // console.log(`\n${structString}\n --------- \n`)
-    //     if (!structOccurrences.has(parentKey)) {
-    //         structOccurrences.set(parentKey, structString);
-    //     }
-
-
-    //     // Return the name of the struct variable for this nested object
-    //     return `${toSnakeCase(parentKey)}`;
-    //     // return `Struct${Object.keys(structOccurrences).length - 1}`;
-    // }
-    // handleNestedObject(JSON.parse(inputJson2), name)
-
     return rustStruct;
 }
 
@@ -416,20 +325,6 @@ function generateNestedStructs(inputObject, parentName) {
                     nestedStructsMap.set(toPascalCase(fullName), structDefinition);
                     structs.push(structDefinition);
                 }
-
-                // for (const [fieldName, fieldValue] of fields) {
-                //     if (typeof fieldValue === 'object' && (!fieldValue.hasOwnProperty("isOption") || !fieldValue.hasOwnProperty("isSecret"))) {
-                //         if (Array.isArray(fieldValue)) {
-                //             fieldValue.forEach((element) => {
-                //                 if (typeof element === 'object') {
-                //                     processObject({ [fieldName]: element }, fullName);
-                //                 }
-                //             });
-                //         } else {
-                //             processObject({ [fieldName]: fieldValue }, fullName);
-                //         }
-                //     }
-                // }
             } else {
                 // If it's a primitive field, generate the field definition
                 const rustStruct = `
@@ -473,25 +368,7 @@ function generateNestedInitStructs(inputObject, parentName) {
 
                 // // Generate unique field names for nested structs
                 const fullName = parentName ? `${parentName}_${structName}` : structName;
-                // const structDefinition = processObject(toPascalCase(fullName), fields);
-                // if (!nestedStructsMap.has(toPascalCase(fullName))) {
-                //     nestedStructsMap.set(toPascalCase(fullName), structDefinition);
-                //     structs.push(structDefinition);
-                // }
 
-                // for (const [fieldName, fieldValue] of fields) {
-                //     if (typeof fieldValue === 'object') {
-                //         if (Array.isArray(fieldValue)) {
-                //             fieldValue.forEach((element) => {
-                //                 if (typeof element === 'object') {
-                //                     processObject({ [fieldName]: element }, fullName);
-                //                 }
-                //             });
-                //         } else {
-                //             processObject({ [fieldName]: fieldValue }, fullName);
-                //         }
-                //     }
-                // }
                 let internallyNestedFields = processObject(structFields.value, toPascalCase(fullName))
                 // structs.push(`let ${toSnakeCase(fullName)} = ${toPascalCase(fullName)}${JSON.stringify(internallyNestedFields)};`);
                 let variableValue = `${toPascalCase(fullName)}${removeQuotes(JSON.stringify(internallyNestedFields))}`;
@@ -540,17 +417,20 @@ function printTemplateCode(nestedStructs2) {
         }
     }    `;
 
-    // console.log(`${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`);
-    let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
+    let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
+    // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
     console.log(output);
     return output;
 }
 
 export const generateRustCode = (connector, inputJson2) => {
     // const inputObject = JSON.parse(inputJson);
+    console.log(`sssssss ${connector}`);
+    connectorName = connector;
     const inputObject2 = JSON.parse(inputJson2);
-    const nestedStructs = generateNestedStructs(inputObject2, connector);
-    const nestedStructs2 = generateNestedInitStructs(inputObject2?.[connector]?.body?.paymentsRequest, `${connector}PaymentsRequest`);
+    console.log(inputObject2);
+    const nestedStructs = generateNestedStructs(inputObject2[connectorName]?.body, connectorName);
+    const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${connectorName}PaymentsRequest`);
     // console.log(`${[...nestedStructsMap.values()]}`);
     // console.log(`${[...structOccurrences.values()]}`);
     return printTemplateCode(nestedStructs2);
@@ -615,209 +495,6 @@ const inputJson = `
 }
 `;
 
-// const inputJson = `
-// {
-//     "checkout": {
-//         "body":{
-//             "cardRequest": {
-//                 "amount": "100",
-//                 "card": {
-//                     "number": "$card_number",
-//                     "expMonth": 10,
-//                     "expYear": 2023,
-//                     "cvc": 123,
-//                     "cardholderName": "John Doe"
-//                 },
-//                 "captured": true,
-//                 "currency": "USD",
-//                 "description": "Sample description"
-//             } 
-//         }
-//     }
-// }`
-
-// const inputJson2 = `
-// {
-//     "checkout": {
-//         "body":{
-//             "cardRequest": {
-//                 "amount": "$amount",
-//                 "card": {
-//                     "number": "$card_number",
-//                     "expMonth": "$card_exp_month",
-//                     "expYear": "$card_exp_year",
-//                     "cvc": "$card_cvc",
-//                     "cardholderName": "$card_holder_name"
-//                 },
-//                 "captured": true,
-//                 "currency": "$currency",
-//                 "description": "$description",
-//                 "purchase_units": [
-//                     {
-//                         "reference_id": "d9f80740-38f0-11e8-b467-0ed5f89f718b",
-//                         "amount": {
-//                             "currency_code": "USD",
-//                             "value": "100.00"
-//                         }
-//                     }
-//                 ],
-//                 "payment_source": {
-//                     "card": {
-//                         "billing_address": {
-//                         "address_line_1": "asdasd",
-//                         "postal_code": "94566",
-//                         "country_code": "US"
-//                         },
-//                         "expiry" : "2025-01",
-//                         "name": "John Doe",
-//                         "number": "4000020000000000",
-//                         "security_code": "123"
-//                     }
-//                 }
-//             } 
-//         }
-//     }
-// }
-// `;
-
-
-// const inputJson2 = `
-// {
-//     "paymentsRequest": {
-//         "source":{
-//             "type": "card",
-//             "card": {
-//                 "number": "$card_number",
-//                 "expMonth": "$card_exp_month",
-//                 "expYear": "$card_exp_year",
-//                 "cvv": "$card_cvc"
-//             }
-//         },
-//         "amount": "$amount",
-//         "currency": "$currency",
-//         "processing_channel_id": "pc_ovo75iz4hdyudnx6tu74mum3fq",
-//         "reference": "ORD-5023-4E89",
-//         "metadata": {
-//             "udf1": "TEST123",
-//             "coupon_code": "NY2018",
-//             "partner_id": 123989
-//         },
-//         "customer":{
-//             "email": "$email"
-//         }
-//     }
-// }
-// `;
-
-// const inputJson2 = `
-// {
-//     "paymentsRequest": {
-//         "source":{
-//             "value":{
-//                 "type": {"value": "card", "isOption": false, "isSecret": false, "type": "String"},
-//                 "card": {
-//                     value:{
-//                         "number": {"value": "$card_number", "isOption": false, "isSecret": true, "type": "String"},
-//                         "expMonth": {"value": "$card_exp_month", "isOption": false, "isSecret": true, "type": "String"},
-//                         "expYear": {"value": "$card_exp_year", "isOption": false, "isSecret": true, "type": "String"},
-//                         "cvv": {"value": "$card_cvc", "isOption": false, "isSecret": true, "type": "String"}
-//                     },
-//                     "isOption": false,
-//                     "isSecret": false,
-//                     "type": "Object"
-//                 }
-//             },
-//             "isOption": true,
-//             "isSecret": false,
-//             "type": "Object"
-//         },
-//         "amount": {"value": "$amount", "isOption": true, "isSecret": true, "type": "decimal_String"},
-//         "currency": {"value": "$currency", "isOption": true, "isSecret": true, "type": "Currency"},
-//         "processing_channel_id": "pc_ovo75iz4hdyudnx6tu74mum3fq",
-//         "reference": "ORD-5023-4E89",
-//         "metadata": {
-//             "udf1": "TEST123",
-//             "coupon_code": "NY2018",
-//             "partner_id": 123989
-//         },
-//         "customer":{
-//             "email": "$email"
-//         },
-//         "purchase_units":{
-//                 "value":[
-//                     {
-//                         "reference_id": "d9f80740-38f0-11e8-b467-0ed5f89f718b",
-//                         "amount": {
-//                             "currency_code": "USD",
-//                             "value": "100.00"
-//                         }
-//                     }
-//                 ],
-//                 "value":{
-//                     "reference_id": "d9f80740-38f0-11e8-b467-0ed5f89f718b",
-//                     "amount": {
-//                         "currency_code": "USD",
-//                         "value": "100.00"
-//                     }
-//                 },
-//                 "isOption": true,
-//                 "isSecret": false,
-//                 "type": "String"
-//         }
-//     }
-// }
-// `;
-
-// const inputJson2 = `{
-//     "paymentsRequest": {
-//         "source":{
-//             "value":{
-//                 "type": {"value": "card", "isOption": false, "isSecret": false, "type": "String"},
-//                 "card": {
-//                     "value":{
-//                         "number": {"value": "$card_number", "isOption": false, "isSecret": true, "type": "String"},
-//                         "expMonth": {"value": "$card_exp_month", "isOption": false, "isSecret": true, "type": "String"},
-//                         "expYear": {"value": "$card_exp_year", "isOption": false, "isSecret": true, "type": "String"},
-//                         "cvv": {"value": "$card_cvc", "isOption": false, "isSecret": true, "type": "String"}
-//                     },
-//                     "isOption": false,
-//                     "isSecret": false,
-//                     "type": "Object"
-//                 }
-//             },
-//             "isOption": true,
-//             "isSecret": false,
-//             "type": "Object"
-//         },
-//         "amount": {"value": "$amount", "isOption": true, "isSecret": true, "type": "decimal_String"},
-//         "currency": {"value": "$currency", "isOption": true, "isSecret": true, "type": "Currency"},
-//         "purchase_units":{
-//             "value":[
-//                 {
-//                     "value":{
-//                         "reference_id": {"value": "d9f80740-38f0-11e8-b467-0ed5f89f718b", "isOption": false, "isSecret": false, "type": "String"},
-//                         "amount": {
-//                             "value":{
-//                                 "currency_code": {"value": "USD", "isOption": false, "isSecret": false, "type": "Currency"},
-//                                 "value": {"value": "100.00", "isOption": false, "isSecret": false, "type": "decimal_String"}
-//                             },
-//                             "isOption": true,
-//                             "isSecret": false,
-//                             "type": "String"
-//                         }
-//                     },
-//                     "isOption": true,
-//                     "isSecret": false,
-//                     "type": "String"
-//                 }
-//             ],
-//             "isOption": true,
-//             "isSecret": false,
-//             "type": "Array"
-//         }
-//     }
-// }`
-
 const inputJson2 = `{
     "paymentsRequest": {
         "source":{
@@ -839,4 +516,4 @@ const inputJson2 = `{
     }
 }`
 
-const generatedCode = generateRustCode(inputJson, inputJson2);
+// const generatedCode = generateRustCode(inputJson, inputJson2);

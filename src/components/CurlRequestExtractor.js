@@ -127,15 +127,15 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(addFieldsToNodes(mapFieldName( JSON.parse(fetchRequest?.data?.ascii || "{}"))));
+      setRequestFields(addFieldsToNodes(mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}"))));
 
       setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
         let header = item.split(":");
         result[header[0]] = header[1];
         return result;
-      },{})));
+      }, {})));
       saveFlowDetails(fetchRequest);
-    } catch (e) { 
+    } catch (e) {
       console.error(e);
     }
   };
@@ -143,14 +143,14 @@ const CurlRequestExecutor = () => {
   const saveFlowDetails = (curl) => {
     let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
     let flow = props.flows[selectedFlowOption];
-    if(flow) {
+    if (flow) {
       flow.url_path = new URL(curl.url).pathname;
       flow.http_method = curl.method;
       let headers = getHeaders(curl.headers);
       props.content_type = headers['Content-Type'] || headers['content-type'];
       flow.headers = Object.keys(headers).map((key) => convertToValidVariableName(key));
       // if request body is present then build request body
-      if(curl.data.ascii) {
+      if (curl.data.ascii) {
         flow.enabled.push('get_request_body')
       }
       else {
@@ -221,15 +221,15 @@ const CurlRequestExecutor = () => {
       for (const key in obj) {
         if (isObject(obj[key])) {
           traverse(obj[key]); // Recursively traverse nested objects
-        } 
+        }
 
-          // Add fields to leaf nodes
-          obj[key] = {
-            value: obj[key],
-            optional: false, // Set this to true or false based on your requirement
-            secret: false, // Set this to true or false based on your requirement
-            type : typesList[0],
-          };
+        // Add fields to leaf nodes
+        obj[key] = {
+          value: obj[key],
+          optional: false, // Set this to true or false based on your requirement
+          secret: false, // Set this to true or false based on your requirement
+          type: typesList[0],
+        };
       }
     }
 
@@ -280,19 +280,21 @@ const CurlRequestExecutor = () => {
   // };
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
 
-  
-  const inputJson = JSON.stringify({[connector_name]:{
-    "body":{
-      "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
+
+  const inputJson = JSON.stringify({
+    [connector_name]: {
+      "body": {
+        "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
+      }
     }
-  }});
+  });
   console.log(inputJson)
 
   return (
     <div>
       <div className='dropdown-wrapper'>
         <label htmlFor="dropdown">Connector: </label>
-        <input className='conector' type="text" placeholder="Connector Name" onChange={(e) => {localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value));}}/>
+        <input className='conector' type="text" placeholder="Connector Name" onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} />
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='FLOW TYPE' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='PAYMENT METHOD' />
       </div>
@@ -332,37 +334,38 @@ const CurlRequestExecutor = () => {
 
             <div id="responseFieldsRight" className="response-fields-right">
               <div className="responseButtonStatus">
-                <h3>Response Fields Mapping</h3> 
-               <button id="responseStatusMapping" onClick={handleStatusMappingButtonClick}>
-          Status Mapping
-        </button>
+                <h3>Response Fields Mapping</h3>
+                <button id="responseStatusMapping" onClick={handleStatusMappingButtonClick}>
+                  Status Mapping
+                </button>
               </div>
               {
                 hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
-              {isStatusMappingPopupOpen && ( <StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
+              {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
               }
             </div>
           </div>
           <div>
-            <button onClick={(e) => { 
+            <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
-              setCodeSnippet(generateRustCode(props.connector, inputJson)) }}>
+              setCodeSnippet(generateRustCode(props.connector, inputJson))
+            }}>
               Generate Code
             </button>
           </div>
-          <div style={{display: 'flex'}}>
-            <div style={{width: '50%', padding:'10px'}}>
+          <div style={{ display: 'flex' }}>
+            <div style={{ width: '50%', padding: '10px' }}>
               <h3>Generated Code Snippet</h3>
               <SyntaxHighlighter language="rust">
                 {codeSnippet}
               </SyntaxHighlighter>
             </div>
-            <div style={{ padding:'10px'}}>
-            <div style={{width: '50%'}}>
-              <ConnectorTemplates></ConnectorTemplates>
-            </div>
+            <div style={{ padding: '10px' }}>
+              <div style={{ width: '50%' }}>
+                <ConnectorTemplates></ConnectorTemplates>
+              </div>
             </div>
           </div>
         </div>}
