@@ -417,7 +417,8 @@ function printTemplateCode(nestedStructs2) {
         }
     }    `;
 
-    let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
+    let output = `${connectorImports}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
+    // let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
     console.log(output);
     return output;
