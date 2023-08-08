@@ -31,7 +31,8 @@ export const synonymMapping = {
     card_cvc: ["cvc", "cvd","cvv", "CVV", "security_code", "securityCode", "card_verification_value"],
     card_holder_name: ["cardholderName", "holderName", "name_on_card", "cardHolderName"],
     capture: ["auto_capture", "capture", "submit_for_settlement"],
-    country: ["country", "country_code"],
+    billing_country: ["country", "country_code"],
+    shipping_country: ["country", "country_code"],
     currency: ["currency", "currency_code"],
     description: ["description", "softDescriptor"],
     email: ["email"],
@@ -40,8 +41,9 @@ export const synonymMapping = {
     setup_future_usage: ["storePaymentMethod"],
     return_url: ["returnUrl", ""],
     type_i64:[],
-    type_i32:[],
-
+    type_decimal:[],
+    type_base_string:[],
+    type_decimal_string:[],
 };
 
 export default function mapFieldNames(input) {

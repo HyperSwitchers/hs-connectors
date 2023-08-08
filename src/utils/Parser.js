@@ -185,18 +185,27 @@ const paymentsRequestTryFrom = `impl TryFrom<&types::PaymentsAuthorizeRouterData
 }`;
 // Define the replacements for dynamic values
 const replacements = {
-    amount_i64: "item.request.amount",
-    amount_decimal_String: "item.request.amount",
-    amount_base_String: "item.request.amount.to_string()",
-    card_number_String: `ccard.card_number.clone()`,
+    amount_type_i64: "item.request.amount",
+    amount_type_decimal: "utils::to_currency_base_unit_asf64(item.request.amount, item.request.currency)?",
+    amount_type_decimal_string: "utils::to_currency_base_unit(item.request.amount, item.request.currency)?",
+    amount_type_base_string: "item.request.amount.to_string()",
     card_number_CardNumber: `ccard.card_number.clone()`,
     card_exp_month_String: "ccard.card_exp_month.clone()",
     card_exp_year_String: "ccard.card_exp_year.clone()",
     card_cvc_String: "ccard.card_cvc.clone()",
-    card_holder_name: "ccard.card.card_holder_name.clone()",
+    card_holder_name_String: "ccard.card.card_holder_name.clone()",
     currency_Currency: "item.request.currency",
-    description: `item.request.description`,
-    email: `item.request.get_email()?`,
+    description_String: `item.request.description`,
+    email_Email: `item.request.get_email()?`,
+    billing_country_CountryAlpha2: `item.request.billing.address.get_country()?`,
+    shipping_country_CountryAlpha2: `item.request.shipping.address.get_country()?`,
+    billing_address_line1_String: `item.request.billing.address.get_line1()?`,
+    billing_address_line2_String: `item.request.billing.address.get_line2()?`,
+    billing_address_city_String: `item.request.billing.address.get_city()?`,
+    billing_address_state_String: `item.request.billing.address.get_state()?`,
+    billing_address_zip_String: `item.request.billing.address.get_zip()?`,
+    billing_address_firstname_String: `item.request.billing.address.get_firstname()?`,
+    billing_address_lastname_String: `item.request.billing.address.get_lastname()?`,
 };
 
 function toSnakeCase(str) {
