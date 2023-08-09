@@ -98,6 +98,18 @@ impl ConnectorCommon for {{struct_name}} {
     fn base_url<'a>(&self, connectors: &'a settings::Connectors) -> &'a str {
         connectors.{{connector_name}}.base_url.as_ref()
     }
+
+    fn get_auth_header(
+        &self,
+        auth_type: &types::ConnectorAuthType,
+    ) -> CustomResult<Vec<(String, request::Maskable<String>)>, errors::ConnectorError> {
+        let auth = {{connector_name}}::{{struct_name}}AuthType::try_from(auth_type)
+            .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
+        Ok(vec![(
+            {{header_auth_key}},
+            {{header_auth_value}},
+        )])
+    }
 }
 `
 export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {{data_type}}, {{response_data}}> for {{struct_name}} {

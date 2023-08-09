@@ -6,6 +6,8 @@ export const synonymMapping = {
     auth_type_key1: [],
     auth_type_secret_key: [],
     auth_type_key2: [],
+    auth_type_base_64_encode_api_key_colon_key1: [],
+    auth_type_base_64_encode_key1_colon_api_key: [],
     billing_address_firstname: ["name", "first_name", "firstname", "firstName", "username"],
     billing_address_lastname: ["last_name", "lastname", "lastName"],
     billing_address_line1: ["line1", "address_line_1"],

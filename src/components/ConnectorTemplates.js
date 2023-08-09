@@ -148,6 +148,51 @@ const ConnectorTemplate = ({ context = {
     }
     return maxHeaders;
   }
+  const build_auth_header_key = (data) => {
+    if ('auth_type_api_key'.includes(data)) {
+      return "auth.api_key.into_masked()";
+    }
+    else if ('auth_type_api_key'.includes(data)) {
+      return "auth.api_key.into_masked()";
+    }
+    else if ('auth_type_key1'.includes(data)) {
+      return "auth.key1.into_masked()";
+    }
+    else if ('auth_type_secret_key'.includes(data)) {
+      return "auth.secret_key.into_masked()";
+    }
+    else if ('auth_type_key2'.includes(data)) {
+      return "auth.key2.into_masked()";
+    }
+    else if ('auth_type_base_64_encode_api_key_colon_key1'.includes(data)) {
+      return 'format!("{}", consts::BASE64_ENGINE.encode(format!("{}:{}", auth.api_key.peek(), auth.key1.peek()))).into_masked()'
+    }
+    else if ('auth_type_base_64_encode_key1_colon_api_key'.includes(data)) {
+      return 'format!("{}", consts::BASE64_ENGINE.encode(format!("{}:{}", auth.key1.peek(), auth.api_key.peek()))).into_masked()'
+    }
+    return '';
+  }
+  const get_auth_header_key = (data) => {
+    if(data === 'Authorization') return 'headers.AUTHORIZATION';
+    if(data === 'X-API-KEY') return 'headers.X_API_KEY';
+    if(data === 'API-KEY') return 'headers.API_KEY';
+    if(data === 'apikey') return 'headers.APIKEY';
+    if(data === 'X-CC-Api-Key') return 'headers.X_CC_API_KEY';
+    if(data === 'X-Trans-Key') return 'headers.X_TRANS_KEY';
+    return data;
+  }
+  const build_auth_headers = (data) => {
+    for (const key in data) {
+      let auth_value = build_auth_header_key(data[key]);
+      if(auth_value){
+        return {
+          header_auth_key: get_auth_header_key(key),
+          header_auth_value: auth_value
+        }
+      }
+    }
+    return {};
+  }
   useEffect(() => {
     if (templateContent) {
       const template = handlebars.compile(ConnectorIntegration);
@@ -161,7 +206,8 @@ const ConnectorTemplate = ({ context = {
           struct_name: toPascalCase(props.connector),
           connector_name: props.connector,
           headers: findCommonHeaders(props.flows),
-          content_type: props.content_type
+          content_type: props.content_type,
+          ...build_auth_headers(props.flows)
         }) +
         Object.values(flows).map((flow) => template(flow)).join("\n")
         + connector_webhook_template({
