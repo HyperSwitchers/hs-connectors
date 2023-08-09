@@ -11,6 +11,7 @@
     "@mui/material": "^5.14.3",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.4.0",
+    "copy-to-clipboard": "^3.3.3",
     "curl-parser": "^0.0.2",
     "curlconverter": "^4.8.0",
     "fs": "^0.0.1-security",

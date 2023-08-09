@@ -5,6 +5,8 @@ import "../styles.css";
 import mapFieldName, { synonymMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
+import copy from "copy-to-clipboard"; // Import the copy-to-clipboard library
 import React from "react";
 import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
@@ -40,7 +42,7 @@ const initialStatusMapping = {
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST 'http://localhost:5050/https://api.shift4.com/charges' \
+    useState(`curl --location --request POST 'https://api.shift4.com/charges' \
   --header 'X-router;' \
   --header 'Authorization: Basic c2tfdGVzdF93cjhMYjdqd1FNTEp1STJCMHBoSFJMVDQ6' \
   --header 'Content-Type: application/json' \
@@ -273,31 +275,72 @@ const CurlRequestExecutor = () => {
     // Do something with the submitted JSON data (jsonData)
     console.log("Submitted JSON Data:", jsonData);
   };
-
-  const [connectorName, setConnectorName] = useState(""); // State variable to store the input value
-
-  // // Function to handle changes in the input field
-  // const handleConnectorNameChange = (event) => {
-  //   setConnectorName(event.target.value);
-  // };
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
-
-
-  const inputJson = JSON.stringify({
+  
+  var inputJsonData = JSON.stringify({
     [connector_name]: {
       "body": {
         "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
       }
     }
   });
-  console.log(inputJson)
 
+  const[inputJson, setInputJson] = useState('');
+  const updateInputJson = (inputJsonData) => {
+    setInputJson(inputJsonData);
+  };
+  // var inputJson = JSON.stringify({
+  //   [connector_name]: {
+  //     "body": {
+  //       "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
+  //     }
+  //   }
+  // });
+  console.log(inputJson)
+  const curlTextareaRef = useRef(null);
+
+  const [isCopied, setIsCopied] = useState(false);
+   // Function to handle the "Copy to Clipboard" button click event
+   const handleCopyClick = () => {
+    copy(codeSnippet);
+    setIsCopied(true);
+    // Reset the "Copied to clipboard" notification after a short delay
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 500);
+  };
+  
+  const [connectorName, setConnectorName] = useState("Shift4");
+  const handleConnectorNameChange = (event) => {
+    setConnectorName(event.target.value);
+    localStorage.props = JSON.stringify(defaultConnectorProps(event.target.value));
+  };
+  const onRequestFieldsChange = (data) => {
+    if (data) {
+      updateInputJson(JSON.stringify({
+        [connector_name]: {
+          "body": {
+            "paymentsRequest": data
+          }
+        }
+      }));
+    }
+    console.log("input json  " + inputJsonData);
+  }
+  const onRequestHeadersChange = (data) => {
+    console.log(data);
+  }
+  const onResponseFieldsChange = (data) => {
+    console.log(data);
+  }
   return (
     <div>
       <div className='dropdown-wrapper hs-headers'>
         <div style={{paddingRight: '10px'}}>
           <label htmlFor="dropdown">Connector: </label>
-          <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} />
+          {/* <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} /> */}
+        <input className='conector' type="text" placeholder="Connector Name" onChange={handleConnectorNameChange}
+          defaultValue={connectorName} />
         </div>
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='Flow Type' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='Payment Method' />
@@ -314,6 +357,7 @@ const CurlRequestExecutor = () => {
             <div className="curl-input-section">
               <h3>cURL Request</h3>
               <textarea
+                ref={curlTextareaRef} // Add the ref to the text area
                 style={{ height: '100%' }}
                 value={curlCommand}
                 onChange={(e) => updateCurlRequest(e.target.value)}
@@ -325,10 +369,10 @@ const CurlRequestExecutor = () => {
             </div>
             <div className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={requestHeaderFields} options={options}></JsonEditor>
+              <JsonEditor content={requestHeaderFields} options={{...options, onChange:onRequestHeadersChange}}></JsonEditor>
               <h3>Request Body Fields:</h3>
               {/* <div>{JSON.stringify(requestFields)}</div> */}
-              <JsonEditor content={requestFields} options={options}></JsonEditor>
+              <JsonEditor content={requestFields} options={{...options, onChange:onRequestFieldsChange}}></JsonEditor>
             </div>
 
             <div id="responseFieldsLeft" className="response-fields-left">
@@ -344,7 +388,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields}></JsonEditor>
+                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
@@ -354,6 +398,8 @@ const CurlRequestExecutor = () => {
           <div>
             <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+              console.log("before input");
+              console.log(inputJson);
               setCodeSnippet(generateRustCode(props.connector, inputJson));
               setConnectorContext({});
             }}>
@@ -363,7 +409,9 @@ const CurlRequestExecutor = () => {
           <div style={{ display: 'flex' }}>
             <div style={{ width: '50%', padding: '10px' }}>
               <h3>Generated Code Snippet</h3>
-              <SyntaxHighlighter language="rust">
+              <button onClick={handleCopyClick}>Copy to Clipboard</button>
+              {isCopied && <span style={{ marginLeft: '10px', color: 'green' }}>Copied to clipboard!</span>}
+              <SyntaxHighlighter language="rust" style={githubGist}>
                 {codeSnippet}
               </SyntaxHighlighter>
             </div>

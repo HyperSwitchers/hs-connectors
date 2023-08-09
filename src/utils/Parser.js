@@ -2,35 +2,81 @@ const nestedStructsMap = new Map();
 const structOccurrences = new Map();
 var nestedFields = {}
 var connectorName = localStorage.props ? JSON.parse(localStorage.props)?.connector : '';
-// const c_name = localStorage.props.connector;
 
 const connectorImports = `use api_models::payments::Card;
 use serde::{Deserialize, Serialize};
 use cards::CardNumber;
 use masking::Secret;
-use crate::{connector::utils::PaymentsAuthorizeRequestData,core::errors,types::{self,api, storage::enums::{self, Currency}}};`;
+use crate::{connector::utils::{PaymentsAuthorizeRequestData, RouterData},core::errors,types::{self,api, storage::enums::{self, Currency}}};`;
 
-const connectorAuthType = `//TODO: Fill the struct with respective fields
+const connectorSignatureKeyAuthType = `
 // Auth Struct
-pub struct CheckoutAuthType {
+pub struct ${connectorName}AuthType {
     pub(super) api_key: Secret<String>,
-    pub(super) processing_channel_id: Secret<String>,
+    pub(super) key1: Secret<String>,
     pub(super) api_secret: Secret<String>,
 }
 
-impl TryFrom<&types::ConnectorAuthType> for CheckoutAuthType {
+impl TryFrom<&types::ConnectorAuthType> for ${connectorName}AuthType {
     type Error = error_stack::Report<errors::ConnectorError>;
     fn try_from(auth_type: &types::ConnectorAuthType) -> Result<Self, Self::Error> {
         if let types::ConnectorAuthType::SignatureKey {
             api_key,
-            api_secret,
             key1,
+            api_secret,
         } = auth_type
         {
             Ok(Self {
                 api_key: api_key.to_owned(),
                 api_secret: api_secret.to_owned(),
-                processing_channel_id: key1.to_owned(),
+                key1: key1.to_owned(),
+            })
+        } else {
+            Err(errors::ConnectorError::FailedToObtainAuthType.into())
+        }
+    }
+}`;
+
+const connectorBodyKeyAuthType = `
+// Auth Struct
+pub struct ${connectorName}AuthType {
+    pub(super) api_key: Secret<String>,
+    pub(super) key1: Secret<String>,
+}
+
+impl TryFrom<&types::ConnectorAuthType> for ${connectorName}AuthType {
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(auth_type: &types::ConnectorAuthType) -> Result<Self, Self::Error> {
+        if let types::ConnectorAuthType::BodyKey {
+            api_key,
+            key1,
+        } = auth_type
+        {
+            Ok(Self {
+                api_key: api_key.to_owned(),
+                key1: key1.to_owned(),
+            })
+        } else {
+            Err(errors::ConnectorError::FailedToObtainAuthType.into())
+        }
+    }
+}`;
+
+const connectorHeaderKeyAuthType = `
+// Auth Struct
+pub struct ${connectorName}AuthType {
+    pub(super) api_key: Secret<String>,
+}
+
+impl TryFrom<&types::ConnectorAuthType> for ${connectorName}AuthType {
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(auth_type: &types::ConnectorAuthType) -> Result<Self, Self::Error> {
+        if let types::ConnectorAuthType::HeaderKey {
+            api_key,
+        } = auth_type
+        {
+            Ok(Self {
+                api_key: api_key.to_owned(),
             })
         } else {
             Err(errors::ConnectorError::FailedToObtainAuthType.into())
@@ -57,31 +103,6 @@ impl From<${connectorName}PaymentStatus> for enums::AttemptStatus {
             ${connectorName}PaymentStatus::Failed => Self::Failure,
             ${connectorName}PaymentStatus::Processing => Self::Authorizing,
         }
-    }
-}
-
-//TODO: Fill the struct with respective fields
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ${connectorName}PaymentsResponse {
-    status: ${connectorName}PaymentStatus,
-    id: String,
-}
-
-impl<F,T> TryFrom<types::ResponseRouterData<F, ${connectorName}PaymentsResponse, T, types::PaymentsResponseData>> for types::RouterData<F, T, types::PaymentsResponseData> {
-    type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: types::ResponseRouterData<F, ${connectorName}PaymentsResponse, T, types::PaymentsResponseData>) -> Result<Self,Self::Error> {
-        Ok(Self {
-            status: enums::AttemptStatus::from(item.response.status),
-            response: Ok(types::PaymentsResponseData::TransactionResponse {
-                resource_id: types::ResponseId::ConnectorTransactionId(item.response.id),
-                redirection_data: None,
-                mandate_reference: None,
-                connector_metadata: None,
-                network_txn_id: None,
-                connector_response_reference_id: None,
-            }),
-            ..item.data
-        })
     }
 }
 
@@ -185,18 +206,36 @@ const paymentsRequestTryFrom = `impl TryFrom<&types::PaymentsAuthorizeRouterData
 }`;
 // Define the replacements for dynamic values
 const replacements = {
-    amount_i64: "item.request.amount",
-    amount_decimal_String: "item.request.amount",
-    amount_base_String: "item.request.amount.to_string()",
-    card_number_String: `ccard.card_number.clone()`,
-    card_number_CardNumber: `ccard.card_number.clone()`,
+    amount_type_i64: "item.request.amount",
+    amount_type_f64: "utils::to_currency_base_unit_asf64(item.request.amount, item.request.currency)?",
+    amount_type_f64_String: "utils::to_currency_base_unit(item.request.amount, item.request.currency)?",
+    amount_type_base_String: "item.request.amount.to_string()",
+    card_number_type_CardNumber: `ccard.card_number.clone()`,
     card_exp_month_String: "ccard.card_exp_month.clone()",
     card_exp_year_String: "ccard.card_exp_year.clone()",
     card_cvc_String: "ccard.card_cvc.clone()",
-    card_holder_name: "ccard.card.card_holder_name.clone()",
+    card_holder_name_String: "ccard.card_holder_name.clone()",
     currency_Currency: "item.request.currency",
-    description: `item.request.description`,
-    email: `item.request.get_email()?`,
+    description_String: `item.get_description()?`,
+    email_type_Email: `item.request.get_email()?`,
+    billing_country_CountryAlpha2: `item.request.billing.address.get_country()?`,
+    shipping_country_CountryAlpha2: `item.request.shipping.address.get_country()?`,
+    billing_address_line1_String: `item.request.billing.address.get_line1()?`,
+    billing_address_line2_String: `item.request.billing.address.get_line2()?`,
+    billing_address_city_String: `item.request.billing.address.get_city()?`,
+    billing_address_state_String: `item.request.billing.address.get_state()?`,
+    billing_address_zip_String: `item.request.billing.address.get_zip()?`,
+    billing_address_firstname_String: `item.request.billing.address.get_firstname()?`,
+    billing_address_lastname_String: `item.request.billing.address.get_lastname()?`,
+    is_auto_capture_bool: `item.request.is_auto_capture()?`,
+    payment_id_String: "item.attempt_id.clone()"
+};
+
+const responseReplacements = {
+    status: "status",
+    transactionId: "transactionId",
+    redirectionData: "redirection_data",
+    amountCaptured: "amount_captured"
 };
 
 function toSnakeCase(str) {
@@ -221,28 +260,51 @@ function removeQuotes(jsonString) {
 }
 
 function typeReplacement(fieldTypeValue) {
-    if (fieldTypeValue?.toLowerCase() == "base_string" || fieldTypeValue?.toLowerCase() == "decimal_string") {
-        return 'String';
+    const lastIndex = fieldTypeValue.lastIndexOf("_");
+    if (lastIndex !== -1) {
+        return fieldTypeValue.substring(lastIndex + 1);
     }
-    else {
-        return fieldTypeValue;
-    }
+    return fieldTypeValue;
 }
 
+function generateRustEnumStruct(name, fields) {
+    let structFields = fields.type.map((element) => toPascalCase(element));
+
+    const header = shouldAddCamelCaseHeader(fields.type.map(([fieldName]) => fieldName))
+        ? '#[serde(rename_all = "camelCase")]'
+        : '';
+
+    const rustStruct = `
+${header}
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ${name} {
+${structFields.join(',\n')}
+}
+`;
+    return rustStruct;
+}
+//(toSnakeCase(amount),  {value:, optional:, ..}, $parentName)
 function generateRustStructField(fieldName, fieldValue, parentName) {
     let fieldType = typeReplacement(fieldValue.type);
 
-    if (Array.isArray(fieldValue.value)) {
+    if (Array.isArray(fieldValue.type)) {
+        const structName = toPascalCase(`${parentName}_${fieldName}`);
+        fieldType = structName;
+        if (!nestedStructsMap.has(structName)) {
+            // console.log(`${structName}\n---------\n`)
+            nestedStructsMap.set(structName, generateRustEnumStruct(structName, fieldValue));
+        }
+    } else if (Array.isArray(fieldValue.value)) {
         // fieldType = `Vec<${toPascalCase(`${parentName}_${fieldName}`)}>`;
         let fieldValueItem = fieldValue.value[0];
         // console.log(`$$$$$JSON.stringify(fieldValueItem)`);
         if (typeof fieldValueItem.value === 'object') {
             const structName = toPascalCase(`${parentName}_${fieldName}_item`);
             fieldType = `${structName}`;
-            if (fieldValueItem.isSecret) {
+            if (fieldValueItem.secret) {
                 fieldType = `Secret<${fieldType}>`
             }
-            if (fieldValueItem.isOption) {
+            if (fieldValueItem.optional) {
                 fieldType = `Option<${fieldType}>`
             }
             fieldType = `Vec<${fieldType}>`;
@@ -266,16 +328,21 @@ function generateRustStructField(fieldName, fieldValue, parentName) {
     }
 
 
-    if (fieldValue.isSecret) {
+    if (fieldValue.secret) {
         fieldType = `Secret<${fieldType}>`
     }
-    if (fieldValue.isOption) {
+    if (fieldValue.optional) {
         fieldType = `Option<${fieldType}>`
     }
 
     if (fieldName == "type") {
         fieldName = `${parentName}_${fieldName}`
         return `    #[serde(rename = "type")]
+    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
+    }
+    if (fieldName == "self") {
+        fieldName = `${parentName}_${fieldName}`
+        return `    #[serde(rename = "self")]
     pub ${toSnakeCase(fieldName)}: ${fieldType},`;
     }
     return `    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
@@ -287,8 +354,9 @@ function shouldAddCamelCaseHeader(fields) {
 
 
 //(Name of the Struct, Array of [key, values] of fields inside that struct)
+//($parentName_structName, [[amount, {value: , optional:, ...}], [card, {value: {}, optional:, ...}] ])
 function generateRustStruct(name, fields) {
-    let structFields = fields.map(([fieldName, fieldValue]) =>
+    let structFields = fields.map(([fieldName, fieldValue]) =>  //[amount, {value:, optional:, ..}]
         generateRustStructField(toSnakeCase(fieldName), fieldValue, name)
     );
 
@@ -298,7 +366,7 @@ function generateRustStruct(name, fields) {
 
     const rustStruct = `
 ${header}
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ${name} {
 ${structFields.join('\n')}
 }
@@ -310,12 +378,13 @@ ${structFields.join('\n')}
 function generateNestedStructs(inputObject, parentName) {
     const structs = [];
 
-    function processObject(inputObj, parentName) {
+    function processObject(inputObj, parentName) { //( { paymentsRequest: {}, paymentsResponse: {} }, ConnectorName)
         // [[key, Value], [key, Value]]
-        Object.entries(inputObj).forEach(([structName, structFields]) => {
+        Object.entries(inputObj).forEach(([structName, structFields]) => { // [structname, structFields] = [paymentsRequest, {amount: {}, card:{}, currency:{}, }]
 
             if (typeof structFields === 'object') {
                 //Get [key, value] of nested objects, the map will return Array([key, value])
+                // fields = [[amount, {value: , optional:, ...}], [card, {value: {}, optional:, ...}] ]
                 const fields = Object.keys(structFields).map((fieldName) => [fieldName, structFields[fieldName]]);
 
                 // Generate unique field names for nested structs
@@ -339,15 +408,21 @@ function generateNestedStructs(inputObject, parentName) {
     return structs;
 }
 function replaceDynamicFields(value, type) {
-    if (typeof value === "string" && value.startsWith("$")) {
-        // Extract the dynamic value name without the "$" prefix
-        const dynamicValueName = value.substring(1);
+    if (typeof value === "string") {
+        if (value.startsWith("$")) {
 
-        // Check if a replacement is available for the dynamic value
-        const replacement = replacements[`${dynamicValueName}_${type}`] || value;
+            // Extract the dynamic value name without the "$" prefix
+            const dynamicValueName = value.substring(1);
 
-        // Store the replacement value for this field
-        return replacement;
+            // Check if a replacement is available for the dynamic value
+            const replacement = replacements[`${dynamicValueName}_${type}`] || value;
+
+            // Store the replacement value for this field
+            return replacement;
+        } else {
+            return `"${value}".to_string()`
+        }
+
     } else {
         // If the value is not a dynamic value or nested object, treat it as a regular value
         return value;
@@ -362,7 +437,15 @@ function generateNestedInitStructs(inputObject, parentName) {
         // [[key, Value], [key, Value]]
         const a = inputObj ? Object.entries(inputObj).forEach(([structName, structFields]) => {
             // console.log(`${structName}-----${structFields}`);
-            if (typeof structFields.value === 'object') {
+            if (Array.isArray(structFields.type)) {
+                const fullName = parentName ? `${parentName}_${structName}` : structName;
+                let variableValue = `${toPascalCase(fullName)}::${toPascalCase(structFields.type[0])}`;
+                structs.push(`let ${toSnakeCase(fullName)} = ${variableValue};`);
+                if (structName == "type" || structName == "self") {
+                    structName = toSnakeCase(`${parentName}_${structName}`)
+                }
+                nestedFields[toSnakeCase(structName)] = toSnakeCase(fullName)
+            } else if (typeof structFields.value === 'object') {
                 //Get [key, value] of nested objects, the map will return Array([key, value])
                 // const fields = Object.keys(structFields).map((fieldName) => [fieldName, structFields[fieldName]]);
 
@@ -372,24 +455,24 @@ function generateNestedInitStructs(inputObject, parentName) {
                 let internallyNestedFields = processObject(structFields.value, toPascalCase(fullName))
                 // structs.push(`let ${toSnakeCase(fullName)} = ${toPascalCase(fullName)}${JSON.stringify(internallyNestedFields)};`);
                 let variableValue = `${toPascalCase(fullName)}${removeQuotes(JSON.stringify(internallyNestedFields))}`;
-                // if (structFields.isSecret) {
+                // if (structFields.secret) {
                 //     variableValue = `$Secret::new(${variableValue})`
                 // }
-                // if (structFields.isOption) {
+                // if (structFields.optional) {
                 //     variableValue = `Some(${variableValue})`
                 // }
                 structs.push(`let ${toSnakeCase(fullName)} = ${variableValue};`);
                 nestedFields[toSnakeCase(structName)] = toSnakeCase(fullName)
             } else {
                 // If it's a primitive field, generate the field definition
-                if (structName == "type") {
+                if (structName == "type" || structName == "self") {
                     structName = toSnakeCase(`${parentName}_${structName}`)
                 }
                 let variableValue = replaceDynamicFields(structFields.value, structFields.type);
-                // if (structFields.isSecret) {
+                // if (structFields.secret) {
                 //     variableValue = `$Secret::new(${variableValue})`
                 // }
-                // if (structFields.isOption) {
+                // if (structFields.optional) {
                 //     variableValue = `Some(${variableValue})`
                 // }
                 nestedFields[toSnakeCase(structName)] = variableValue;
@@ -407,7 +490,43 @@ function generateNestedInitStructs(inputObject, parentName) {
     return structs;
 }
 
-function printTemplateCode(nestedStructs2) {
+function generatedResponseVariables(inputObject, parentName) {
+    const structs = [];
+    function processObject(inputObj, parentName) {
+        // const nestedFields = {};
+        // [[key, Value], [key, Value]]
+        const a = Object.entries(inputObj).forEach(([structName, structFields]) => {
+            // console.log(`${structName}-----${structFields}`);
+            if (typeof structFields.value === 'object') {
+                const fullName = parentName ? `${parentName}.${structName}` : structName;
+                processObject(structFields.value, toSnakeCase(fullName))
+            } else {
+                // If it's a primitive field, generate the field definition
+                if (structName == "type" || structName == "self") {
+                    structName = toSnakeCase(`${parentName}_${structName}`)
+                }
+
+                if (typeof structFields.value === "string" && structFields.value.startsWith("$")) {
+                    // Extract the dynamic value name without the "$" prefix
+                    const dynamicValueName = structFields.value.substring(1);
+                    // console.log(dynamicValueName);
+                    // Check if a replacement is available for the dynamic value
+                    const replacement = responseReplacements[`${dynamicValueName}`] || dynamicValueName;
+
+                    // Store the replacement value for this field
+                    // nestedFields[toSnakeCase(replacement)] = `${parentName}.${toSnakeCase(structName)}`;
+                    structs.push(`let ${toSnakeCase(replacement)} = ${parentName}.${toSnakeCase(structName)};`)
+                }
+            }
+        });
+
+        return;
+    }
+    processObject(inputObject, parentName);
+    return structs;
+}
+
+function printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode) {
     let generatedTryFrom = `impl TryFrom<(&types::PaymentsAuthorizeRouterData, &Card)> for ${connectorName}PaymentsRequest {
         type Error = error_stack::Report<errors::ConnectorError>;
         fn try_from(value: (&types::PaymentsAuthorizeRouterData, &Card)) -> Result<Self, Self::Error> {
@@ -417,10 +536,29 @@ function printTemplateCode(nestedStructs2) {
         }
     }    `;
 
-    let output = `${connectorImports}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
-    // let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
+    let generatedResponseTryFrom = `impl<F,T> TryFrom<types::ResponseRouterData<F, ${connectorName}PaymentsResponse, T, types::PaymentsResponseData>> for types::RouterData<F, T, types::PaymentsResponseData> {
+        type Error = error_stack::Report<errors::ConnectorError>;
+        fn try_from(item: types::ResponseRouterData<F, ${connectorName}PaymentsResponse, T, types::PaymentsResponseData>) -> Result<Self,Self::Error> {
+            ${nestedStructs3.join('\n\t\t\t')}
+            Ok(Self {
+                status,
+                response: Ok(types::PaymentsResponseData::TransactionResponse {
+                    resource_id: types::ResponseId::ConnectorTransactionId(transaction_id),
+                    redirection_data: None,
+                    mandate_reference: None,
+                    connector_metadata: None,
+                    network_txn_id: None,
+                    connector_response_reference_id: None,
+                }),
+                ..item.data
+            })
+        }
+    }`
+
+    let output = `${connectorImports}\n${connectorAuthCode}\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n${generatedResponseTryFrom}\n${connectorTemplate}`;
+    // let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
-    console.log(output);
+    console.log("Check",output);
     return output;
 }
 
@@ -430,9 +568,16 @@ export const generateRustCode = (connector, inputJson2) => {
     const inputObject2 = JSON.parse(inputJson2);
     const nestedStructs = generateNestedStructs(inputObject2[connectorName]?.body, connectorName);
     const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${toPascalCase(connectorName)}PaymentsRequest`);
+    const nestedStructs3 = generatedResponseVariables(inputObject2[connectorName]?.body.paymentsResponse, `item.response`);
     // console.log(`${[...nestedStructsMap.values()]}`);
     // console.log(`${[...structOccurrences.values()]}`);
-    return printTemplateCode(nestedStructs2);
+    let connectorAuthCode = connectorHeaderKeyAuthType;
+    switch (inputObject2[connectorName]?.authType) {
+        case "HeaderLey": connectorAuthCode = connectorHeaderKeyAuthType; break;
+        case "BodyKey": connectorAuthCode = connectorBodyKeyAuthType; break;
+        case "SignatureKey": connectorAuthCode = connectorSignatureKeyAuthType; break;
+    };
+    return printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode);
     // console.log(nestedStructs2.join('\n'))
 
     // return nestedStructs.join('\n');
