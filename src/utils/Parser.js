@@ -186,17 +186,17 @@ const paymentsRequestTryFrom = `impl TryFrom<&types::PaymentsAuthorizeRouterData
 // Define the replacements for dynamic values
 const replacements = {
     amount_type_i64: "item.request.amount",
-    amount_type_decimal: "utils::to_currency_base_unit_asf64(item.request.amount, item.request.currency)?",
-    amount_type_decimal_string: "utils::to_currency_base_unit(item.request.amount, item.request.currency)?",
-    amount_type_base_string: "item.request.amount.to_string()",
-    card_number_CardNumber: `ccard.card_number.clone()`,
+    amount_type_f64: "utils::to_currency_base_unit_asf64(item.request.amount, item.request.currency)?",
+    amount_type_f64_String: "utils::to_currency_base_unit(item.request.amount, item.request.currency)?",
+    amount_type_base_String: "item.request.amount.to_string()",
+    card_number_type_CardNumber: `ccard.card_number.clone()`,
     card_exp_month_String: "ccard.card_exp_month.clone()",
     card_exp_year_String: "ccard.card_exp_year.clone()",
     card_cvc_String: "ccard.card_cvc.clone()",
     card_holder_name_String: "ccard.card.card_holder_name.clone()",
     currency_Currency: "item.request.currency",
     description_String: `item.request.description`,
-    email_Email: `item.request.get_email()?`,
+    email_type_Email: `item.request.get_email()?`,
     billing_country_CountryAlpha2: `item.request.billing.address.get_country()?`,
     shipping_country_CountryAlpha2: `item.request.shipping.address.get_country()?`,
     billing_address_line1_String: `item.request.billing.address.get_line1()?`,
@@ -206,6 +206,7 @@ const replacements = {
     billing_address_zip_String: `item.request.billing.address.get_zip()?`,
     billing_address_firstname_String: `item.request.billing.address.get_firstname()?`,
     billing_address_lastname_String: `item.request.billing.address.get_lastname()?`,
+    is_auto_capture_bool: `item.request.is_auto_capture()?`,
 };
 
 function toSnakeCase(str) {
@@ -429,7 +430,7 @@ function printTemplateCode(nestedStructs2) {
     let output = `${connectorImports}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${connectorImports}\n\n${connectorAuthType}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
-    console.log(output);
+    console.log("Check",output);
     return output;
 }
 

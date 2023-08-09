@@ -276,15 +276,26 @@ const CurlRequestExecutor = () => {
     console.log("Submitted JSON Data:", jsonData);
   };
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
-
-
-  const inputJson = JSON.stringify({
+  
+  var inputJsonData = JSON.stringify({
     [connector_name]: {
       "body": {
         "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
       }
     }
   });
+
+  const[inputJson, setInputJson] = useState('');
+  const updateInputJson = (inputJsonData) => {
+    setInputJson(inputJsonData);
+  };
+  // var inputJson = JSON.stringify({
+  //   [connector_name]: {
+  //     "body": {
+  //       "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
+  //     }
+  //   }
+  // });
   console.log(inputJson)
   const curlTextareaRef = useRef(null);
 
@@ -304,6 +315,24 @@ const CurlRequestExecutor = () => {
     setConnectorName(event.target.value);
     localStorage.props = JSON.stringify(defaultConnectorProps(event.target.value));
   };
+  const onRequestFieldsChange = (data) => {
+    if (data) {
+      updateInputJson(JSON.stringify({
+        [connector_name]: {
+          "body": {
+            "paymentsRequest": data
+          }
+        }
+      }));
+    }
+    console.log("input json  " + inputJsonData);
+  }
+  const onRequestHeadersChange = (data) => {
+    console.log(data);
+  }
+  const onResponseFieldsChange = (data) => {
+    console.log(data);
+  }
   return (
     <div>
       <div className='dropdown-wrapper hs-headers'>
@@ -340,10 +369,10 @@ const CurlRequestExecutor = () => {
             </div>
             <div className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={requestHeaderFields} options={options}></JsonEditor>
+              <JsonEditor content={requestHeaderFields} options={{...options, onChange:onRequestHeadersChange}}></JsonEditor>
               <h3>Request Body Fields:</h3>
               {/* <div>{JSON.stringify(requestFields)}</div> */}
-              <JsonEditor content={requestFields} options={options}></JsonEditor>
+              <JsonEditor content={requestFields} options={{...options, onChange:onRequestFieldsChange}}></JsonEditor>
             </div>
 
             <div id="responseFieldsLeft" className="response-fields-left">
@@ -359,7 +388,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields}></JsonEditor>
+                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
@@ -369,6 +398,8 @@ const CurlRequestExecutor = () => {
           <div>
             <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+              console.log("before input");
+              console.log(inputJson);
               setCodeSnippet(generateRustCode(props.connector, inputJson));
               setConnectorContext({});
             }}>

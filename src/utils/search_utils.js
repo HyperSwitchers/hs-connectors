@@ -41,9 +41,13 @@ export const synonymMapping = {
     setup_future_usage: ["storePaymentMethod"],
     return_url: ["returnUrl", ""],
     type_i64:[],
-    type_decimal:[],
-    type_base_string:[],
-    type_decimal_string:[],
+    type_f64:[],
+    type_base_String:[],
+    type_f64_String:[],
+    type_CardNumber:[],
+    type_Email:[],
+    enum:[],
+    is_auto_capture: ["auto_capture", "captured", "submit_for_settlement", "intent"],
 };
 
 export default function mapFieldNames(input) {

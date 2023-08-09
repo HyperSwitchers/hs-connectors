@@ -7,7 +7,8 @@ function JsonEditor({
     content = {},
     options = {
         mode: "tree",
-        modes: ["tree", "code"]
+        modes: ["tree", "code"],
+        onChange: (e) => {},
     }, 
     is_saveable = false, 
     onSave = (editor) => { },
@@ -114,7 +115,9 @@ function JsonEditor({
     useEffect(() => {
         if (!jsonEditor && !isLoaded) {
             isLoaded = true;
-            const requestEditor = new JSONEditor(jsonEditorRef.current, use_custom_options ? customOptions : options);
+            let editorOptions = use_custom_options ? customOptions : options;
+            editorOptions = {... editorOptions, onChangeText: onEditorContentChange}
+            const requestEditor = new JSONEditor(jsonEditorRef.current, editorOptions);
             setJsonEditor(requestEditor);
             requestEditor.set(content);
             requestEditor.expandAll();
@@ -124,6 +127,10 @@ function JsonEditor({
             jsonEditor.expandAll();
         }
     }, [content]);
+
+    const onEditorContentChange = (e) => {
+      options.onChange(JSON.parse(e));
+    } 
 
     return (
         <div className='editor'>
