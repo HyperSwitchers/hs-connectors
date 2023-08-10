@@ -42,7 +42,7 @@ const initialStatusMapping = {
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST '/https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+    useState(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
       "source": {
         "type": "card",
         "number": "4242424242424242",
