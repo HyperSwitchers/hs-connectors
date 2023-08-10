@@ -611,9 +611,9 @@ function generatedResponseVariables(inputObject, parentName) {
     return structs;
 }
 
-function printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCode) {
+function printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping) {
 
-    let output = `${connectorImports}\n\n${connectorAuthCode}\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${connectorTemplateCode}`;
+    let output = `${connectorImports}\n\n${connectorAuthCode}\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}`;
     // let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
     console.log("Check", output);
@@ -625,7 +625,7 @@ export const generateRustCode = (connector, inputJson) => {
     connectorName = connector;
 
     const attemptStatusMapping = inputObject[connectorName]?.attemptStatus && generateStatusMapping("AttemptStatus", inputObject[connectorName]?.attemptStatus);
-    const refundStatusMapping = inputObject[connectorName]?.refundStatus && generateStatusMapping("RefundStatus", inputObject[connectorName]?.refundStatus);
+    let refundStatusMapping = inputObject[connectorName]?.refundStatus && generateStatusMapping("RefundStatus", inputObject[connectorName]?.refundStatus);
 
     const tryFromsArray = [];
 
@@ -654,8 +654,9 @@ export const generateRustCode = (connector, inputJson) => {
     let connectorTemplateCode = '';
     if (!refundFlag) {
         connectorTemplateCode = connectorTemplate;
+        refundStatusMapping = '';
     }
-    return printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCode);
+    return printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping);
     // console.log(nestedStructs2.join('\n'))
 
     // return nestedStructs.join('\n');
