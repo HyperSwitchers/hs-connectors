@@ -273,10 +273,13 @@ const CurlRequestExecutor = () => {
     setStatusMappingPopupOpen(false);
   };
 
-  const handleStatusMappingSubmit = (jsonData) => {
+  const [statusMappingData, setStatusMappingData] = useState(initialStatusMapping);
+  const handleStatusMappingData = (jsonData) => {
+    setStatusMappingData(jsonData);
     // Do something with the submitted JSON data (jsonData)
     console.log("Submitted JSON Data:", jsonData);
   };
+
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
   
   let y = localStorage?.auth_type? JSON.parse(localStorage?.auth_type) : {};
@@ -386,7 +389,7 @@ const CurlRequestExecutor = () => {
                 hsResponseFields && <JsonEditor content={mappedResponseFields} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
-              {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
+              {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)
               }
             </div>
           </div>
@@ -398,10 +401,13 @@ const CurlRequestExecutor = () => {
               let x = JSON.stringify({
                 [connector_name]: {
                   "authType": y.type,
-                  "body": {
+                  "flows": {
+                    "Authorize":{
                     "paymentsRequest": updateRequestData,
                     "paymentsResponse": updateResponseData
-                  }
+                    }
+                  },
+                  "attemptStatus": statusMappingData
                 }
               });
               updateInputJson(x);

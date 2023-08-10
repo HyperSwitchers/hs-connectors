@@ -45,6 +45,7 @@ export const synonymMapping = {
     type_base_String:[],
     type_f64_String:[],
     type_CardNumber:[],
+    type_Currency:[],
     type_Email:[],
     enum:[],
     is_auto_capture: ["auto_capture", "captured", "submit_for_settlement", "intent"],

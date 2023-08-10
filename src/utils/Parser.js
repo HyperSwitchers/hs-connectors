@@ -215,7 +215,7 @@ const replacements = {
     card_exp_year_String: "ccard.card_exp_year.clone()",
     card_cvc_String: "ccard.card_cvc.clone()",
     card_holder_name_String: "ccard.card_holder_name.clone()",
-    currency_Currency: "item.request.currency",
+    currency_type_Currency: "item.request.currency",
     description_String: `item.get_description()?`,
     email_type_Email: `item.request.get_email()?`,
     billing_country_CountryAlpha2: `item.request.billing.address.get_country()?`,
