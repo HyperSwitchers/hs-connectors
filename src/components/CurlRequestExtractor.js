@@ -12,7 +12,7 @@ import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
 import ConnectorTemplates, { defaultConnectorProps } from "./ConnectorTemplates";
 import StatusMappingPopup from "./StatusMappingPopup";
-import { generateRustCode, toPascalCase } from "utils/Parser";
+import { generateRustCode, responseReplacements, toPascalCase } from "utils/Parser";
 
 const initialStatusMapping = {
   Started: null,
@@ -330,6 +330,7 @@ const CurlRequestExecutor = () => {
   const onRequestFieldsChange = (data) => {
     if (data) {
       setUpdateRequestData(data);
+      setRequestFields(data);
     }
   }
   const onRequestHeadersChange = (data) => {
@@ -396,7 +397,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                hsResponseFields && <JsonEditor content={{...mappedResponseFields}} use_custom_options={true} options_data={hsResponseFields} options={{...options, onChange:setMappedResponseFields}}></JsonEditor>
+                <JsonEditor content={{...mappedResponseFields}} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{...options, onChange:setMappedResponseFields}}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)

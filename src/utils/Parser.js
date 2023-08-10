@@ -198,7 +198,7 @@ const replacements = {
     payment_id_String: "item.attempt_id.clone()"
 };
 
-const responseReplacements = {
+export const responseReplacements = {
     status: "status",
     transactionId: "transaction_id",
     redirectionData: "redirection_data",
