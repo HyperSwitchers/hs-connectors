@@ -61,15 +61,6 @@ const CurlRequestExecutor = () => {
       "description":"asdasd"
   }`);
   const suggestions = Object.keys(synonymMapping);
-  const staticResponse = {
-    status: "",
-    response: {
-      response_id: "",
-      card: {
-        number: "",
-      },
-    },
-  };
   const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
@@ -95,6 +86,15 @@ const CurlRequestExecutor = () => {
   const [curlRequest, setCurlRequest] = useState({});
   const [responseFields, setResponseFields] = useState({});
   const [hsResponseFields, setHsResponseFields] = useState({});
+  const [hsMapping, setHsMapping] = useState({
+    status: "",
+    response: {
+      response_id: "",
+      card: {
+        number: "",
+      },
+    },
+  });
   const [requestFields, setRequestFields] = useState({});
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
@@ -194,7 +194,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "/cors/" + curlRequest.url;
+    let url = "http://localhost:5050/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -252,7 +252,14 @@ const CurlRequestExecutor = () => {
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
 
   const handleFlowOptionChange = (event) => {
-    setSelectedFlowOption(event.target.value);
+    let flow = event.target.value;
+    let curl = JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl;
+    setCurlCommand(curl?.input || '');
+    setRequestFields(curl?.body || {});
+    setRequestHeaderFields(curl?.headers || {});
+    setResponseFields(curl?.response || {});
+    setHsResponseFields(curl?.hsResponse || {});
+    setSelectedFlowOption(flow);
   };
 
   const handlePaymentMethodOptionChange = (event) => {
@@ -296,7 +303,6 @@ const CurlRequestExecutor = () => {
   //     }
   //   }
   // });
-  console.log(inputJson)
   const curlTextareaRef = useRef(null);
 
   const [isCopied, setIsCopied] = useState(false);
@@ -326,12 +332,6 @@ const CurlRequestExecutor = () => {
       }));
     }
     console.log("input json  " + inputJsonData);
-  }
-  const onRequestHeadersChange = (data) => {
-    console.log(data);
-  }
-  const onResponseFieldsChange = (data) => {
-    console.log(data);
   }
   return (
     <div>
@@ -369,15 +369,15 @@ const CurlRequestExecutor = () => {
             </div>
             <div className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={requestHeaderFields} options={{...options, onChange:onRequestHeadersChange}}></JsonEditor>
+              <JsonEditor content={{...requestHeaderFields}} options={{...options, onChange:setRequestHeaderFields}}></JsonEditor>
               <h3>Request Body Fields:</h3>
               {/* <div>{JSON.stringify(requestFields)}</div> */}
-              <JsonEditor content={requestFields} options={{...options, onChange:onRequestFieldsChange}}></JsonEditor>
+              <JsonEditor content={{...requestFields}} options={{...options, onChange:onRequestFieldsChange}}></JsonEditor>
             </div>
 
             <div id="responseFieldsLeft" className="response-fields-left">
               <h3>Response</h3>
-              <JsonEditor content={responseFields}></JsonEditor>
+              <JsonEditor content={{...responseFields}} options={{...options, onChange:setResponseFields}}></JsonEditor>
             </div>
 
             <div id="responseFieldsRight" className="response-fields-right">
@@ -388,7 +388,12 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
+                hsResponseFields && <JsonEditor 
+                content={{...hsMapping}}
+                use_custom_options={true}
+                options_data={hsResponseFields}
+                options={{...options, onChange:setHsMapping}}
+                ></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
@@ -399,9 +404,8 @@ const CurlRequestExecutor = () => {
             <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
               console.log("before input");
-              console.log(inputJson);
               setCodeSnippet(generateRustCode(props.connector, inputJson));
-              setConnectorContext({});
+              setConnectorContext({...{}});
             }}>
               Generate Code
             </button>
@@ -417,7 +421,9 @@ const CurlRequestExecutor = () => {
             </div>
             <div style={{ padding: '10px' }}>
               <div style={{ width: '50%' }}>
-                <ConnectorTemplates context={connectorContext}></ConnectorTemplates>
+                <ConnectorTemplates 
+                curl={{...{connector: connectorName, flow: selectedFlowOption, input: curlCommand, body: requestFields, headers: requestHeaderFields, response: responseFields, hsResponse: hsMapping }}} 
+                context={connectorContext}></ConnectorTemplates>
               </div>
             </div>
           </div>

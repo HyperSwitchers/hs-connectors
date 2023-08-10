@@ -53,11 +53,11 @@ where
 {
     fn build_headers(
         &self,
-        _req: &types::RouterData<Flow, Request, Response>,
+        req: &types::RouterData<Flow, Request, Response>,
         _connectors: &settings::Connectors,
     ) -> CustomResult<Vec<(String, request::Maskable<String>)>, errors::ConnectorError> {
 
-        let headers = vec![
+        let mut headers = vec![
             {{#contains headers "content_type"}}
             (
                 headers::CONTENT_TYPE.to_string(),
@@ -87,14 +87,6 @@ impl ConnectorCommon for {{struct_name}} {
         "{{content_type}}"
     }
 
-    fn validate_auth_type(
-        &self,
-        val: &types::ConnectorAuthType,
-    ) -> Result<(), error_stack::Report<errors::ConnectorError>> {
-        {{connector_name}}::{{struct_name}}AuthType::try_from(val)?;
-        Ok(())
-    }
-
     fn base_url<'a>(&self, connectors: &'a settings::Connectors) -> &'a str {
         connectors.{{connector_name}}.base_url.as_ref()
     }
@@ -106,8 +98,8 @@ impl ConnectorCommon for {{struct_name}} {
         let auth = {{connector_name}}::{{struct_name}}AuthType::try_from(auth_type)
             .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
         Ok(vec![(
-            {{header_auth_key}},
-            {{header_auth_value}},
+            {{{header_auth_key}}},
+            {{{header_auth_value}}},
         )])
     }
 }
@@ -128,7 +120,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
     }
     {{/contains}}
     {{#contains enabled "get_url"}}
-    fn get_url(&self, _req: &{{{router_type}}}, _connectors: &settings::Connectors,) -> CustomResult<String,errors::ConnectorError> {
+    fn get_url(&self, req: &{{{router_type}}}, connectors: &settings::Connectors,) -> CustomResult<String,errors::ConnectorError> {
         {{#if url_path}}
             Ok(format!(
                 "{}{{url_path}}",
@@ -174,7 +166,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
     fn handle_response(
         &self,
         data: &{{{router_type}}},
-        res: types::Response,
+        res: Response,
     ) -> CustomResult<{{{router_type}}},errors::ConnectorError> {
         let response: {{connector_name}}::{{struct_name}}{{response_type}} = res.response.parse_struct("{{struct_name}}{{response_type}}").change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
         types::{{router_data_type}}::try_from(types::ResponseRouterData {
@@ -185,7 +177,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
     }
     {{/contains}}
     {{#contains enabled "get_error_response"}}
-    fn get_error_response(&self, res: types::Response) -> CustomResult<ErrorResponse,errors::ConnectorError> {
+    fn get_error_response(&self, res: Response) -> CustomResult<ErrorResponse,errors::ConnectorError> {
         self.build_error_response(res)
     }
     {{/contains}}

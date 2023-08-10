@@ -16,6 +16,7 @@ function JsonEditor({
     options_data = {},
 }) {
     const [customOptionsData, setCustomOptionsData] = useState(options_data);
+    const [editorContent, setEditorContent] = useState();
     const jsonEditorRef = useRef();
     const activationChar = "$";
     const customOptions = {
@@ -116,19 +117,21 @@ function JsonEditor({
         if (!jsonEditor && !isLoaded) {
             isLoaded = true;
             let editorOptions = use_custom_options ? customOptions : options;
-            editorOptions = {... editorOptions, onChangeText: onEditorContentChange}
+            editorOptions = {...editorOptions, onChangeText: onEditorContentChange}
             const requestEditor = new JSONEditor(jsonEditorRef.current, editorOptions);
             setJsonEditor(requestEditor);
             requestEditor.set(content);
             requestEditor.expandAll();
         }
-        else if (jsonEditor) {
-            jsonEditor.set(content);
-            jsonEditor.expandAll();
+        else if (jsonEditor && JSON.stringify(editorContent) !== JSON.stringify(content)) {
+          jsonEditor.set(content);
+          jsonEditor.expandAll();
         }
+
     }, [content]);
 
     const onEditorContentChange = (e) => {
+      setEditorContent(JSON.parse(e));
       options.onChange(JSON.parse(e));
     } 
 

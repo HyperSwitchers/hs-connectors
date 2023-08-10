@@ -380,7 +380,7 @@ function generateNestedStructs(inputObject, parentName) {
 
     function processObject(inputObj, parentName) { //( { paymentsRequest: {}, paymentsResponse: {} }, ConnectorName)
         // [[key, Value], [key, Value]]
-        Object.entries(inputObj).forEach(([structName, structFields]) => { // [structname, structFields] = [paymentsRequest, {amount: {}, card:{}, currency:{}, }]
+        inputObj && Object.entries(inputObj).forEach(([structName, structFields]) => { // [structname, structFields] = [paymentsRequest, {amount: {}, card:{}, currency:{}, }]
 
             if (typeof structFields === 'object') {
                 //Get [key, value] of nested objects, the map will return Array([key, value])
@@ -495,7 +495,7 @@ function generatedResponseVariables(inputObject, parentName) {
     function processObject(inputObj, parentName) {
         // const nestedFields = {};
         // [[key, Value], [key, Value]]
-        const a = Object.entries(inputObj).forEach(([structName, structFields]) => {
+        const a = inputObj ? Object.entries(inputObj).forEach(([structName, structFields]) => {
             // console.log(`${structName}-----${structFields}`);
             if (typeof structFields.value === 'object') {
                 const fullName = parentName ? `${parentName}.${structName}` : structName;
@@ -518,7 +518,7 @@ function generatedResponseVariables(inputObject, parentName) {
                     structs.push(`let ${toSnakeCase(replacement)} = ${parentName}.${toSnakeCase(structName)};`)
                 }
             }
-        });
+        }) : '';
 
         return;
     }
@@ -565,7 +565,7 @@ function printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode) {
 export const generateRustCode = (connector, inputJson2) => {
     // const inputObject = JSON.parse(inputJson);
     connectorName = connector;
-    const inputObject2 = JSON.parse(inputJson2);
+    const inputObject2 = inputJson2 ? JSON.parse(inputJson2) : {};
     const nestedStructs = generateNestedStructs(inputObject2[connectorName]?.body, connectorName);
     const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${toPascalCase(connectorName)}PaymentsRequest`);
     const nestedStructs3 = generatedResponseVariables(inputObject2[connectorName]?.body.paymentsResponse, `item.response`);

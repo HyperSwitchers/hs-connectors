@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import handlebars from 'handlebars';
 import { ConnectorCommon, ConnectorIntegration, ConnectorWebhook } from 'templates/ConnectorIntegration';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -10,6 +10,11 @@ function toPascalCase(str) {
     .split(/\s|_|-/g) // Split by whitespace, underscore, or hyphen
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join('');
+}
+function toCamelCase(str) {
+  return str.replace(/(?:^\w|[A-Z]|\b\w)/g, (match, index) => {
+    return index === 0 ? match.toLowerCase() : match.toUpperCase();
+  }).replace(/\s+/g, '');
 }
 
 export const defaultConnectorProps = (connector) => {
@@ -135,7 +140,7 @@ const ConnectorTemplate = ({ context = {
   response_data: 'types::PaymentsResponseData',
   struct_name: 'Shift4',
   connector_name: 'shift4'
-} }) => {
+}, curl = { connector: '', flow: '', input: '', body: undefined, headers: undefined, response: undefined, hsResponse: undefined} }) => {
   const [templateContent] = useState(ConnectorIntegration);
   const [generatedCode, setGeneratedCode] = useState('');
   const findCommonHeaders = (data) => {
@@ -151,51 +156,59 @@ const ConnectorTemplate = ({ context = {
     return maxHeaders;
   }
   const build_auth_header_key = (data) => {
-    if ('auth_type_api_key'.includes(data)) {
-      return "auth.api_key.into_masked()";
+    if (data.includes('auth_type_api_key')) {
+      return "auth.api_key.expose()";
     }
-    else if ('auth_type_api_key'.includes(data)) {
-      return "auth.api_key.into_masked()";
+    else if (data.includes('auth_type_key1')) {
+      return "auth.key1.expose()";
     }
-    else if ('auth_type_key1'.includes(data)) {
-      return "auth.key1.into_masked()";
+    else if (data.includes('auth_type_secret_key')) {
+      return "auth.secret_key.expose()";
     }
-    else if ('auth_type_secret_key'.includes(data)) {
-      return "auth.secret_key.into_masked()";
+    else if (data.includes('auth_type_key2')) {
+      return "auth.key2.expose()";
     }
-    else if ('auth_type_key2'.includes(data)) {
-      return "auth.key2.into_masked()";
+    else if (data.includes('auth_type_base_64_encode_api_key_colon_key1')) {
+      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.api_key.peek(), auth.key1.peek()))'
     }
-    else if ('auth_type_base_64_encode_api_key_colon_key1'.includes(data)) {
-      return 'format!("{}", consts::BASE64_ENGINE.encode(format!("{}:{}", auth.api_key.peek(), auth.key1.peek()))).into_masked()'
-    }
-    else if ('auth_type_base_64_encode_key1_colon_api_key'.includes(data)) {
-      return 'format!("{}", consts::BASE64_ENGINE.encode(format!("{}:{}", auth.key1.peek(), auth.api_key.peek()))).into_masked()'
+    else if (data.includes('auth_type_base_64_encode_key1_colon_api_key')) {
+      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.key1.peek(), auth.api_key.peek()))'
     }
     return '';
   }
   const get_auth_header_key = (data) => {
-    if(data === 'Authorization') return 'headers.AUTHORIZATION';
-    if(data === 'X-API-KEY') return 'headers.X_API_KEY';
-    if(data === 'API-KEY') return 'headers.API_KEY';
-    if(data === 'apikey') return 'headers.APIKEY';
-    if(data === 'X-CC-Api-Key') return 'headers.X_CC_API_KEY';
-    if(data === 'X-Trans-Key') return 'headers.X_TRANS_KEY';
+    if (data === 'Authorization') return 'headers::AUTHORIZATION.to_string()';
+    if (data === 'X-API-KEY') return 'headers::X_API_KEY.to_string()';
+    if (data === 'API-KEY') return 'headers::API_KEY.to_string()';
+    if (data === 'apikey') return 'headers::APIKEY.to_string()';
+    if (data === 'X-CC-Api-Key') return 'headers::X_CC_API_KEY.to_string()';
+    if (data === 'X-Trans-Key') return 'headers::X_TRANS_KEY.to_string()';
     return data;
   }
   const build_auth_headers = (data) => {
     for (const key in data) {
-      let auth_value = build_auth_header_key(data[key]);
-      if(auth_value){
+      let headers = data[key]?.curl?.headers || {};
+      for (const header in headers) {
+        let auth_value = build_auth_header_key(headers[header]);
+      if (auth_value) {
+        let contents = headers[header].split("$");
+        auth_value = contents.length > 1 && contents[0] ? `format!("`+contents[0]+`{}", `+auth_value+`)` : auth_value;
         return {
-          header_auth_key: get_auth_header_key(key),
-          header_auth_value: auth_value
+          header_auth_key: get_auth_header_key(header) ,
+          header_auth_value: auth_value+ '.into_masked()'
         }
+      }
       }
     }
     return {};
   }
   useEffect(() => {
+    if(curl?.connector && curl?.flow) {
+      let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(curl?.connector)
+      props.flows[curl?.flow].curl = {};
+      props.flows[curl?.flow].curl = {input: curl.input, hsResponse: curl.hsResponse, body: curl.body, headers: curl.headers, response: curl.response};
+      localStorage.props = JSON.stringify(props);
+    }
     if (templateContent) {
       const template = handlebars.compile(ConnectorIntegration);
       const connector_common_template = handlebars.compile(ConnectorCommon);
@@ -206,12 +219,12 @@ const ConnectorTemplate = ({ context = {
       const renderedTemplate =
         connector_common_template({
           struct_name: toPascalCase(props.connector),
-          connector_name: props.connector,
+          connector_name: toCamelCase(props.connector),
           headers: findCommonHeaders(props.flows),
           content_type: props.content_type,
           ...build_auth_headers(props.flows)
         }) +
-        Object.values(flows).map((flow) => template(flow)).join("\n")
+        Object.values(flows).map((flow) => template({...flow, connector_name: toCamelCase(flow?.connector_name || ' ')})).join("\n")
         + connector_webhook_template({
           struct_name: toPascalCase(props.connector),
         });
@@ -220,8 +233,8 @@ const ConnectorTemplate = ({ context = {
   }, [templateContent, context]);
 
   const [isCopied, setIsCopied] = useState(false);
-   // Function to handle the "Copy to Clipboard" button click event
-   const handleCopyClick = () => {
+  // Function to handle the "Copy to Clipboard" button click event
+  const handleCopyClick = () => {
     copy(generatedCode);
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
@@ -235,8 +248,8 @@ const ConnectorTemplate = ({ context = {
       <h3>Connectors.rs </h3>
       <div data-testid="generated-code">
         <button onClick={handleCopyClick}>Copy to Clipboard</button>
-      {isCopied && <span style={{ marginLeft: '10px', color: 'green' }}>Copied to clipboard!</span>}
-      <SyntaxHighlighter language="rust" style={githubGist}>
+        {isCopied && <span style={{ marginLeft: '10px', color: 'green' }}>Copied to clipboard!</span>}
+        <SyntaxHighlighter language="rust" style={githubGist}>
           {generatedCode}</SyntaxHighlighter>
       </div>
     </div>
