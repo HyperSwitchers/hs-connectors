@@ -250,12 +250,13 @@ const CurlRequestExecutor = () => {
   }
 
 
-  const [selectedFlowOption, setSelectedFlowOption] = useState('');
+  const [selectedFlowOption, setSelectedFlowOption] = useState(localStorage.last_selected_flow);
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
 
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
     let curl = JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl;
+    localStorage.last_selected_flow = flow;
     setCurlCommand(curl?.input || '');
     setRequestFields(curl?.body || {});
     setRequestHeaderFields(curl?.headers || {});
@@ -321,10 +322,12 @@ const CurlRequestExecutor = () => {
     }, 500);
   };
 
-  const [connectorName, setConnectorName] = useState("Shift4");
+  const [connectorName, setConnectorName] = useState(localStorage.connector_name || "Shift4");
   const handleConnectorNameChange = (event) => {
-    setConnectorName(event.target.value);
-    localStorage.props = JSON.stringify(defaultConnectorProps(event.target.value));
+    let connector_name = event.target.value;
+    setConnectorName(connector_name);
+    localStorage.connector_name = connector_name;
+    localStorage.props = JSON.stringify(defaultConnectorProps(connector_name));
   };
   const [updateRequestData, setUpdateRequestData] = useState({});
   const onRequestFieldsChange = (data) => {
