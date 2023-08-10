@@ -99,6 +99,7 @@ const CurlRequestExecutor = () => {
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
   const [connectorContext, setConnectorContext] = useState({});
+  const [mappedResponseFields, setMappedResponseFields] = useState({});
 
   const [loading, setLoading] = useState(false);
   const options = {
@@ -202,6 +203,7 @@ const CurlRequestExecutor = () => {
       data: requestOptions.body,
       success: (data) => {
         setResponseFields(data);
+        setMappedResponseFields(addFieldsToNodes(mapFieldName(data)));
         setHsResponseFields(undefined);
         setTimeout(() => {
           setHsResponseFields(addFieldsToNodes(data));
@@ -213,7 +215,7 @@ const CurlRequestExecutor = () => {
     };
     $.ajax(url, req_content).always(() => setLoading(false));
   };
-  const typesList = ["string", "number", "boolean", "array", "object"];
+  const typesList = ["String", "i64", "bool", "array", "object"];
   function addFieldsToNodes(jsonObj) {
     // Helper function to check if a value is an object (excluding arrays)
     function isObject(val) {
@@ -277,10 +279,13 @@ const CurlRequestExecutor = () => {
   };
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
   
+  let y = localStorage?.auth_type? JSON.parse(localStorage?.auth_type) : {};
   var inputJsonData = JSON.stringify({
     [connector_name]: {
+      "authType": y.type,
       "body": {
-        "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
+        "paymentsRequest": JSON.parse(JSON.stringify(requestFields)),
+        "paymentsResponse": JSON.parse(JSON.stringify(mappedResponseFields))
       }
     }
   });
@@ -289,13 +294,6 @@ const CurlRequestExecutor = () => {
   const updateInputJson = (inputJsonData) => {
     setInputJson(inputJsonData);
   };
-  // var inputJson = JSON.stringify({
-  //   [connector_name]: {
-  //     "body": {
-  //       "paymentsRequest": JSON.parse(JSON.stringify(requestFields))
-  //     }
-  //   }
-  // });
   console.log(inputJson)
   const curlTextareaRef = useRef(null);
 
@@ -315,23 +313,20 @@ const CurlRequestExecutor = () => {
     setConnectorName(event.target.value);
     localStorage.props = JSON.stringify(defaultConnectorProps(event.target.value));
   };
+  const [updateRequestData, setUpdateRequestData] = useState({});
   const onRequestFieldsChange = (data) => {
     if (data) {
-      updateInputJson(JSON.stringify({
-        [connector_name]: {
-          "body": {
-            "paymentsRequest": data
-          }
-        }
-      }));
+      setUpdateRequestData(data);
     }
-    console.log("input json  " + inputJsonData);
   }
   const onRequestHeadersChange = (data) => {
     console.log(data);
   }
+  const [updateResponseData, setUpdateResponseData] = useState({});
   const onResponseFieldsChange = (data) => {
-    console.log(data);
+    if(data){
+      setUpdateResponseData(data);
+    }
   }
   return (
     <div>
@@ -388,7 +383,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                hsResponseFields && <JsonEditor content={staticResponse} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
+                hsResponseFields && <JsonEditor content={mappedResponseFields} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingSubmit} />)
@@ -398,9 +393,21 @@ const CurlRequestExecutor = () => {
           <div>
             <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+              let y = localStorage?.auth_type? JSON.parse(localStorage?.auth_type) : {};
+              console.log(y.type);
+              let x = JSON.stringify({
+                [connector_name]: {
+                  "authType": y.type,
+                  "body": {
+                    "paymentsRequest": updateRequestData,
+                    "paymentsResponse": updateResponseData
+                  }
+                }
+              });
+              updateInputJson(x);
               console.log("before input");
-              console.log(inputJson);
-              setCodeSnippet(generateRustCode(props.connector, inputJson));
+              console.log(x);
+              setCodeSnippet(generateRustCode(props.connector, x));
               setConnectorContext({});
             }}>
               Generate Code
