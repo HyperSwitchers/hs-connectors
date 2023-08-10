@@ -6,12 +6,12 @@ import JsonEditor from './JsonEditor';
 function AuthType() {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
   const types = { 'HeaderKey': { 'api_key': '' }, 'BodyKey': { 'api_key': '', 'key1': '' }, 'SignatureKey': { 'api_key': '', 'key1': '', 'api_secret': '' }, 'MultiAuthKey': { 'api_key': '', 'key1': '', 'api_secret': '', 'key2': '' } };
-  const [authType, setAuthType] = useState(authTypes[0]);
+  const [authType, setAuthType] = useState('');
   const [content, setContent] = useState(types['HeaderKey']);
 
   const onSaveClick = (jsonEditor) => {
     const requestData = jsonEditor.get();
-    localStorage.auth_type = JSON.stringify(requestData);
+    localStorage.auth_type = JSON.stringify({...JSON.parse(localStorage.auth_type), type: authType, content: requestData});
 
   }
   const onAuthTypeChange = (e, jsonEditor) => {
@@ -21,7 +21,7 @@ function AuthType() {
 
   return (
     <div className='auth-type'>
-      <div style={{marginBottom: '10px'}}><Dropdown options={authTypes} selectedOption={authType} handleSelectChange={onAuthTypeChange} type='Select Auth type' /></div>
+      <div style={{marginBottom: '10px'}}><Dropdown options={authTypes} selectedOption={authType} handleSelectChange={onAuthTypeChange} type='Auth type' /></div>
       <JsonEditor is_saveable={true} onSave={onSaveClick} content={content}></JsonEditor>
     </div>
   );

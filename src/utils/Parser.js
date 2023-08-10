@@ -85,28 +85,7 @@ impl TryFrom<&types::ConnectorAuthType> for ${connectorName}AuthType {
 }`;
 
 
-const connectorTemplate = `// PaymentsResponse
-//TODO: Append the remaining status flags
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum ${connectorName}PaymentStatus {
-    Succeeded,
-    Failed,
-    #[default]
-    Processing,
-}
-
-impl From<${connectorName}PaymentStatus> for enums::AttemptStatus {
-    fn from(item: ${connectorName}PaymentStatus) -> Self {
-        match item {
-            ${connectorName}PaymentStatus::Succeeded => Self::Charged,
-            ${connectorName}PaymentStatus::Failed => Self::Failure,
-            ${connectorName}PaymentStatus::Processing => Self::Authorizing,
-        }
-    }
-}
-
-//TODO: Fill the struct with respective fields
+const connectorTemplate = `//TODO: Fill the struct with respective fields
 // REFUND :
 // Type definition for RefundRequest
 #[derive(Default, Debug, Serialize)]
@@ -192,18 +171,6 @@ pub struct ${connectorName}ErrorResponse {
     pub reason: Option<String>,
 }
 `;
-
-const paymentsRequestTryFrom = `impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}PaymentsRequest {
-    type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: &types::PaymentsAuthorizeRouterData) -> Result<Self, Self::Error> {
-        match &item.request.payment_method_data {
-            api_models::payments::PaymentMethodData::Card(card) => Self::try_from((item, card)),
-            _ => Err(errors::ConnectorError::NotImplemented(
-                "payment method".to_string(),
-            ))?,
-        }
-    }
-}`;
 // Define the replacements for dynamic values
 const replacements = {
     amount_type_i64: "item.request.amount",
@@ -215,7 +182,7 @@ const replacements = {
     card_exp_year_String: "ccard.card_exp_year.clone()",
     card_cvc_String: "ccard.card_cvc.clone()",
     card_holder_name_String: "ccard.card_holder_name.clone()",
-    currency_Currency: "item.request.currency",
+    currency_type_Currency: "item.request.currency",
     description_String: `item.get_description()?`,
     email_type_Email: `item.request.get_email()?`,
     billing_country_CountryAlpha2: `item.request.billing.address.get_country()?`,
@@ -233,7 +200,7 @@ const replacements = {
 
 const responseReplacements = {
     status: "status",
-    transactionId: "transactionId",
+    transactionId: "transaction_id",
     redirectionData: "redirection_data",
     amountCaptured: "amount_captured"
 };
@@ -249,7 +216,7 @@ function toSnakeCase(str) {
 
 export const toPascalCase = (str) => {
     return str
-        ? str.replace(/(?:^|_)([a-z0-9])/g, (_, letter) => letter.toUpperCase())
+        ? str.replace(/(?:^|_)([a-z0-9A-Z])/g, (_, letter) => letter.toUpperCase())
         : '';
 }
 
@@ -265,6 +232,120 @@ function typeReplacement(fieldTypeValue) {
         return fieldTypeValue.substring(lastIndex + 1);
     }
     return fieldTypeValue;
+}
+
+function generateTryFroms(flowType, request, response) {
+    let requestRouterDataType = `PaymentsAuthorizeRouterData`;
+    let responseRouterDataType = `ResponseRouterData`;
+    let apiType = "Authorize";
+
+    switch (flowType) {
+        case "Authorize": requestRouterDataType = `PaymentsAuthorizeRouterData`; responseRouterDataType = `PaymentsResponseRouterData`; apiType = `Authorize`; break;
+        case "Capture": requestRouterDataType = `PaymentsCaptureRouterData`; responseRouterDataType = `PaymentsCaptureResponseRouterData`; apiType = `Capture`; break;
+        case "Psync": requestRouterDataType = `PaymentsSyncRouterData`; responseRouterDataType = `PaymentsSyncResponseRouterData`; apiType = `Psync`; break;
+        case "Void": requestRouterDataType = `PaymentsCancelRouterData`; responseRouterDataType = `PaymentsCancelResponseRouterData`; apiType = `Void`; break;
+        case "Refund": requestRouterDataType = `RefundsRouterData`; responseRouterDataType = `RefundsResponseRouterData`; apiType = `Execute`; break;
+        case "Rsync": requestRouterDataType = `RefundSyncRouterData`; responseRouterDataType = `RefundsResponseRouterData`; apiType = `RSync`; break;
+    };
+
+    let generatedRequestTryFrom = `impl TryFrom<&types::${requestRouterDataType}> for ${connectorName}${flowType}Request {
+        type Error = error_stack::Report<errors::ConnectorError>;
+        fn try_from(item: &types::${requestRouterDataType}) -> Result<Self, Self::Error> {
+            ${request.join('\n\t\t\t')}
+            Ok(${connectorName.toLowerCase()}_${flowType.toLowerCase()}_request)
+        }
+    }    `;
+
+    if (flowType === "Authorize") {
+
+        generatedRequestTryFrom = `impl TryFrom<(&types::PaymentsAuthorizeRouterData, &Card)> for ${connectorName}${flowType}Request {
+            type Error = error_stack::Report<errors::ConnectorError>;
+            fn try_from(value: (&types::PaymentsAuthorizeRouterData, &Card)) -> Result<Self, Self::Error> {
+                let (item, ccard) = value;
+                ${request.join('\n\t\t\t')}
+                Ok(${connectorName.toLowerCase()}_${flowType.toLowerCase()}_request)
+            }
+        }    
+impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType}Request {
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(item: &types::PaymentsAuthorizeRouterData) -> Result<Self, Self::Error> {
+        match &item.request.payment_method_data {
+            api_models::payments::PaymentMethodData::Card(card) => Self::try_from((item, card)),
+            _ => Err(errors::ConnectorError::NotImplemented(
+                "payment method".to_string(),
+            ))?,
+        }
+    }
+}`;
+    }
+
+
+    let generatedResponseTryFrom = `impl TryFrom<types::${responseRouterDataType}<${connectorName}${flowType}Response>> 
+    for types::${requestRouterDataType}
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(item: types::${responseRouterDataType}<${connectorName}${flowType}Response>>,
+    ) -> Result<Self,Self::Error> {
+        ${response.join('\n\t\t')}
+        Ok(Self {
+            status,
+            response: Ok(types::PaymentsResponseData::TransactionResponse {
+                resource_id: types::ResponseId::ConnectorTransactionId(transaction_id),
+                redirection_data: None,
+                mandate_reference: None,
+                connector_metadata: None,
+                network_txn_id: None,
+                connector_response_reference_id: None,
+            }),
+            ..item.data
+        })
+    }
+}`;
+
+    if (flowType === "Refund") {
+        generatedResponseTryFrom = `impl TryFrom<types::RefundsResponseRouterData<api::${apiType}, ${connectorName}${flowType}Response>>
+    for types::RefundsRouterData<api::${apiType}>
+{
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(
+        item: types::RefundsResponseRouterData<api::${apiType}, ${connectorName}${flowType}Response>>,
+    ) -> Result<Self, Self::Error> {
+        ${response.join('\n\t\t\t')}
+        Ok(Self {
+            response: Ok(types::RefundsResponseData {
+                connector_refund_id: transaction_id.clone(),
+                refund_status: status,
+            }),
+            ..item.data
+        })
+    }
+}`;
+    }
+    return `${generatedRequestTryFrom}\n\n${generatedResponseTryFrom}`;
+}
+
+function generateStatusMapping(statusType, inputJson) {
+    let statusArray = [];
+    let tryFromArray = [];
+    Object.entries(inputJson).forEach(([AttempStatus, ConnectorStatus]) => {
+        statusArray.push(`${toPascalCase(ConnectorStatus)}`);
+        tryFromArray.push(`${toPascalCase(connectorName)}${statusType}::${ConnectorStatus} => Self::${AttempStatus}`);
+    });
+    const header = shouldAddCamelCaseHeader(Object.values(inputJson).map(([fieldName]) => fieldName))
+        ? '#[serde(rename_all = "camelCase")]'
+        : '';
+    return `#[derive(Debug, Serialize, Deserialize)]
+${header}
+pub enum ${connectorName}${statusType} {
+    ${statusArray.join(',\n\t')}
+}
+impl From<${toPascalCase(connectorName)}${statusType}> for enums::${statusType} {
+    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
+        match item {
+            ${tryFromArray.join(',\n\t\t\t')}
+        }
+    }
+}`
 }
 
 function generateRustEnumStruct(name, fields) {
@@ -388,7 +469,7 @@ function generateNestedStructs(inputObject, parentName) {
                 const fields = Object.keys(structFields).map((fieldName) => [fieldName, structFields[fieldName]]);
 
                 // Generate unique field names for nested structs
-                const fullName = parentName ? `${parentName}_${structName}` : structName;
+                const fullName = parentName ? `${parentName}_${structName.substring(8)}` : structName;
                 const structDefinition = generateRustStruct(toPascalCase(fullName), fields);
                 if (!nestedStructsMap.has(toPascalCase(fullName))) {
                     nestedStructsMap.set(toPascalCase(fullName), structDefinition);
@@ -415,6 +496,9 @@ function replaceDynamicFields(value, type) {
             const dynamicValueName = value.substring(1);
 
             // Check if a replacement is available for the dynamic value
+            if (type.startsWith("$")) {
+                type = type.substring(1);
+            }
             const replacement = replacements[`${dynamicValueName}_${type}`] || value;
 
             // Store the replacement value for this field
@@ -472,9 +556,9 @@ function generateNestedInitStructs(inputObject, parentName) {
                 // if (structFields.secret) {
                 //     variableValue = `$Secret::new(${variableValue})`
                 // }
-                // if (structFields.optional) {
-                //     variableValue = `Some(${variableValue})`
-                // }
+                if (structFields.optional) {
+                    variableValue = `Some(${variableValue})`
+                }
                 nestedFields[toSnakeCase(structName)] = variableValue;
             }
         }) : '';
@@ -515,7 +599,11 @@ function generatedResponseVariables(inputObject, parentName) {
 
                     // Store the replacement value for this field
                     // nestedFields[toSnakeCase(replacement)] = `${parentName}.${toSnakeCase(structName)}`;
-                    structs.push(`let ${toSnakeCase(replacement)} = ${parentName}.${toSnakeCase(structName)};`)
+                    let variableValue = `${parentName}.${toSnakeCase(structName)}`;
+                    if (dynamicValueName == "status") {
+                        variableValue = `enums::AttemptStatus::from(${variableValue})`
+                    }
+                    structs.push(`let ${toSnakeCase(replacement)} = ${variableValue};`)
                 }
             }
         }) : '';
@@ -526,58 +614,59 @@ function generatedResponseVariables(inputObject, parentName) {
     return structs;
 }
 
-function printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode) {
-    let generatedTryFrom = `impl TryFrom<(&types::PaymentsAuthorizeRouterData, &Card)> for ${connectorName}PaymentsRequest {
-        type Error = error_stack::Report<errors::ConnectorError>;
-        fn try_from(value: (&types::PaymentsAuthorizeRouterData, &Card)) -> Result<Self, Self::Error> {
-            let (item, ccard) = value;
-            ${nestedStructs2.join('\n\t\t\t')}
-            Ok(${connectorName.toLowerCase()}_payments_request)
-        }
-    }    `;
+function printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping) {
 
-    let generatedResponseTryFrom = `impl<F,T> TryFrom<types::ResponseRouterData<F, ${connectorName}PaymentsResponse, T, types::PaymentsResponseData>> for types::RouterData<F, T, types::PaymentsResponseData> {
-        type Error = error_stack::Report<errors::ConnectorError>;
-        fn try_from(item: types::ResponseRouterData<F, ${connectorName}PaymentsResponse, T, types::PaymentsResponseData>) -> Result<Self,Self::Error> {
-            ${nestedStructs3.join('\n\t\t\t')}
-            Ok(Self {
-                status,
-                response: Ok(types::PaymentsResponseData::TransactionResponse {
-                    resource_id: types::ResponseId::ConnectorTransactionId(transaction_id),
-                    redirection_data: None,
-                    mandate_reference: None,
-                    connector_metadata: None,
-                    network_txn_id: None,
-                    connector_response_reference_id: None,
-                }),
-                ..item.data
-            })
-        }
-    }`
-
-    let output = `${connectorImports}\n${connectorAuthCode}\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n${generatedResponseTryFrom}\n${connectorTemplate}`;
+    let output = `${connectorImports}\n\n${connectorAuthCode}\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}`;
     // let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n\n${connectorTemplate}`;
     // let output = `${[...nestedStructsMap.values()]}\n${generatedTryFrom}\n${paymentsRequestTryFrom}`;
-    console.log("Check",output);
+    console.log("Check", output);
     return output;
 }
 
-export const generateRustCode = (connector, inputJson2) => {
-    // const inputObject = JSON.parse(inputJson);
+export const generateRustCode = (connector, inputJson) => {
+    const inputObject = JSON.parse(inputJson);
     connectorName = connector;
-    const inputObject2 = inputJson2 ? JSON.parse(inputJson2) : {};
-    const nestedStructs = generateNestedStructs(inputObject2[connectorName]?.body, connectorName);
-    const nestedStructs2 = generateNestedInitStructs(inputObject2[connectorName]?.body.paymentsRequest, `${toPascalCase(connectorName)}PaymentsRequest`);
-    const nestedStructs3 = generatedResponseVariables(inputObject2[connectorName]?.body.paymentsResponse, `item.response`);
-    // console.log(`${[...nestedStructsMap.values()]}`);
-    // console.log(`${[...structOccurrences.values()]}`);
+
+    inputObject[connectorName].attemptStatus = Object.keys(inputObject[connectorName]?.attemptStatus).reduce((acc, key) => {
+        if (inputObject[connectorName]?.attemptStatus[key] !== null) {
+            acc[key] = inputObject[connectorName]?.attemptStatus[key];
+        }
+        return acc;
+    }, {});
+
+    const attemptStatusMapping = inputObject[connectorName]?.attemptStatus && generateStatusMapping("AttemptStatus", inputObject[connectorName]?.attemptStatus);
+    let refundStatusMapping = inputObject[connectorName]?.refundStatus && generateStatusMapping("RefundStatus", inputObject[connectorName]?.refundStatus);
+
+    const tryFromsArray = [];
+
     let connectorAuthCode = connectorHeaderKeyAuthType;
-    switch (inputObject2[connectorName]?.authType) {
-        case "HeaderLey": connectorAuthCode = connectorHeaderKeyAuthType; break;
+    switch (inputObject[connectorName]?.authType) {
+        case "HeaderKey": connectorAuthCode = connectorHeaderKeyAuthType; break;
         case "BodyKey": connectorAuthCode = connectorBodyKeyAuthType; break;
         case "SignatureKey": connectorAuthCode = connectorSignatureKeyAuthType; break;
     };
-    return printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode);
+
+    let refundFlag = false;
+    Object.entries(inputObject[connectorName]?.flows).forEach(([flowType, requestResposne]) => {
+        if (flowType === "Refund") {
+            refundFlag = true;
+        }
+        const nestedStructs = generateNestedStructs(inputObject[connectorName]?.flows[flowType], `${connectorName}${flowType}`);
+        const nestedStructs2 = inputObject[connectorName]?.flows[flowType].paymentsRequest && generateNestedInitStructs(inputObject[connectorName]?.flows[flowType].paymentsRequest, `${toPascalCase(connectorName)}${flowType}Request`);
+        const nestedStructs3 = inputObject[connectorName]?.flows[flowType].paymentsResponse && generatedResponseVariables(inputObject[connectorName]?.flows[flowType].paymentsResponse, `item.response`);
+
+        tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, nestedStructs3));
+
+        // printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode, attemptStatusMapping);
+    });
+    // console.log(`${[...nestedStructsMap.values()]}`);
+    // console.log(`${[...structOccurrences.values()]}`);
+    let connectorTemplateCode = '';
+    if (!refundFlag) {
+        connectorTemplateCode = connectorTemplate;
+        refundStatusMapping = '';
+    }
+    return printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping);
     // console.log(nestedStructs2.join('\n'))
 
     // return nestedStructs.join('\n');
