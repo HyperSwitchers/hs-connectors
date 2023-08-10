@@ -42,24 +42,22 @@ const initialStatusMapping = {
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST 'https://api.shift4.com/charges' \
-  --header 'X-router;' \
-  --header 'Authorization: Basic c2tfdGVzdF93cjhMYjdqd1FNTEp1STJCMHBoSFJMVDQ6' \
-  --header 'Content-Type: application/json' \
-  --header 'Cookie: __cf_bm=fsHWOIwYKLyvlLhuMqB3vjSRUvHYVnPQIvpMTggO2IE-1679579356-0-Aa0HljVPYVwZLsJW+Neq4sv7FiWlU5tuh7a498pR4NlkM61Si3keelHQ7HQRU+FfDm1pe/qc5FLGne4Lck/6F6k=' \
-  --data-raw '{
-      "amount": 499,
-      "card": {
-          "number": "4012000100000007",
-          "expMonth": "03",
-          "expYear": "25",
-          "cvc": "123",
-          "cardholderName": "john"
+    useState(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+      "source": {
+        "type": "card",
+        "number": "4242424242424242",
+        "expiry_month": 1,
+        "expiry_year": 30,
+        "name": "John Smith",
+        "cvv": "100"
       },
-      "captured": true,
-      "currency": "EUR",
-      "description":"asdasd"
-  }`);
+      "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+      "amount": 1040,
+      "currency": "GBP",
+      "reference": "123lala",
+      "capture": false
+    }'
+    `);
   const suggestions = Object.keys(synonymMapping);
   const generateCodeSnippet = () => {
     return `fn main() {
@@ -195,7 +193,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "http://localhost:5050/" + curlRequest.url;
+    let url = "/cors/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -381,15 +379,15 @@ const CurlRequestExecutor = () => {
             </div>
             <div className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={{...requestHeaderFields}} options={{...options, onChange:setRequestHeaderFields}}></JsonEditor>
+              <JsonEditor content={{ ...requestHeaderFields }} options={{ ...options, onChange: setRequestHeaderFields }}></JsonEditor>
               <h3>Request Body Fields:</h3>
               {/* <div>{JSON.stringify(requestFields)}</div> */}
-              <JsonEditor content={{...requestFields}} options={{...options, onChange:onRequestFieldsChange}}></JsonEditor>
+              <JsonEditor content={{ ...requestFields }} options={{ ...options, onChange: onRequestFieldsChange }}></JsonEditor>
             </div>
 
             <div id="responseFieldsLeft" className="response-fields-left">
               <h3>Response</h3>
-              <JsonEditor content={{...responseFields}} options={{...options, onChange:setResponseFields}}></JsonEditor>
+              <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor>
             </div>
 
             <div id="responseFieldsRight" className="response-fields-right">
@@ -400,7 +398,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                <JsonEditor content={{...mappedResponseFields}} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{...options, onChange:setMappedResponseFields}}></JsonEditor>
+                <JsonEditor content={{ ...mappedResponseFields }} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{ ...options, onChange: setMappedResponseFields }}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)
@@ -428,7 +426,7 @@ const CurlRequestExecutor = () => {
               console.log("before input");
               console.log(x);
               setCodeSnippet(generateRustCode(props.connector, x));
-              setConnectorContext({...{}});
+              setConnectorContext({ ...{} });
             }}>
               Generate Code
             </button>
@@ -444,9 +442,9 @@ const CurlRequestExecutor = () => {
             </div>
             <div style={{ padding: '10px' }}>
               <div style={{ width: '50%' }}>
-                <ConnectorTemplates 
-                curl={{...{connector: connectorName, flow: selectedFlowOption, input: curlCommand, body: requestFields, headers: requestHeaderFields, response: responseFields, hsResponse: hsMapping }}} 
-                context={connectorContext}></ConnectorTemplates>
+                <ConnectorTemplates
+                  curl={{ ...{ connector: connectorName, flow: selectedFlowOption, input: curlCommand, body: requestFields, headers: requestHeaderFields, response: responseFields, hsResponse: hsMapping } }}
+                  context={connectorContext}></ConnectorTemplates>
               </div>
             </div>
           </div>
