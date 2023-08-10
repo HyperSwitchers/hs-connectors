@@ -15,29 +15,29 @@ import StatusMappingPopup from "./StatusMappingPopup";
 import { generateRustCode, toPascalCase } from "utils/Parser";
 
 const initialStatusMapping = {
-  Started: "",
-  AuthenticationFailed: "",
-  RouterDeclined: "",
-  AuthenticationPending: "",
-  AuthenticationSuccessful: "",
-  Authorized: "",
-  AuthorizationFailed: "",
-  Charged: "",
-  Authorizing: "",
-  CodInitiated: "",
-  Voided: "",
-  VoidInitiated: "",
-  CaptureInitiated: "",
-  CaptureFailed: "",
-  VoidFailed: "",
-  AutoRefunded: "",
-  PartialCharged: "",
-  Unresolved: "",
-  Pending: "",
-  Failure: "",
-  PaymentMethodAwaited: "",
-  ConfirmationAwaited: "",
-  DeviceDataCollectionPending: "",
+  Started: null,
+  AuthenticationFailed: null,
+  RouterDeclined: null,
+  AuthenticationPending: null,
+  AuthenticationSuccessful: null,
+  Authorized: null,
+  AuthorizationFailed: null,
+  Charged: null,
+  Authorizing: null,
+  CodInitiated: null,
+  Voided: null,
+  VoidInitiated: null,
+  CaptureInitiated: null,
+  CaptureFailed: null,
+  VoidFailed: null,
+  AutoRefunded: null,
+  PartialCharged: null,
+  Unresolved: null,
+  Pending: null,
+  Failure: null,
+  PaymentMethodAwaited: null,
+  ConfirmationAwaited: null,
+  DeviceDataCollectionPending: null,
 };
 
 const CurlRequestExecutor = () => {
@@ -281,19 +281,22 @@ const CurlRequestExecutor = () => {
   };
 
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
-  
-  let y = localStorage?.auth_type? JSON.parse(localStorage?.auth_type) : {};
+
+  let y = localStorage?.auth_type ? JSON.parse(localStorage?.auth_type) : {};
   var inputJsonData = JSON.stringify({
     [connector_name]: {
       "authType": y.type,
-      "body": {
-        "paymentsRequest": JSON.parse(JSON.stringify(requestFields)),
-        "paymentsResponse": JSON.parse(JSON.stringify(mappedResponseFields))
-      }
+      "flows": {
+        "Authorize": {
+          "paymentsRequest": JSON.parse(JSON.stringify(requestFields)),
+          "paymentsResponse": JSON.parse(JSON.stringify(mappedResponseFields))
+        }
+      },
+      "attemptStatus": statusMappingData
     }
   });
 
-  const[inputJson, setInputJson] = useState('');
+  const [inputJson, setInputJson] = useState('');
   const updateInputJson = (inputJsonData) => {
     setInputJson(inputJsonData);
   };
@@ -301,8 +304,8 @@ const CurlRequestExecutor = () => {
   const curlTextareaRef = useRef(null);
 
   const [isCopied, setIsCopied] = useState(false);
-   // Function to handle the "Copy to Clipboard" button click event
-   const handleCopyClick = () => {
+  // Function to handle the "Copy to Clipboard" button click event
+  const handleCopyClick = () => {
     copy(codeSnippet);
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
@@ -310,7 +313,7 @@ const CurlRequestExecutor = () => {
       setIsCopied(false);
     }, 500);
   };
-  
+
   const [connectorName, setConnectorName] = useState("Shift4");
   const handleConnectorNameChange = (event) => {
     setConnectorName(event.target.value);
@@ -327,18 +330,18 @@ const CurlRequestExecutor = () => {
   }
   const [updateResponseData, setUpdateResponseData] = useState({});
   const onResponseFieldsChange = (data) => {
-    if(data){
+    if (data) {
       setUpdateResponseData(data);
     }
   }
   return (
     <div>
       <div className='dropdown-wrapper hs-headers'>
-        <div style={{paddingRight: '10px'}}>
+        <div style={{ paddingRight: '10px' }}>
           <label htmlFor="dropdown">Connector: </label>
           {/* <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} /> */}
-        <input className='conector' type="text" placeholder="Connector Name" onChange={handleConnectorNameChange}
-          defaultValue={connectorName} />
+          <input className='conector' type="text" placeholder="Connector Name" onChange={handleConnectorNameChange}
+            defaultValue={connectorName} />
         </div>
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='Flow Type' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='Payment Method' />
@@ -367,10 +370,10 @@ const CurlRequestExecutor = () => {
             </div>
             <div className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={requestHeaderFields} options={{...options, onChange:onRequestHeadersChange}}></JsonEditor>
+              <JsonEditor content={requestHeaderFields} options={{ ...options, onChange: onRequestHeadersChange }}></JsonEditor>
               <h3>Request Body Fields:</h3>
               {/* <div>{JSON.stringify(requestFields)}</div> */}
-              <JsonEditor content={requestFields} options={{...options, onChange:onRequestFieldsChange}}></JsonEditor>
+              <JsonEditor content={requestFields} options={{ ...options, onChange: onRequestFieldsChange }}></JsonEditor>
             </div>
 
             <div id="responseFieldsLeft" className="response-fields-left">
@@ -386,7 +389,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                hsResponseFields && <JsonEditor content={mappedResponseFields} use_custom_options={true} options_data={hsResponseFields} options={{onChange:onResponseFieldsChange}}></JsonEditor>
+                hsResponseFields && <JsonEditor content={mappedResponseFields} use_custom_options={true} options_data={hsResponseFields} options={{ onChange: onResponseFieldsChange }}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)
@@ -396,15 +399,15 @@ const CurlRequestExecutor = () => {
           <div>
             <button onClick={(e) => {
               let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
-              let y = localStorage?.auth_type? JSON.parse(localStorage?.auth_type) : {};
+              let y = localStorage?.auth_type ? JSON.parse(localStorage?.auth_type) : {};
               console.log(y.type);
               let x = JSON.stringify({
                 [connector_name]: {
                   "authType": y.type,
                   "flows": {
-                    "Authorize":{
-                    "paymentsRequest": updateRequestData,
-                    "paymentsResponse": updateResponseData
+                    "Authorize": {
+                      "paymentsRequest": updateRequestData,
+                      "paymentsResponse": updateResponseData
                     }
                   },
                   "attemptStatus": statusMappingData

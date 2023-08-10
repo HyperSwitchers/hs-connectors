@@ -496,6 +496,9 @@ function replaceDynamicFields(value, type) {
             const dynamicValueName = value.substring(1);
 
             // Check if a replacement is available for the dynamic value
+            if (type.startsWith("$")) {
+                type = type.substring(1);
+            }
             const replacement = replacements[`${dynamicValueName}_${type}`] || value;
 
             // Store the replacement value for this field
@@ -623,6 +626,13 @@ function printTemplateCode(connectorAuthCode, tryFromsArray, connectorTemplateCo
 export const generateRustCode = (connector, inputJson) => {
     const inputObject = JSON.parse(inputJson);
     connectorName = connector;
+
+    inputObject[connectorName].attemptStatus = Object.keys(inputObject[connectorName]?.attemptStatus).reduce((acc, key) => {
+        if (inputObject[connectorName]?.attemptStatus[key] !== null) {
+            acc[key] = inputObject[connectorName]?.attemptStatus[key];
+        }
+        return acc;
+    }, {});
 
     const attemptStatusMapping = inputObject[connectorName]?.attemptStatus && generateStatusMapping("AttemptStatus", inputObject[connectorName]?.attemptStatus);
     let refundStatusMapping = inputObject[connectorName]?.refundStatus && generateStatusMapping("RefundStatus", inputObject[connectorName]?.refundStatus);
