@@ -341,6 +341,7 @@ const CurlRequestExecutor = () => {
   const onResponseFieldsChange = (data) => {
     if (data) {
       setUpdateResponseData(data);
+      setMappedResponseFields(data);
     }
   }
   return (
@@ -398,7 +399,7 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                <JsonEditor content={{ ...mappedResponseFields }} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{ ...options, onChange: setMappedResponseFields }}></JsonEditor>
+                <JsonEditor content={{ ...mappedResponseFields }} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{ ...options, onChange: onResponseFieldsChange }}></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)

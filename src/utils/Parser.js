@@ -247,8 +247,10 @@ function generateTryFroms(flowType, request, response) {
         case "Refund": requestRouterDataType = `RefundsRouterData`; responseRouterDataType = `RefundsResponseRouterData`; apiType = `Execute`; break;
         case "Rsync": requestRouterDataType = `RefundSyncRouterData`; responseRouterDataType = `RefundsResponseRouterData`; apiType = `RSync`; break;
     };
-
-    let generatedRequestTryFrom = `impl TryFrom<&types::${requestRouterDataType}> for ${connectorName}${flowType}Request {
+    let generatedRequestTryFrom = '';
+    let generatedResponseTryFrom = '';
+    if (request.length !== 0) {
+        generatedRequestTryFrom = `impl TryFrom<&types::${requestRouterDataType}> for ${connectorName}${flowType}Request {
         type Error = error_stack::Report<errors::ConnectorError>;
         fn try_from(item: &types::${requestRouterDataType}) -> Result<Self, Self::Error> {
             ${request.join('\n\t\t\t')}
@@ -256,9 +258,9 @@ function generateTryFroms(flowType, request, response) {
         }
     }    `;
 
-    if (flowType === "Authorize") {
+        if (flowType === "Authorize") {
 
-        generatedRequestTryFrom = `impl TryFrom<(&types::PaymentsAuthorizeRouterData, &Card)> for ${connectorName}${flowType}Request {
+            generatedRequestTryFrom = `impl TryFrom<(&types::PaymentsAuthorizeRouterData, &Card)> for ${connectorName}${flowType}Request {
             type Error = error_stack::Report<errors::ConnectorError>;
             fn try_from(value: (&types::PaymentsAuthorizeRouterData, &Card)) -> Result<Self, Self::Error> {
                 let (item, ccard) = value;
@@ -277,10 +279,10 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType
         }
     }
 }`;
+        }
     }
-
-
-    let generatedResponseTryFrom = `impl TryFrom<types::${responseRouterDataType}<${connectorName}${flowType}Response>> 
+    if (response.length !== 0) {
+        generatedResponseTryFrom = `impl TryFrom<types::${responseRouterDataType}<${connectorName}${flowType}Response>> 
     for types::${requestRouterDataType}
 {
     type Error = error_stack::Report<errors::ConnectorError>;
@@ -302,8 +304,8 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType
     }
 }`;
 
-    if (flowType === "Refund") {
-        generatedResponseTryFrom = `impl TryFrom<types::RefundsResponseRouterData<api::${apiType}, ${connectorName}${flowType}Response>>
+        if (flowType === "Refund") {
+            generatedResponseTryFrom = `impl TryFrom<types::RefundsResponseRouterData<api::${apiType}, ${connectorName}${flowType}Response>>
     for types::RefundsRouterData<api::${apiType}>
 {
     type Error = error_stack::Report<errors::ConnectorError>;
@@ -320,6 +322,7 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType
         })
     }
 }`;
+        }
     }
     return `${generatedRequestTryFrom}\n\n${generatedResponseTryFrom}`;
 }
@@ -462,6 +465,7 @@ function generateNestedStructs(inputObject, parentName) {
     function processObject(inputObj, parentName) { //( { paymentsRequest: {}, paymentsResponse: {} }, ConnectorName)
         // [[key, Value], [key, Value]]
         inputObj && Object.entries(inputObj).forEach(([structName, structFields]) => { // [structname, structFields] = [paymentsRequest, {amount: {}, card:{}, currency:{}, }]
+            if (Object.keys(inputObj[structName]).length === 0) return;
 
             if (typeof structFields === 'object') {
                 //Get [key, value] of nested objects, the map will return Array([key, value])
@@ -495,10 +499,11 @@ function replaceDynamicFields(value, type) {
             // Extract the dynamic value name without the "$" prefix
             const dynamicValueName = value.substring(1);
 
-            // Check if a replacement is available for the dynamic value
             if (type.startsWith("$")) {
                 type = type.substring(1);
             }
+
+            // Check if a replacement is available for the dynamic value
             const replacement = replacements[`${dynamicValueName}_${type}`] || value;
 
             // Store the replacement value for this field
@@ -647,13 +652,24 @@ export const generateRustCode = (connector, inputJson) => {
     };
 
     let refundFlag = false;
+    let nestedStructs2 = [];
+    let nestedStructs3 = [];
     Object.entries(inputObject[connectorName]?.flows).forEach(([flowType, requestResposne]) => {
         if (flowType === "Refund") {
             refundFlag = true;
         }
+        if (Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsRequest).length === 0 && Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsResponse).length === 0) {
+            return;
+        }
         const nestedStructs = generateNestedStructs(inputObject[connectorName]?.flows[flowType], `${connectorName}${flowType}`);
-        const nestedStructs2 = inputObject[connectorName]?.flows[flowType].paymentsRequest && generateNestedInitStructs(inputObject[connectorName]?.flows[flowType].paymentsRequest, `${toPascalCase(connectorName)}${flowType}Request`);
-        const nestedStructs3 = inputObject[connectorName]?.flows[flowType].paymentsResponse && generatedResponseVariables(inputObject[connectorName]?.flows[flowType].paymentsResponse, `item.response`);
+        if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsRequest).length !== 0)) {
+
+            nestedStructs2 = inputObject[connectorName]?.flows[flowType].paymentsRequest && generateNestedInitStructs(inputObject[connectorName]?.flows[flowType].paymentsRequest, `${toPascalCase(connectorName)}${flowType}Request`);
+        }
+        if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsResponse).length !== 0)) {
+            nestedStructs3 = inputObject[connectorName]?.flows[flowType].paymentsResponse && generatedResponseVariables(inputObject[connectorName]?.flows[flowType].paymentsResponse, `item.response`);
+        }
+
 
         tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, nestedStructs3));
 
