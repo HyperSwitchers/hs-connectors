@@ -293,7 +293,7 @@ const CurlRequestExecutor = () => {
     [connector_name]: {
       "authType": y.type,
       "flows": {
-        "Authorize": {
+        [selectedFlowOption || 'Authorize']: {
           "paymentsRequest": JSON.parse(JSON.stringify(requestFields)),
           "paymentsResponse": JSON.parse(JSON.stringify(mappedResponseFields))
         }
@@ -408,14 +408,16 @@ const CurlRequestExecutor = () => {
           </div>
           <div>
             <button onClick={(e) => {
-              let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+              let connector = localStorage.connector || 'tttt';
+              let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(connector);
               let y = localStorage?.auth_type ? JSON.parse(localStorage?.auth_type) : {};
-              console.log(y.type);
+              let existingFlows = JSON.parse(inputJson || '{}')?.[connector_name]?.flows;
               let x = JSON.stringify({
                 [connector_name]: {
                   "authType": y.type,
                   "flows": {
-                    "Authorize": {
+                    ...existingFlows,
+                    [selectedFlowOption || 'Authorize']: {
                       "paymentsRequest": updateRequestData,
                       "paymentsResponse": updateResponseData
                     }
@@ -424,8 +426,6 @@ const CurlRequestExecutor = () => {
                 }
               });
               updateInputJson(x);
-              console.log("before input");
-              console.log(x);
               setCodeSnippet(generateRustCode(props.connector, x));
               setConnectorContext({ ...{} });
             }}>
