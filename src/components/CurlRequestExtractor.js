@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { parse_curl } from "curl-parser";
 import $ from "jquery";
 import "../styles.css";
-import mapFieldName, { synonymMapping } from "../utils/search_utils";
+import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
@@ -12,7 +12,11 @@ import AuthType from "./AuthType";
 import JsonEditor from "./JsonEditor";
 import ConnectorTemplates, { defaultConnectorProps } from "./ConnectorTemplates";
 import StatusMappingPopup from "./StatusMappingPopup";
-import { generateRustCode, responseReplacements, toPascalCase } from "utils/Parser";
+import { generateRustCode } from "utils/Parser";
+import IRequestFieldsTable from "./RequestFieldsTable";
+import { Paper } from "@mui/material";
+import IRequestHeadersTable from "./RequestHeadersTable";
+import IResponseFieldsTable from "./ResponseFields";
 
 const initialStatusMapping = {
   Started: null,
@@ -129,13 +133,13 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(addFieldsToNodes(mapFieldName(JSON.parse(fetchRequest?.data?.ascii || "{}"))));
+      setRequestFields(JSON.parse(fetchRequest?.data?.ascii || "{}"));
 
-      setRequestHeaderFields(mapFieldName(fetchRequest?.headers.reduce((result, item) => {
+      setRequestHeaderFields(fetchRequest?.headers.reduce((result, item) => {
         let header = item.split(":");
         result[header[0]] = header[1];
         return result;
-      }, {})));
+      }, {}));
       saveFlowDetails(fetchRequest);
     } catch (e) {
       console.error(e);
@@ -193,7 +197,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "/cors/" + curlRequest.url;
+    let url = "http://localhost:5050/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -201,7 +205,7 @@ const CurlRequestExecutor = () => {
       data: requestOptions.body,
       success: (data) => {
         setResponseFields(data);
-        setMappedResponseFields(addFieldsToNodes(mapFieldName(data)));
+        setMappedResponseFields(addFieldsToNodes(mapFieldNames(data)));
         setHsResponseFields(undefined);
         setTimeout(() => {
           setHsResponseFields(addFieldsToNodes(data));
@@ -213,39 +217,6 @@ const CurlRequestExecutor = () => {
     };
     $.ajax(url, req_content).always(() => setLoading(false));
   };
-  const typesList = ["String", "i64", "bool", "array", "object"];
-  function addFieldsToNodes(jsonObj) {
-    // Helper function to check if a value is an object (excluding arrays)
-    function isObject(val) {
-      return typeof val === "object" && !Array.isArray(val);
-    }
-
-    // Recursive function to traverse the JSON object
-    function traverse(obj) {
-      for (const key in obj) {
-        if (isObject(obj[key])) {
-          traverse(obj[key]); // Recursively traverse nested objects
-        }
-
-        // Add fields to leaf nodes
-        obj[key] = {
-          value: obj[key],
-          optional: false, // Set this to true or false based on your requirement
-          secret: false, // Set this to true or false based on your requirement
-          type: typesList[0],
-        };
-      }
-    }
-
-    // Make a deep copy of the JSON object to avoid modifying the original object
-    const newObj = JSON.parse(JSON.stringify(jsonObj));
-    console.log(JSON.stringify(jsonObj));
-
-    // Start traversing the object
-    traverse(newObj);
-
-    return newObj;
-  }
 
 
   const [selectedFlowOption, setSelectedFlowOption] = useState(localStorage.last_selected_flow);
@@ -365,7 +336,7 @@ const CurlRequestExecutor = () => {
               </div>
             )}
 
-            <div className="curl-input-section">
+            <Paper elevation={0} className="curl-input-section">
               <h3>cURL Request</h3>
               <textarea
                 ref={curlTextareaRef} // Add the ref to the text area
@@ -377,34 +348,31 @@ const CurlRequestExecutor = () => {
               <button onClick={sendRequest} disabled={loading}>
                 {loading ? <div className="loader"></div> : "Send Request"}
               </button>
-            </div>
-            <div className="request-body-section">
+            </Paper>
+            <Paper elevation={0} className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={{ ...requestHeaderFields }} options={{ ...options, onChange: setRequestHeaderFields }}></JsonEditor>
+              <IRequestHeadersTable requestHeaders={{...requestHeaderFields}} suggestions={authTypesMapping} setRequestHeaders={setRequestHeaderFields}></IRequestHeadersTable>
               <h3>Request Body Fields:</h3>
-              {/* <div>{JSON.stringify(requestFields)}</div> */}
-              <JsonEditor content={{ ...requestFields }} options={{ ...options, onChange: onRequestFieldsChange }}></JsonEditor>
-            </div>
+              <IRequestFieldsTable requestFields={{...requestFields}} suggestions={synonymMapping}></IRequestFieldsTable>
+            </Paper>
 
-            <div id="responseFieldsLeft" className="response-fields-left">
+            <Paper elevation={0} id="responseFieldsLeft" className="response-fields-left">
               <h3>Response</h3>
               <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor>
-            </div>
+            </Paper>
 
-            <div id="responseFieldsRight" className="response-fields-right">
+            <Paper elevation={0} id="responseFieldsRight" className="response-fields-right">
               <div className="responseButtonStatus">
                 <h3>Response Fields Mapping</h3>
                 <button id="responseStatusMapping" onClick={handleStatusMappingButtonClick}>
                   Status Mapping
                 </button>
               </div>
-              {
-                <JsonEditor content={{ ...mappedResponseFields }} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{ ...options, onChange: onResponseFieldsChange }}></JsonEditor>
-              }
+              <IResponseFieldsTable responseFields={hsMapping} suggestions={responseFields}></IResponseFieldsTable>
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)
               }
-            </div>
+            </Paper>
           </div>
           <div>
             <button onClick={(e) => {
@@ -432,7 +400,7 @@ const CurlRequestExecutor = () => {
               Generate Code
             </button>
           </div>
-          <div style={{ display: 'flex' }}>
+          <div style={{ display: 'flex', overflow:'hidden' }}>
             <div style={{ width: '50%', padding: '10px' }}>
               <h3>Generated Code Snippet</h3>
               <button onClick={handleCopyClick}>Copy to Clipboard</button>
