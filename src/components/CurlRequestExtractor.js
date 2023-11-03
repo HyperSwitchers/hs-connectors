@@ -1,7 +1,9 @@
+// @ts-check
+
 import { useState, useEffect, useRef } from "react";
 import { parse_curl } from "curl-parser";
 import $ from "jquery";
-import "../styles.css";
+import '../styles/styles.sass';
 import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -62,8 +64,8 @@ const CurlRequestExecutor = () => {
       "capture": false
     }'
     `);
-  const suggestions = Object.keys(synonymMapping);
-  const generateCodeSnippet = () => {
+    const suggestions = Object.keys(synonymMapping);
+    const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
     let age: u32 = 30;
@@ -89,11 +91,11 @@ const CurlRequestExecutor = () => {
   const [responseFields, setResponseFields] = useState({});
   const [hsResponseFields, setHsResponseFields] = useState({});
   const [hsMapping, setHsMapping] = useState({
-    status: "",
+    status: '',
     response: {
-      response_id: "",
+      response_id: '',
       card: {
-        number: "",
+        number: '',
       },
     },
   });
@@ -126,9 +128,9 @@ const CurlRequestExecutor = () => {
 
   const updateCurlRequest = (request) => {
     let ss = request
-      .replace(/\s*\\\s*/g, " ")
-      .replace(/\n/g, "")
-      .replace(/--data-raw|--data-urlencode/g, "-d");
+      .replace(/\s*\\\s*/g, ' ')
+      .replace(/\n/g, '')
+      .replace(/--data-raw|--data-urlencode/g, '-d');
     setCurlCommand(request);
     try {
       const fetchRequest = parse_curl(ss);
@@ -218,7 +220,6 @@ const CurlRequestExecutor = () => {
     $.ajax(url, req_content).always(() => setLoading(false));
   };
 
-
   const [selectedFlowOption, setSelectedFlowOption] = useState(localStorage.last_selected_flow);
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
 
@@ -232,14 +233,25 @@ const CurlRequestExecutor = () => {
     setResponseFields(curl?.response || {});
     setHsResponseFields(curl?.hsResponse || {});
     setSelectedFlowOption(flow);
+    if (curl?.input) {
+      updateCurlRequest(curl?.input);
+    }
   };
 
   const handlePaymentMethodOptionChange = (event) => {
     setSelectedPaymentMethodOption(event.target.value);
   };
 
-  const flowOptions = ["AuthType", "Authorize", "Capture", "Void", "Refund", "PSync", "RSync"];
-  const paymentMethodOptions = ["Card", "Wallet", "BankRedirects"];
+  const flowOptions = [
+    'AuthType',
+    'Authorize',
+    'Capture',
+    'Void',
+    'Refund',
+    'PSync',
+    'RSync',
+  ];
+  const paymentMethodOptions = ['Card', 'Wallet', 'BankRedirects'];
 
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
@@ -277,7 +289,6 @@ const CurlRequestExecutor = () => {
   const updateInputJson = (inputJsonData) => {
     setInputJson(inputJsonData);
   };
-  console.log(inputJson)
   const curlTextareaRef = useRef(null);
 
   const [isCopied, setIsCopied] = useState(false);
@@ -304,17 +315,17 @@ const CurlRequestExecutor = () => {
       setUpdateRequestData(data);
       setRequestFields(data);
     }
-  }
+  };
   const onRequestHeadersChange = (data) => {
     console.log(data);
-  }
+  };
   const [updateResponseData, setUpdateResponseData] = useState({});
   const onResponseFieldsChange = (data) => {
     if (data) {
       setUpdateResponseData(data);
       setMappedResponseFields(data);
     }
-  }
+  };
   return (
     <div>
       <div className='dropdown-wrapper hs-headers'>
