@@ -72,3 +72,15 @@ export default function mapFieldNames(input) {
     }
     return input;
 }
+
+export function flattenObject(obj, parent = '', res = []) {
+    for (let key in obj) {
+        let propName = parent ? parent + '.' + key : key;
+        if (typeof obj[key] == 'object') {
+            flattenObject(obj[key], propName, res);
+        } else {
+            res.push(propName);
+        }
+    }
+    return res;
+}

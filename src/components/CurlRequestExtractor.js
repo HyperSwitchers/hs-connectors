@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { parse_curl } from "curl-parser";
 import $ from "jquery";
 import "../styles.css";
-import mapFieldName, { synonymMapping } from "../utils/search_utils";
+import mapFieldName, { flattenObject, synonymMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
@@ -98,6 +98,15 @@ const CurlRequestExecutor = () => {
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
   const [connectorContext, setConnectorContext] = useState({});
   const [mappedResponseFields, setMappedResponseFields] = useState({});
+  const handleResponseFieldsChange = (data) => {
+    if (data) {
+      setResponseFields(addFieldsToNodes(data));
+      setHsResponseFields(undefined);
+      setTimeout(() => {
+        setHsResponseFields(data);
+      }, 100);
+    }
+  };
 
   const [loading, setLoading] = useState(false);
   const options = {
@@ -107,6 +116,7 @@ const CurlRequestExecutor = () => {
       filter: "contain",
       trigger: "focus",
       getOptions: function (text, path, input, editor) {
+        console.log(editor.options);
         return suggestions.map((s) => "$" + s);
       },
     },
@@ -193,18 +203,18 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "/cors/" + curlRequest.url;
+    let url = "http://localhost:5050/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
       headers: requestOptions.headers,
       data: requestOptions.body,
       success: (data) => {
-        setResponseFields(data);
+        setResponseFields(addFieldsToNodes(data));
         setMappedResponseFields(addFieldsToNodes(mapFieldName(data)));
         setHsResponseFields(undefined);
         setTimeout(() => {
-          setHsResponseFields(addFieldsToNodes(data));
+          setHsResponseFields(data);
         }, 100);
       },
       error: (data) => {
@@ -380,7 +390,11 @@ const CurlRequestExecutor = () => {
             </div>
             <div className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <JsonEditor content={{ ...requestHeaderFields }} options={{ ...options, onChange: setRequestHeaderFields }}></JsonEditor>
+              <JsonEditor
+                className="json-request-header-editor-container"
+                content={{ ...requestHeaderFields }}
+                options={{ ...options, onChange: setRequestHeaderFields }}
+              ></JsonEditor>
               <h3>Request Body Fields:</h3>
               {/* <div>{JSON.stringify(requestFields)}</div> */}
               <JsonEditor content={{ ...requestFields }} options={{ ...options, onChange: onRequestFieldsChange }}></JsonEditor>
@@ -388,7 +402,7 @@ const CurlRequestExecutor = () => {
 
             <div id="responseFieldsLeft" className="response-fields-left">
               <h3>Response</h3>
-              <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor>
+              <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: handleResponseFieldsChange }}></JsonEditor>
             </div>
 
             <div id="responseFieldsRight" className="response-fields-right">
@@ -399,7 +413,17 @@ const CurlRequestExecutor = () => {
                 </button>
               </div>
               {
-                <JsonEditor content={{ ...mappedResponseFields }} use_custom_options={true} options_data={addFieldsToNodes(responseReplacements)} options={{ ...options, onChange: onResponseFieldsChange }}></JsonEditor>
+                hsResponseFields && <JsonEditor
+                  content={{ ...hsMapping }}
+                  options={{ ...options, onChange: setHsMapping, 
+                    autocomplete: {
+                    filter: "contain",
+                    trigger: "focus",
+                    getOptions: function (text, path, input, editor) {
+                      return flattenObject(responseFields);
+                    },
+                  } }}
+                ></JsonEditor>
               }
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)

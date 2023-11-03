@@ -118,6 +118,9 @@ select option {
   .json-editor-container {
     height: 400px;
   }
+  .json-request-header-editor-container {
+    height: 200px;
+  }
 
 .dropdown-wrapper {
   display: flex;

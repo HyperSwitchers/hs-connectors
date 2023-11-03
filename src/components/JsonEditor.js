@@ -5,6 +5,7 @@ import "jsoneditor/dist/jsoneditor.css";
 
 function JsonEditor({
     content = {},
+    className = "json-request-editor-container",
     options = {
         mode: "tree",
         modes: ["tree", "code"],
@@ -23,13 +24,15 @@ function JsonEditor({
         autocomplete: {
           confirmKeys: [39, 35, 9, 190], // Confirm Autocomplete Keys: [right, end, tab, '.']  // By default are only [right, end, tab]
           caseSensitive: false,
+          filter: "contain",
+          trigger: "focus",
   
           getOptions: function (text, path, input, editor) {
-            if (!text.startsWith(activationChar) || input !== "value") return [];
+            if (!text.startsWith(activationChar)) return Object.keys(customOptionsData).map((k) => "$" + k);
             let data = {};
-            let startFrom = 0;
             const lastPoint = text.lastIndexOf(".");
             const jsonObj = customOptionsData;
+            let startFrom = lastPoint > 0 ? 0 : 1;
             if (lastPoint > 0 && text.length > 1) {
               data = jsonpath.query(
                 jsonObj,
@@ -45,46 +48,12 @@ function JsonEditor({
             } else {
               data = jsonObj;
             }
-  
-            const optionsStr = YaskON.stringify(data, null, activationChar);
-            const opts = optionsStr.split("\n");
-            return { startFrom: startFrom, options: opts };
+
+            return { startFrom: startFrom, options: Object.keys(data) };
           },
         },
     };
   
-      // helper function to auto complete paths of a JSON object
-      const YaskON = {
-        // Return first level json paths by the node 'o'
-        stringify: function (o, prefix, activationChar) {
-          prefix = prefix || "";
-          switch (typeof o) {
-            case "object":
-              let output = "";
-              if (Array.isArray(o)) {
-                o.forEach(
-                  function (e, index) {
-                    output += activationChar + prefix + "[" + index + "]" + "\n";
-                  }.bind(this)
-                );
-                return output;
-              }
-              output = "";
-              for (let k in o) {
-                if (o.hasOwnProperty(k)) {
-                  if (prefix === "")
-                    output += this.stringify(o[k], k, activationChar);
-                }
-              }
-              if (prefix !== "") output += activationChar + prefix + "\n";
-              return output;
-            case "function":
-              return "";
-            default:
-              return prefix + "\n";
-          }
-        },
-      };
     let isLoaded = false;
     const [jsonEditor, setJsonEditor] = useState(undefined);
     const [validationErrors, setValidationErrors] = useState([]);
@@ -138,7 +107,7 @@ function JsonEditor({
     return (
         <div className='editor'>
             <div
-                className="json-request-editor-container"
+                className={className}
                 ref={jsonEditorRef}
             ></div>
             {
