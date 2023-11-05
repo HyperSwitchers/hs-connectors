@@ -2,21 +2,21 @@ import { useState, useEffect, useRef } from "react";
 import { parse_curl } from "curl-parser";
 import $ from "jquery";
 import "../styles.css";
-import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
+import { addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
 import copy from "copy-to-clipboard"; // Import the copy-to-clipboard library
 import React from "react";
 import AuthType from "./AuthType";
-import JsonEditor from "./JsonEditor";
 import ConnectorTemplates, { defaultConnectorProps } from "./ConnectorTemplates";
 import StatusMappingPopup from "./StatusMappingPopup";
 import { generateRustCode } from "utils/Parser";
-import IRequestFieldsTable from "./RequestFieldsTable";
+import IRequestFieldsTable from "./curl_handlers/RequestFieldsTable";
 import { Paper } from "@mui/material";
-import IRequestHeadersTable from "./RequestHeadersTable";
-import IResponseFieldsTable from "./ResponseFields";
+import IRequestHeadersTable from "./curl_handlers/RequestHeadersTable";
+import IResponseFieldsTable from "./curl_handlers/ResponseFields";
+import IConnectorResponseTable from "./curl_handlers/ConnectorResponseTable";
 
 const initialStatusMapping = {
   Started: null,
@@ -62,7 +62,6 @@ const CurlRequestExecutor = () => {
       "capture": false
     }'
     `);
-  const suggestions = Object.keys(synonymMapping);
   const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
@@ -87,7 +86,6 @@ const CurlRequestExecutor = () => {
   };
   const [curlRequest, setCurlRequest] = useState({});
   const [responseFields, setResponseFields] = useState({});
-  const [hsResponseFields, setHsResponseFields] = useState({});
   const [hsMapping, setHsMapping] = useState({
     status: "",
     response: {
@@ -101,20 +99,8 @@ const CurlRequestExecutor = () => {
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
   const [connectorContext, setConnectorContext] = useState({});
-  const [mappedResponseFields, setMappedResponseFields] = useState({});
 
   const [loading, setLoading] = useState(false);
-  const options = {
-    mode: "tree",
-    modes: ["tree", "code"],
-    autocomplete: {
-      filter: "contain",
-      trigger: "focus",
-      getOptions: function (text, path, input, editor) {
-        return suggestions.map((s) => "$" + s);
-      },
-    },
-  };
   let isLoaded = false;
 
   useEffect(() => {
@@ -167,14 +153,6 @@ const CurlRequestExecutor = () => {
     localStorage.props = JSON.stringify(props);
   }
 
-  const isObject = (value) => {
-    return value && typeof value === "object" && value.constructor === Object;
-  };
-
-  const isString = (value) => {
-    return typeof value === "string" || value instanceof String;
-  };
-
   function convertToValidVariableName(str) {
     return str
       .toLowerCase()
@@ -205,11 +183,6 @@ const CurlRequestExecutor = () => {
       data: requestOptions.body,
       success: (data) => {
         setResponseFields(data);
-        setMappedResponseFields(addFieldsToNodes(mapFieldNames(data)));
-        setHsResponseFields(undefined);
-        setTimeout(() => {
-          setHsResponseFields(addFieldsToNodes(data));
-        }, 100);
       },
       error: (data) => {
         console.log(data);
@@ -230,7 +203,6 @@ const CurlRequestExecutor = () => {
     setRequestFields(curl?.body || {});
     setRequestHeaderFields(curl?.headers || {});
     setResponseFields(curl?.response || {});
-    setHsResponseFields(curl?.hsResponse || {});
     setSelectedFlowOption(flow);
   };
 
@@ -259,20 +231,6 @@ const CurlRequestExecutor = () => {
 
   const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
 
-  let y = localStorage?.auth_type ? JSON.parse(localStorage?.auth_type) : {};
-  var inputJsonData = JSON.stringify({
-    [connector_name]: {
-      "authType": y.type,
-      "flows": {
-        [selectedFlowOption || 'Authorize']: {
-          "paymentsRequest": JSON.parse(JSON.stringify(requestFields)),
-          "paymentsResponse": JSON.parse(JSON.stringify(mappedResponseFields))
-        }
-      },
-      "attemptStatus": statusMappingData
-    }
-  });
-
   const [inputJson, setInputJson] = useState('');
   const updateInputJson = (inputJsonData) => {
     setInputJson(inputJsonData);
@@ -299,22 +257,6 @@ const CurlRequestExecutor = () => {
     localStorage.props = JSON.stringify(defaultConnectorProps(connector_name));
   };
   const [updateRequestData, setUpdateRequestData] = useState({});
-  const onRequestFieldsChange = (data) => {
-    if (data) {
-      setUpdateRequestData(data);
-      setRequestFields(data);
-    }
-  }
-  const onRequestHeadersChange = (data) => {
-    console.log(data);
-  }
-  const [updateResponseData, setUpdateResponseData] = useState({});
-  const onResponseFieldsChange = (data) => {
-    if (data) {
-      setUpdateResponseData(data);
-      setMappedResponseFields(data);
-    }
-  }
   return (
     <div>
       <div className='dropdown-wrapper hs-headers'>
@@ -353,12 +295,13 @@ const CurlRequestExecutor = () => {
               <h3>Request Header Fields:</h3>
               <IRequestHeadersTable requestHeaders={{...requestHeaderFields}} suggestions={authTypesMapping} setRequestHeaders={setRequestHeaderFields}></IRequestHeadersTable>
               <h3>Request Body Fields:</h3>
-              <IRequestFieldsTable requestFields={{...requestFields}} suggestions={synonymMapping}></IRequestFieldsTable>
+              <IRequestFieldsTable requestFields={{...requestFields}} suggestions={synonymMapping} setRequestFields={setUpdateRequestData}></IRequestFieldsTable>
             </Paper>
 
             <Paper elevation={0} id="responseFieldsLeft" className="response-fields-left">
               <h3>Response</h3>
-              <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor>
+              <IConnectorResponseTable connectorResponse={responseFields}></IConnectorResponseTable>
+              {/* <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor> */}
             </Paper>
 
             <Paper elevation={0} id="responseFieldsRight" className="response-fields-right">
@@ -387,7 +330,7 @@ const CurlRequestExecutor = () => {
                     ...existingFlows,
                     [selectedFlowOption || 'Authorize']: {
                       "paymentsRequest": updateRequestData,
-                      "paymentsResponse": updateResponseData
+                      "paymentsResponse": addFieldsToNodes(responseFields)
                     }
                   },
                   "attemptStatus": statusMappingData

@@ -96,7 +96,7 @@ export function flattenObject(obj, parent = '', res = []) {
   return res;
 }
 
-const typesList = ["String", "i64", "bool", "array", "object"];
+export const typesList = ["String", "i32", "i64", "f32", "f64", "bool", "array", "object"];
 export function addFieldsToNodes(jsonObj) {
   // Helper function to check if a value is an object (excluding arrays)
   function isObject(val) {
@@ -115,7 +115,7 @@ export function addFieldsToNodes(jsonObj) {
         value: obj[key],
         optional: false, // Set this to true or false based on your requirement
         secret: false, // Set this to true or false based on your requirement
-        type: typesList[0],
+        type: getRustType(obj[key]),
       };
     }
   }
@@ -127,4 +127,28 @@ export function addFieldsToNodes(jsonObj) {
   traverse(newObj);
 
   return newObj;
+}
+
+export function is_mapped_field(field) {
+  return typeof field?.value === 'string' && field?.value?.includes("$");
+}
+
+function getRustType(value) {
+  const type = typeof value;
+  switch (type) {
+    case 'string':
+      return 'String';
+    case 'number':
+      return 'i64';
+    case 'boolean':
+      return 'bool';
+    case 'object':
+      if (Array.isArray(value)) {
+        return 'Vec<T>';
+      } else {
+        return 'HashMap<String, T>';
+      }
+    default:
+      return 'Unknown';
+  }
 }

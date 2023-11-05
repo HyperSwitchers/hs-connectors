@@ -227,7 +227,8 @@ function removeQuotes(jsonString) {
 }
 
 function typeReplacement(fieldTypeValue) {
-    const lastIndex = fieldTypeValue.lastIndexOf("_");
+    if(!fieldTypeValue) return "";
+    const lastIndex = fieldTypeValue?.lastIndexOf("_");
     if (lastIndex !== -1) {
         return fieldTypeValue.substring(lastIndex + 1);
     }

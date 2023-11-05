@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Checkbox, Autocomplete, TextField, Tooltip } from '@mui/material';
 import "jsoneditor/dist/jsoneditor.css";
-import { addFieldsToNodes, flattenObject, mapFieldNames } from 'utils/search_utils';
+import { addFieldsToNodes, flattenObject, is_mapped_field, mapFieldNames, typesList } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 
-function IRequestFieldsTable({requestFields,  suggestions = {}}) {
+function IRequestFieldsTable({requestFields,  suggestions = {}, setRequestFields = (value) => {}}) {
 
   const defaultProps = {
     options: Object.keys(suggestions).map((s) => "$" + s),
@@ -17,7 +17,11 @@ function IRequestFieldsTable({requestFields,  suggestions = {}}) {
     setMapping(addFieldsToNodes(mapFieldNames(requestFields)));
     setFields(flattenObject(requestFields));
   }, [requestFields]);
-  console.log(requestFields);
+  function updateRequestFields() {
+    let updated = { ...mapping };
+    setMapping(updated)
+    setRequestFields(updated);
+  };
   return (
     <div className='editor'>
       <TableContainer component={Paper} sx={{maxHeight: '500px', overflow:'scroll'}}>
@@ -27,6 +31,7 @@ function IRequestFieldsTable({requestFields,  suggestions = {}}) {
               <TableCell><b>Field Name</b></TableCell>
               <TableCell><b>Optional</b></TableCell>
               <TableCell><b>Secret</b></TableCell>
+              <TableCell><b>Type</b></TableCell>
               <TableCell><b>Hyperswitch Field</b></TableCell>
             </TableRow>
           </TableHead>
@@ -43,29 +48,43 @@ function IRequestFieldsTable({requestFields,  suggestions = {}}) {
                 <TableCell>
                   <Checkbox checked={field.optional} onChange={() => {
                     field.optional = !field.optional;
-                    setMapping({ ...mapping });
+                    updateRequestFields();
                   }} />
                 </TableCell>
                 <TableCell>
                   <Checkbox checked={field.secret} onChange={() => {
                     field.secret = !field.secret;
-                    setMapping({ ...mapping });
+                    updateRequestFields();
                   }} />
                 </TableCell>
                 <TableCell>
-                <Tooltip title={field?.value?.includes("$")? "Mapped" : "Unmapped"}  placement="right">
-                  
+                <Autocomplete
+                      defaultValue={field.type}
+                      options={typesList}
+                      id={row+"type"}
+                      sx={{ width: 120 }}
+                      freeSolo={false}
+                      onChange={(event, newValue) => {
+                        field.type = newValue;
+                        updateRequestFields();
+                      }}
+                      renderInput={(params) => (
+                          <TextField {...params} label="" variant="standard" />
+                      )}></Autocomplete>
+                </TableCell>
+                <TableCell>
+                <Tooltip title={is_mapped_field(field) ? "Mapped" : "Unmapped"}  placement="right">
                     <Autocomplete
                       defaultValue={field.value}
                       {...defaultProps}
                       id={row}
-                      sx={{ width: 300 }}
+                      sx={{ width: 280 }}
                       onChange={(event, newValue) => {
                         field.value = newValue;
-                        setMapping({ ...mapping });
+                        updateRequestFields();
                       }}
                       renderInput={(params) => (
-                          <TextField {...params} sx={{ input: { color: field?.value?.includes("$") ? '#42A5F5' : "#000" } }} label="" variant="standard" />
+                          <TextField {...params} sx={{ input: { color: is_mapped_field(field)  ? '#42A5F5' : "#000" } }} label="" variant="standard" />
                       )}
                     />
                   </Tooltip>

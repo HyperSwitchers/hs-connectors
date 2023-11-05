@@ -156,22 +156,22 @@ const ConnectorTemplate = ({ context = {
     return maxHeaders;
   }
   const build_auth_header_key = (data) => {
-    if (data.includes('auth_type_api_key')) {
+    if (data.includes('$api_key')) {
       return "auth.api_key.expose()";
     }
-    else if (data.includes('auth_type_key1')) {
+    else if (data.includes('$key1')) {
       return "auth.key1.expose()";
     }
-    else if (data.includes('auth_type_secret_key')) {
+    else if (data.includes('$secret_key')) {
       return "auth.secret_key.expose()";
     }
-    else if (data.includes('auth_type_key2')) {
+    else if (data.includes('$key2')) {
       return "auth.key2.expose()";
     }
-    else if (data.includes('auth_type_base_64_encode_api_key_colon_key1')) {
+    else if (data.includes('$base_64_encode_api_key_colon_key1')) {
       return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.api_key.peek(), auth.key1.peek()))'
     }
-    else if (data.includes('auth_type_base_64_encode_key1_colon_api_key')) {
+    else if (data.includes('$base_64_encode_key1_colon_api_key')) {
       return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.key1.peek(), auth.api_key.peek()))'
     }
     return '';

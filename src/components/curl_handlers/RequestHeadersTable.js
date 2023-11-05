@@ -44,7 +44,7 @@ function IRequestHeadersTable({ requestHeaders, suggestions = {}, setRequestHead
                       {...defaultProps}
                       id={row}
                       sx={{ maxWidth: 500 }}
-                      onChange={(event, newValue) => {
+                      onInputChange={(event, newValue) => {
                         let updated = { ...mapping, [row]: newValue };
                         setMapping(updated);
                         setRequestHeaders(updated);
