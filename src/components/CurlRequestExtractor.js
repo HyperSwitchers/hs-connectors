@@ -1,8 +1,11 @@
+// @ts-check
+
 import { useState, useEffect, useRef } from "react";
 import { parse_curl } from "curl-parser";
 import $ from "jquery";
 import "../styles.css";
-import { addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
+import '../styles/styles.sass';
+import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
 import Dropdown from './Dropdown';
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
@@ -87,11 +90,11 @@ const CurlRequestExecutor = () => {
   const [curlRequest, setCurlRequest] = useState({});
   const [responseFields, setResponseFields] = useState({});
   const [hsMapping, setHsMapping] = useState({
-    status: "",
+    status: '',
     response: {
-      response_id: "",
+      response_id: '',
       card: {
-        number: "",
+        number: '',
       },
     },
   });
@@ -112,9 +115,9 @@ const CurlRequestExecutor = () => {
 
   const updateCurlRequest = (request) => {
     let ss = request
-      .replace(/\s*\\\s*/g, " ")
-      .replace(/\n/g, "")
-      .replace(/--data-raw|--data-urlencode/g, "-d");
+      .replace(/\s*\\\s*/g, ' ')
+      .replace(/\n/g, '')
+      .replace(/--data-raw|--data-urlencode/g, '-d');
     setCurlCommand(request);
     try {
       const fetchRequest = parse_curl(ss);
@@ -191,7 +194,6 @@ const CurlRequestExecutor = () => {
     $.ajax(url, req_content).always(() => setLoading(false));
   };
 
-
   const [selectedFlowOption, setSelectedFlowOption] = useState(localStorage.last_selected_flow);
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
 
@@ -204,14 +206,25 @@ const CurlRequestExecutor = () => {
     setRequestHeaderFields(curl?.headers || {});
     setResponseFields(curl?.response || {});
     setSelectedFlowOption(flow);
+    if (curl?.input) {
+      updateCurlRequest(curl?.input);
+    }
   };
 
   const handlePaymentMethodOptionChange = (event) => {
     setSelectedPaymentMethodOption(event.target.value);
   };
 
-  const flowOptions = ["AuthType", "Authorize", "Capture", "Void", "Refund", "PSync", "RSync"];
-  const paymentMethodOptions = ["Card", "Wallet", "BankRedirects"];
+  const flowOptions = [
+    'AuthType',
+    'Authorize',
+    'Capture',
+    'Void',
+    'Refund',
+    'PSync',
+    'RSync',
+  ];
+  const paymentMethodOptions = ['Card', 'Wallet', 'BankRedirects'];
 
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
@@ -235,7 +248,6 @@ const CurlRequestExecutor = () => {
   const updateInputJson = (inputJsonData) => {
     setInputJson(inputJsonData);
   };
-  console.log(inputJson)
   const curlTextareaRef = useRef(null);
 
   const [isCopied, setIsCopied] = useState(false);
