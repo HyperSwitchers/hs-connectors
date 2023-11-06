@@ -352,6 +352,7 @@ const CurlRequestExecutor = () => {
               let x = JSON.stringify({
                 [connector_name]: {
                   "authType": y.type,
+                  "authKeys": JSON.parse(localStorage.auth_type || '{}').content || {},
                   "amount": {
                     "unit": selectedCurrencyUnitOption,
                     "unitType": selectedCurrencyUnitTypeOption

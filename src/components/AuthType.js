@@ -44,7 +44,7 @@ function AuthType() {
   const onSaveClick = (jsonEditor) => {
     const requestData = jsonEditor.get();
     localStorage.auth_type = JSON.stringify({
-      ...JSON.parse(localStorage.auth_type),
+      ...JSON.parse(localStorage.auth_type || '{}'),
       type: authType,
       content: requestData,
     });
