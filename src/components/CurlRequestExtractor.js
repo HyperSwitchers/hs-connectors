@@ -196,6 +196,8 @@ const CurlRequestExecutor = () => {
 
   const [selectedFlowOption, setSelectedFlowOption] = useState(localStorage.last_selected_flow);
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
+  const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] = useState('');
+  const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] = useState('');
 
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
@@ -215,6 +217,14 @@ const CurlRequestExecutor = () => {
     setSelectedPaymentMethodOption(event.target.value);
   };
 
+  const handleCurrencyUnitOptionChange = (event) => {
+    setSelectedCurrencyUnitOption(event.target.value);
+  };
+
+  const handleCurrencyUnitTypeOptionChange = (event) => {
+    setSelectedCurrencyUnitTypeOption(event.target.value);
+  };
+
   const flowOptions = [
     'AuthType',
     'Authorize',
@@ -225,6 +235,9 @@ const CurlRequestExecutor = () => {
     'RSync',
   ];
   const paymentMethodOptions = ['Card', 'Wallet', 'BankRedirects'];
+
+  const CurrencyUnit = ["Minor", "Base"];
+  const CurrencyUnitType = ["String", "i64", "f64"];
 
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
@@ -280,6 +293,8 @@ const CurlRequestExecutor = () => {
         </div>
         <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='Flow Type' />
         <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='Payment Method' />
+        <Dropdown options={CurrencyUnit} handleSelectChange={handleCurrencyUnitOptionChange} selectedOption={selectedCurrencyUnitOption} type='Currency Unit' />
+        <Dropdown options={CurrencyUnitType} handleSelectChange={handleCurrencyUnitTypeOptionChange} selectedOption={selectedCurrencyUnitTypeOption} type='Currency Unit Type' />
       </div>
       {selectedFlowOption === 'AuthType' ? <AuthType></AuthType> :
         <div>
@@ -305,9 +320,9 @@ const CurlRequestExecutor = () => {
             </Paper>
             <Paper elevation={0} className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <IRequestHeadersTable requestHeaders={{...requestHeaderFields}} suggestions={authTypesMapping} setRequestHeaders={setRequestHeaderFields}></IRequestHeadersTable>
+              <IRequestHeadersTable requestHeaders={{ ...requestHeaderFields }} suggestions={authTypesMapping} setRequestHeaders={setRequestHeaderFields}></IRequestHeadersTable>
               <h3>Request Body Fields:</h3>
-              <IRequestFieldsTable requestFields={{...requestFields}} suggestions={synonymMapping} setRequestFields={setUpdateRequestData}></IRequestFieldsTable>
+              <IRequestFieldsTable requestFields={{ ...requestFields }} suggestions={synonymMapping} setRequestFields={setUpdateRequestData}></IRequestFieldsTable>
             </Paper>
 
             <Paper elevation={0} id="responseFieldsLeft" className="response-fields-left">
@@ -338,6 +353,10 @@ const CurlRequestExecutor = () => {
               let x = JSON.stringify({
                 [connector_name]: {
                   "authType": y.type,
+                  "amount": {
+                    "unit": selectedCurrencyUnitOption,
+                    "unitType": selectedCurrencyUnitTypeOption
+                  },
                   "flows": {
                     ...existingFlows,
                     [selectedFlowOption || 'Authorize']: {
@@ -355,7 +374,7 @@ const CurlRequestExecutor = () => {
               Generate Code
             </button>
           </div>
-          <div style={{ display: 'flex', overflow:'hidden' }}>
+          <div style={{ display: 'flex', overflow: 'hidden' }}>
             <div style={{ width: '50%', padding: '10px' }}>
               <h3>Generated Code Snippet</h3>
               <button onClick={handleCopyClick}>Copy to Clipboard</button>

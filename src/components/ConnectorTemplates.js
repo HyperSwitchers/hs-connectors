@@ -140,7 +140,7 @@ const ConnectorTemplate = ({ context = {
   response_data: 'types::PaymentsResponseData',
   struct_name: 'Shift4',
   connector_name: 'shift4'
-}, curl = { connector: '', flow: '', input: '', body: undefined, headers: undefined, response: undefined, hsResponse: undefined} }) => {
+}, curl = { connector: '', flow: '', input: '', body: undefined, headers: undefined, response: undefined, hsResponse: undefined } }) => {
   const [templateContent] = useState(ConnectorIntegration);
   const [generatedCode, setGeneratedCode] = useState('');
   const findCommonHeaders = (data) => {
@@ -190,23 +190,23 @@ const ConnectorTemplate = ({ context = {
       let headers = data[key]?.curl?.headers || {};
       for (const header in headers) {
         let auth_value = build_auth_header_key(headers[header]);
-      if (auth_value) {
-        let contents = headers[header].split("$");
-        auth_value = contents.length > 1 && contents[0] ? `format!("`+contents[0]+`{}", `+auth_value+`)` : auth_value;
-        return {
-          header_auth_key: get_auth_header_key(header) ,
-          header_auth_value: auth_value+ '.into_masked()'
+        if (auth_value) {
+          let contents = headers[header].split("$");
+          auth_value = contents.length > 1 && contents[0] ? `format!("` + contents[0] + `{}", ` + auth_value + `)` : auth_value;
+          return {
+            header_auth_key: get_auth_header_key(header),
+            header_auth_value: auth_value + '.into_masked()'
+          }
         }
-      }
       }
     }
     return {};
   }
   useEffect(() => {
-    if(curl?.connector && curl?.flow) {
+    if (curl?.connector && curl?.flow) {
       let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(curl?.connector)
       props.flows[curl?.flow].curl = {};
-      props.flows[curl?.flow].curl = {input: curl.input, hsResponse: curl.hsResponse, body: curl.body, headers: curl.headers, response: curl.response};
+      props.flows[curl?.flow].curl = { input: curl.input, hsResponse: curl.hsResponse, body: curl.body, headers: curl.headers, response: curl.response };
       localStorage.props = JSON.stringify(props);
     }
     if (templateContent) {
@@ -224,7 +224,7 @@ const ConnectorTemplate = ({ context = {
           content_type: props.content_type,
           ...build_auth_headers(props.flows)
         }) +
-        Object.values(flows).map((flow) => template({...flow, connector_name: toCamelCase(flow?.connector_name || ' ')})).join("\n")
+        Object.values(flows).map((flow) => template({ ...flow, connector_name: toCamelCase(flow?.connector_name || ' ') })).join("\n")
         + connector_webhook_template({
           struct_name: toPascalCase(props.connector),
         });
