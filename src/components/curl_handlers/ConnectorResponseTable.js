@@ -40,8 +40,8 @@ function IConnectorResponseTable({
   const [contextMenu, setContextMenu] = React.useState(null);
   const [contextMenuRequestor, setContextMenuRequestor] = useState(null);
   const [selectedFields, setSelectedFields] = useState([]);
-  const [variants, setVariants] = useState({});
   const [variantRequestor, setVariantRequestor] = useState(null);
+  const [variants, setVariants] = useState({});
 
   useEffect(() => {
     setMapping(addFieldsToNodes(connectorResponse));
@@ -110,10 +110,11 @@ function IConnectorResponseTable({
         (v) => v.length > 0 && !updatedVariants[field].includes(v)
       );
       updatedVariants[field] = updatedVariants[field].concat(filteredVariants);
-      updatedMapping[field].value = updatedVariants[field].join(',');
+      updatedMapping[field].value = updatedVariants[field];
       setMapping(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
+      console.log(updatedMapping);
     }
   };
 
@@ -127,10 +128,11 @@ function IConnectorResponseTable({
         delete updatedVariants[field];
         updatedMapping[field] = addFieldsToNodes(connectorResponse)[field];
       } else {
-        updatedMapping[field].value = updatedVariants[field].join(',');
+        updatedMapping[field].value = updatedVariants[field];
       }
       setMapping(updatedMapping);
       setVariants(updatedVariants);
+      console.log(updatedMapping);
     }
   };
 
@@ -152,9 +154,19 @@ function IConnectorResponseTable({
               <TableCell>
                 <b>Type</b>
               </TableCell>
-              <TableCell>
-                <b>Variants</b>
-              </TableCell>
+              {fields?.filter((row) => {
+                const field =
+                  jsonpath.query(
+                    mapping,
+                    '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
+                  )[0] || {};
+
+                return field.type === 'enum';
+              }).length > 0 ? (
+                <TableCell>
+                  <b>Variants</b>
+                </TableCell>
+              ) : null}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -202,7 +214,10 @@ function IConnectorResponseTable({
                           {Object.keys(variants).includes(row) ? (
                             <React.Fragment>
                               {variants[row].map((variant) => (
-                                <div className="variant-wrap">
+                                <div
+                                  key={`${row}-${variant}`}
+                                  className="variant-wrap"
+                                >
                                   <div className="variant-name">{variant}</div>
                                   <div
                                     className="variant-delete"

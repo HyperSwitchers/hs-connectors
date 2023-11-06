@@ -177,7 +177,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "http://localhost:5050/" + curlRequest.url;
+    let url = curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -321,7 +321,7 @@ const CurlRequestExecutor = () => {
               <h3>Request Header Fields:</h3>
               <IRequestHeadersTable requestHeaders={{ ...requestHeaderFields }} suggestions={authTypesMapping} setRequestHeaders={setRequestHeaderFields}></IRequestHeadersTable>
               <h3>Request Body Fields:</h3>
-              <IRequestFieldsTable requestFields={{ ...requestFields }} suggestions={synonymMapping} setRequestFields={setUpdateRequestData}></IRequestFieldsTable>
+              <IRequestFieldsTable updateRequestData={updateRequestData} requestFields={{ ...requestFields }} suggestions={synonymMapping} setRequestFields={setUpdateRequestData}></IRequestFieldsTable>
             </Paper>
 
             <Paper elevation={0} id="responseFieldsLeft" className="response-fields-left">
