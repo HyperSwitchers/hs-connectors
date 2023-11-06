@@ -59,6 +59,7 @@ function AuthType() {
       <div className="auth-key" key={key}>
         <div className="auth-key-input">
           <input
+            className="material-input"
             type="text"
             onKeyUp={(e) => {
               let updatedContent = { ...content };
