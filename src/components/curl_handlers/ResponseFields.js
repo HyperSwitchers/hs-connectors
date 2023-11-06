@@ -17,7 +17,6 @@ function IResponseFieldsTable({responseFields,  suggestions = {}, setResponseFie
     setMapping(addFieldsToNodes(mapFieldNames(responseFields)));
     setFields(flattenObject(responseFields));
   }, [responseFields]);
-  console.log(responseFields);
   return (
     <div className='editor'>
       <TableContainer component={Paper} sx={{maxHeight: '500px', overflow:'scroll'}}>

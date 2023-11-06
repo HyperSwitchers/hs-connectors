@@ -14,7 +14,7 @@ function IConnectorResponseTable({connectorResponse,  suggestions = {}, setConne
   const [mapping, setMapping] = useState({});
   const [fields, setFields ] = useState([]);
   useEffect(() => {
-    setMapping(addFieldsToNodes(mapFieldNames(connectorResponse)));
+    setMapping(addFieldsToNodes(connectorResponse));
     setFields(flattenObject(connectorResponse));
   }, [connectorResponse]);
   function updateConnectorResponse() {
@@ -29,8 +29,7 @@ function IConnectorResponseTable({connectorResponse,  suggestions = {}, setConne
           <TableHead>
             <TableRow>
               <TableCell><b>Field Name</b></TableCell>
-              <TableCell><b>Optional</b></TableCell>
-              <TableCell><b>Secret</b></TableCell>
+              <TableCell><b>Value</b></TableCell>
               <TableCell><b>Type</b></TableCell>
             </TableRow>
           </TableHead>
@@ -44,17 +43,8 @@ function IConnectorResponseTable({connectorResponse,  suggestions = {}, setConne
                 <TableCell>
                   {row}
                 </TableCell>
-                <TableCell>
-                  <Checkbox checked={field.optional} onChange={() => {
-                    field.optional = !field.optional;
-                    updateConnectorResponse();
-                  }} />
-                </TableCell>
-                <TableCell>
-                  <Checkbox checked={field.secret} onChange={() => {
-                    field.secret = !field.secret;
-                    updateConnectorResponse();
-                  }} />
+                <TableCell sx={{maxWidth: '100px', wordBreak:'break-word'}}>
+                  {field.value}
                 </TableCell>
                 <TableCell>
                 <Autocomplete
