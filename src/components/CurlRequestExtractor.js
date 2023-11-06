@@ -92,10 +92,9 @@ const CurlRequestExecutor = () => {
   const [hsMapping, setHsMapping] = useState({
     status: '',
     response: {
-      response_id: '',
-      card: {
-        number: '',
-      },
+      resource_id: '',
+      redirection_data: `None`,
+      connector_response_reference_id: ``
     },
   });
   const [requestFields, setRequestFields] = useState({});
