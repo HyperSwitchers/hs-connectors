@@ -17,13 +17,15 @@ import {
   flattenObject,
   is_mapped_field,
   mapFieldNames,
+  updateNestedJson,
 } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 
 function IResponseFieldsTable({
-  responseFields,
+  hsResponse,
   suggestions = {},
-  setResponseFields = (value) => {},
+  setHsMapping = (value) => {},
+  setHsResponse = (value) => {},
 }) {
   const defaultProps = {
     options: flattenObject(suggestions).map((s) => '$' + s),
@@ -33,9 +35,9 @@ function IResponseFieldsTable({
   const [mapping, setMapping] = useState({});
   const [fields, setFields] = useState([]);
   useEffect(() => {
-    setMapping(addFieldsToNodes(mapFieldNames(responseFields)));
-    setFields(flattenObject(responseFields));
-  }, [responseFields]);
+    setMapping(addFieldsToNodes(mapFieldNames(hsResponse)));
+    setFields(flattenObject(hsResponse));
+  }, [hsResponse]);
   return (
     <div className="editor">
       <TableContainer component={Paper} sx={{ overflow: 'scroll' }}>
@@ -73,8 +75,17 @@ function IResponseFieldsTable({
                         onChange={(event, newValue) => {
                           field.value = newValue;
                           let updated = { ...mapping };
+                          let updatedResponse = { ...hsResponse };
+                          const keys = row.split('.');
+                          updatedResponse = updateNestedJson(
+                            updatedResponse,
+                            keys,
+                            newValue
+                          );
+                          debugger;
+                          setHsResponse(updatedResponse);
                           setMapping(updated);
-                          setResponseFields(updated);
+                          setHsMapping(updated);
                         }}
                         renderInput={(params) => (
                           <TextField

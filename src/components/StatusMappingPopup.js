@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
 
 const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
+  const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
     JSON.stringify(initialValues, null, 2)
   );
@@ -39,7 +40,10 @@ const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
     const inputField = document.getElementById(`input-${field}`);
     if (suggestionContainer && inputField) {
       suggestionContainer.innerHTML = '';
-
+      setShowSuggestions(field);
+      if (suggestions.length === 0) {
+        setShowSuggestions(null);
+      }
       suggestions.map((suggestion) => {
         const div = document.createElement('div');
         div.textContent = suggestion;
@@ -47,6 +51,7 @@ const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
           inputField.value = suggestion;
           suggestionContainer.innerHTML = '';
           updateJsonInput(field, suggestion);
+          setShowSuggestions(null);
         });
         suggestionContainer.appendChild(div);
       });
@@ -71,12 +76,26 @@ const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
                 <React.Fragment key={f}>
                   <div className="status">{f}</div>
                   <div className="autocomplete">
-                    <input
-                      id={`input-${f}`}
-                      className="material-input status-mapping-input"
-                      type="text"
-                      onChangeCapture={(e) => handleKeyPress(f, e)}
-                    />
+                    <div className="input">
+                      <input
+                        id={`input-${f}`}
+                        className="material-input status-mapping-input"
+                        type="text"
+                        onChangeCapture={(e) => handleKeyPress(f, e)}
+                      />
+                      <div
+                        className="status-dropdown"
+                        onClick={() => {
+                          setShowSuggestions(f);
+                          renderSuggestions(
+                            f,
+                            !showSuggestions ? HYPERSWITCH_STATUS_LIST : []
+                          );
+                        }}
+                      >
+                        {showSuggestions === f ? 'x' : '...'}
+                      </div>
+                    </div>
                     <div className="suggestions" id={`suggestions-${f}`}></div>
                   </div>
                 </React.Fragment>

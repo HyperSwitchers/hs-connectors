@@ -128,6 +128,23 @@ export function mapFieldNames(input) {
   return input;
 }
 
+export const updateNestedJson = (json, keys, updatedValue) => {
+  let updatedObj = { ...json };
+  let updatedKeys = [...keys];
+  if (updatedKeys.length === 1) {
+    if (updatedValue === null || updatedValue === undefined) {
+      delete updatedObj[updatedKeys[0]];
+    } else {
+      updatedObj[updatedKeys[0]] = updatedValue;
+    }
+  } else {
+    const key = updatedKeys.shift();
+    updatedObj[key] = updateNestedJson(json[key], updatedKeys, updatedValue);
+  }
+
+  return updatedObj;
+};
+
 export function flattenObject(obj, parent = '', res = []) {
   for (let key in obj) {
     let propName = parent ? parent + '.' + key : key;

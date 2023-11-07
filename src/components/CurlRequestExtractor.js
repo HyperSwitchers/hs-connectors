@@ -95,14 +95,15 @@ const CurlRequestExecutor = () => {
   };
   const [curlRequest, setCurlRequest] = useState({});
   const [responseFields, setResponseFields] = useState({});
-  const [hsMapping, setHsMapping] = useState({
+  const [hsResponse, setHsResponse] = useState({
     status: '',
     response: {
       resource_id: '',
-      redirection_data: `None`,
-      connector_response_reference_id: ``,
+      redirection_data: 'None',
+      connector_response_reference_id: '',
     },
   });
+  const [hsMapping, setHsMapping] = useState({});
   const [requestFields, setRequestFields] = useState({});
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
   const [responseMapping, setResponseMapping] = useState({});
@@ -212,7 +213,7 @@ const CurlRequestExecutor = () => {
   };
 
   const [selectedFlowOption, setSelectedFlowOption] = useState(
-    localStorage.last_selected_flow
+    localStorage?.last_selected_flow || 'AuthType'
   );
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
     useState('');
@@ -496,7 +497,9 @@ const CurlRequestExecutor = () => {
                 }}
               >
                 <IResponseFieldsTable
-                  responseFields={hsMapping}
+                  setHsMapping={setHsMapping}
+                  setHsResponse={setHsResponse}
+                  hsResponse={hsResponse}
                   suggestions={responseFields}
                 ></IResponseFieldsTable>
               </div>
@@ -542,6 +545,7 @@ const CurlRequestExecutor = () => {
                       [selectedFlowOption || 'Authorize']: {
                         paymentsRequest: modifiedUpdatedRequestData,
                         paymentsResponse: modifiedUpdatedResponseData,
+                        hsResponse: hsMapping,
                       },
                     },
                     attemptStatus: statusMappingData,

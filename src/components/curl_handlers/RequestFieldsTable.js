@@ -19,6 +19,7 @@ import {
   is_mapped_field,
   mapFieldNames,
   typesList,
+  updateNestedJson,
 } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 
@@ -46,23 +47,6 @@ function IRequestFieldsTable({
     setMapping(mapping);
     setFields(flattenObject(requestFields));
   }, [requestFields]);
-
-  const updateNestedJson = (json, keys, updatedValue) => {
-    let updatedObj = { ...json };
-    let updatedKeys = [...keys];
-    if (updatedKeys.length === 1) {
-      if (updatedValue === null || updatedValue === undefined) {
-        delete updatedObj[updatedKeys[0]];
-      } else {
-        updatedObj[updatedKeys[0]] = updatedValue;
-      }
-    } else {
-      const key = updatedKeys.shift();
-      updatedObj[key] = updateNestedJson(json[key], updatedKeys, updatedValue);
-    }
-
-    return updatedObj;
-  };
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
