@@ -6,7 +6,12 @@ import $ from 'jquery';
 import '../styles.css';
 import '../styles/styles.sass';
 import {
-  synonymMapping, authTypesMapping, download
+  authTypesMapping,
+  download,
+  deepJsonSwap,
+  synonymMapping,
+  addFieldsToNodes,
+  mapFieldNames,
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
@@ -26,32 +31,7 @@ import { Paper } from '@mui/material';
 import IRequestHeadersTable from './curl_handlers/RequestHeadersTable';
 import IResponseFieldsTable from './curl_handlers/ResponseFields';
 import IConnectorResponseTable from './curl_handlers/ConnectorResponseTable';
-
-const initialStatusMapping = {
-  Started: null,
-  AuthenticationFailed: null,
-  RouterDeclined: null,
-  AuthenticationPending: null,
-  AuthenticationSuccessful: null,
-  Authorized: null,
-  AuthorizationFailed: null,
-  Charged: null,
-  Authorizing: null,
-  CodInitiated: null,
-  Voided: null,
-  VoidInitiated: null,
-  CaptureInitiated: null,
-  CaptureFailed: null,
-  VoidFailed: null,
-  AutoRefunded: null,
-  PartialCharged: null,
-  Unresolved: null,
-  Pending: null,
-  Failure: null,
-  PaymentMethodAwaited: null,
-  ConfirmationAwaited: null,
-  DeviceDataCollectionPending: null,
-};
+import { fetchItem, storeItem } from 'utils/state';
 
 const CurlRequestExecutor = () => {
   const [curlCommand, setCurlCommand] =
@@ -128,9 +108,10 @@ const CurlRequestExecutor = () => {
     setCurlCommand(request);
     try {
       const fetchRequest = parse_curl(ss);
+      const requestFields = JSON.parse(fetchRequest?.data?.ascii || '{}');
       setCurlRequest(fetchRequest);
-      setRequestFields(JSON.parse(fetchRequest?.data?.ascii || '{}'));
-
+      setRequestFields(requestFields);
+      setUpdateRequestData(addFieldsToNodes(mapFieldNames(requestFields)));
       setRequestHeaderFields(
         fetchRequest?.headers.reduce((result, item) => {
           let header = item.split(':');
@@ -167,7 +148,7 @@ const CurlRequestExecutor = () => {
       }
       props.flows[selectedFlowOption] = flow;
     }
-    localStorage.props = JSON.stringify(props);
+    storeItem('props', JSON.stringify(props));
   };
 
   function convertToValidVariableName(str) {
@@ -224,8 +205,10 @@ const CurlRequestExecutor = () => {
 
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
-    let curl = JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl;
-    localStorage.last_selected_flow = flow;
+    let curl =
+      JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl ||
+      curlCommand;
+    storeItem('last_selected_flow', flow);
     setCurlCommand(curl?.input || '');
     setRequestFields(curl?.body || {});
     setRequestHeaderFields(curl?.headers || {});
@@ -302,6 +285,8 @@ const CurlRequestExecutor = () => {
 
   const [inputJson, setInputJson] = useState('');
   const updateInputJson = (inputJsonData) => {
+    let props = { ...fetchItem('props'), ...JSON.parse(inputJsonData) };
+    storeItem('props', JSON.stringify(props));
     setInputJson(inputJsonData);
   };
   const curlTextareaRef = useRef(null);
@@ -310,28 +295,12 @@ const CurlRequestExecutor = () => {
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(codeSnippet);
-    download(codeSnippet, "transformer.rs", "text");
+    download(codeSnippet, 'transformer.rs', 'text');
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
     setTimeout(() => {
       setIsCopied(false);
     }, 500);
-  };
-
-  const deepJsonSwap = (json) => {
-    if (typeof json === 'object') {
-      let modifiedJson = { ...json };
-      Object.keys(modifiedJson).map((m) => {
-        const shouldSwap = modifiedJson[m]?.type === 'enum';
-        const value = modifiedJson[m]?.value;
-        if (shouldSwap && value) {
-          modifiedJson[m].type = value;
-        }
-        modifiedJson[m] = deepJsonSwap(modifiedJson[m]);
-      });
-    }
-
-    return json;
   };
 
   const [connectorName, setConnectorName] = useState(
@@ -340,8 +309,8 @@ const CurlRequestExecutor = () => {
   const handleConnectorNameChange = (event) => {
     let connector_name = event.target.value;
     setConnectorName(connector_name);
-    localStorage.connector_name = connector_name;
-    localStorage.props = JSON.stringify(defaultConnectorProps(connector_name));
+    storeItem('connector_name', connector_name);
+    storeItem('props', JSON.stringify(defaultConnectorProps(connector_name)));
   };
   const [updateRequestData, setUpdateRequestData] = useState({});
   return (
@@ -392,7 +361,14 @@ const CurlRequestExecutor = () => {
           type="Currency Unit Type"
         />
         <button>
-          <a style={{ textDecoration: "none", color: '#fff' }} target="_blank" rel="noopener noreferrer" href="https://github.com/juspay/hyperswitch/fork">Fork Hyperswitch</a>
+          <a
+            style={{ textDecoration: 'none', color: '#fff' }}
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/juspay/hyperswitch/fork"
+          >
+            Fork Hyperswitch
+          </a>
         </button>
       </div>
       {selectedFlowOption === 'AuthType' ? (
@@ -458,7 +434,7 @@ const CurlRequestExecutor = () => {
                     updateRequestData={updateRequestData}
                     requestFields={{ ...requestFields }}
                     suggestions={synonymMapping}
-                    setRequestFields={setUpdateRequestData}
+                    setUpdateRequestData={setUpdateRequestData}
                   ></IRequestFieldsTable>
                 </div>
               </Paper>
@@ -589,7 +565,7 @@ const CurlRequestExecutor = () => {
                       body: requestFields,
                       headers: requestHeaderFields,
                       response: responseFields,
-                      hsResponse: hsMapping,
+                      hsResponse: hsResponse,
                     },
                   }}
                   context={connectorContext}

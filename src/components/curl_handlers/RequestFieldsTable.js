@@ -26,7 +26,7 @@ import jsonpath from 'jsonpath';
 function IRequestFieldsTable({
   requestFields,
   suggestions = {},
-  setRequestFields = (value) => {},
+  setUpdateRequestData = (value) => {},
   updateRequestData = {},
 }) {
   const defaultProps = {
@@ -79,9 +79,9 @@ function IRequestFieldsTable({
         updatedVariants[field]
       );
       setMapping(updatedMapping);
-      setRequestFields(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
+      setUpdateRequestData(updatedMapping);
     }
   };
 
@@ -102,15 +102,15 @@ function IRequestFieldsTable({
         updatedVariants[field]
       );
       setMapping(updatedMapping);
-      setRequestFields(updatedMapping);
       setVariants(updatedVariants);
+      setUpdateRequestData(updatedMapping);
     }
   };
 
   function updateRequestFields(row, update) {
     let updated = { ...mapping };
     setMapping(updated);
-    setRequestFields(updated);
+    setUpdateRequestData(updated);
   }
 
   return (

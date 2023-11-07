@@ -1,3 +1,5 @@
+// @ts-check
+
 export const HYPERSWITCH_STATUS_LIST = [
   'Started',
   'AuthenticationFailed',
