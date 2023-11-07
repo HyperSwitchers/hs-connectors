@@ -5,15 +5,9 @@ import { parse_curl } from 'curl-parser';
 import $ from 'jquery';
 import '../styles.css';
 import '../styles/styles.sass';
-<<<<<<< Updated upstream
 import {
-  addFieldsToNodes,
-  synonymMapping,
-  authTypesMapping,
+  synonymMapping, authTypesMapping, download
 } from '../utils/search_utils';
-=======
-import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping, download } from "../utils/search_utils";
->>>>>>> Stashed changes
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';

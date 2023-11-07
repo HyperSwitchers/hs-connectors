@@ -206,8 +206,6 @@ function getRustType(value) {
       return 'Unknown';
   }
 }
-<<<<<<< Updated upstream
-=======
 export function download(content, filename, contentType)
 {
     if(!contentType) contentType = 'application/octet-stream';
@@ -217,4 +215,3 @@ export function download(content, filename, contentType)
         a.download = filename;
         a.click();
 }
->>>>>>> Stashed changes
