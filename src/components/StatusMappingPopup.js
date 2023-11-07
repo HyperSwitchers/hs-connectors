@@ -1,6 +1,9 @@
+// @ts-check
+
 import React, { useState } from 'react';
 
 import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
+import { storeItem } from 'utils/state';
 
 const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
   const [showSuggestions, setShowSuggestions] = useState(null);
@@ -11,7 +14,7 @@ const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
   const handleSubmit = () => {
     // Parse the edited JSON and submit it
     const editedJson = JSON.parse(jsonInput);
-    localStorage.status = JSON.stringify(editedJson);
+    storeItem('status', JSON.stringify(editedJson));
     onSubmit(editedJson);
     onClose();
   };

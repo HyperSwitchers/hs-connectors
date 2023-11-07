@@ -145,6 +145,22 @@ export const updateNestedJson = (json, keys, updatedValue) => {
   return updatedObj;
 };
 
+export const deepJsonSwap = (json) => {
+  if (typeof json === 'object') {
+    let modifiedJson = { ...json };
+    Object.keys(modifiedJson).map((m) => {
+      const shouldSwap = modifiedJson[m]?.type === 'enum';
+      const value = modifiedJson[m]?.value;
+      if (shouldSwap && value) {
+        modifiedJson[m].type = value;
+      }
+      modifiedJson[m] = deepJsonSwap(modifiedJson[m]);
+    });
+  }
+
+  return json;
+};
+
 export function flattenObject(obj, parent = '', res = []) {
   for (let key in obj) {
     let propName = parent ? parent + '.' + key : key;
@@ -223,12 +239,11 @@ function getRustType(value) {
       return 'Unknown';
   }
 }
-export function download(content, filename, contentType)
-{
-    if(!contentType) contentType = 'application/octet-stream';
-        var a = document.createElement('a');
-        var blob = new Blob([content], {'type':contentType});
-        a.href = window.URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
+export function download(content, filename, contentType) {
+  if (!contentType) contentType = 'application/octet-stream';
+  var a = document.createElement('a');
+  var blob = new Blob([content], { type: contentType });
+  a.href = window.URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
 }

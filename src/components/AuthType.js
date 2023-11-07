@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Dropdown from './Dropdown';
 import 'jsoneditor/dist/jsoneditor.css';
 import JsonEditor from './JsonEditor';
+import { storeItem } from 'utils/state';
 
 function AuthType() {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
@@ -43,11 +44,14 @@ function AuthType() {
 
   const onSaveClick = (jsonEditor) => {
     const requestData = jsonEditor.get();
-    localStorage.auth_type = JSON.stringify({
-      ...JSON.parse(localStorage.auth_type || '{}'),
-      type: authType,
-      content: requestData,
-    });
+    storeItem(
+      'auth_type',
+      JSON.stringify({
+        ...JSON.parse(localStorage.auth_type || '{}'),
+        type: authType,
+        content: requestData,
+      })
+    );
   };
   const onAuthTypeChange = (e, jsonEditor) => {
     setAuthType(e.target.value);

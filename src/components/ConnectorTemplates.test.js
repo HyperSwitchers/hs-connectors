@@ -1,3 +1,5 @@
+// @ts-check
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import ConnectorTemplates from './ConnectorTemplates';

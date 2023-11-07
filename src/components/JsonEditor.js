@@ -1,7 +1,10 @@
+// @ts-check
+
 import React, { useEffect, useRef, useState } from 'react';
 import JSONEditor from 'jsoneditor';
 import jsonpath from 'jsonpath';
 import 'jsoneditor/dist/jsoneditor.css';
+import { storeItem } from 'utils/state';
 
 function JsonEditor({
   content = {},
@@ -107,7 +110,7 @@ function JsonEditor({
       // Perform save action here
       console.log('Data is valid, performing save action...');
     } else {
-      localStorage.auth_type = requestData;
+      storeItem('auth_type', requestData);
     }
     onSave(jsonEditor);
   };

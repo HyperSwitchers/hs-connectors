@@ -1,3 +1,5 @@
+// @ts-check
+
 import React, { useState } from 'react';
 
 function Dropdown({ options, handleSelectChange, selectedOption, type }) {

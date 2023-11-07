@@ -1,3 +1,5 @@
+// @ts-check
+
 const nestedStructsMap = new Map();
 const structOccurrences = new Map();
 var nestedFields = {};
