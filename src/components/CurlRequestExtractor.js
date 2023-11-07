@@ -107,6 +107,7 @@ const CurlRequestExecutor = () => {
   });
   const [requestFields, setRequestFields] = useState({});
   const [requestHeaderFields, setRequestHeaderFields] = useState({});
+  const [responseMapping, setResponseMapping] = useState({});
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
   const [connectorContext, setConnectorContext] = useState({});
 
@@ -264,6 +265,24 @@ const CurlRequestExecutor = () => {
 
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
+    const statusKeys = Object.keys(responseMapping).filter((f) =>
+      f.match(/status/gi)
+    );
+    let statusFields = {};
+    statusKeys.map((f) => {
+      if (typeof responseMapping[f].value === 'object') {
+        if (Array.isArray(responseMapping[f].value)) {
+          responseMapping[f].value.map((s) => {
+            statusFields[s] = null;
+          });
+        } else {
+          statusFields = { ...statusFields, ...responseMapping[f].value };
+        }
+      } else {
+        statusFields[responseMapping[f].value] = null;
+      }
+    });
+    setStatusMappingData(statusFields);
     setStatusMappingPopupOpen(true);
   };
 
@@ -271,8 +290,7 @@ const CurlRequestExecutor = () => {
     setStatusMappingPopupOpen(false);
   };
 
-  const [statusMappingData, setStatusMappingData] =
-    useState(initialStatusMapping);
+  const [statusMappingData, setStatusMappingData] = useState({});
   const handleStatusMappingData = (jsonData) => {
     setStatusMappingData(jsonData);
     // Do something with the submitted JSON data (jsonData)
@@ -298,6 +316,22 @@ const CurlRequestExecutor = () => {
     setTimeout(() => {
       setIsCopied(false);
     }, 500);
+  };
+
+  const deepJsonSwap = (json) => {
+    if (typeof json === 'object') {
+      let modifiedJson = { ...json };
+      Object.keys(modifiedJson).map((m) => {
+        const shouldSwap = modifiedJson[m]?.type === 'enum';
+        const value = modifiedJson[m]?.value;
+        if (shouldSwap && value) {
+          modifiedJson[m].type = value;
+        }
+        modifiedJson[m] = deepJsonSwap(modifiedJson[m]);
+      });
+    }
+
+    return json;
   };
 
   const [connectorName, setConnectorName] = useState(
@@ -434,6 +468,7 @@ const CurlRequestExecutor = () => {
             >
               <h3>Response</h3>
               <IConnectorResponseTable
+                setResponseMapping={setResponseMapping}
                 connectorResponse={responseFields}
               ></IConnectorResponseTable>
               {/* <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor> */}
@@ -467,7 +502,7 @@ const CurlRequestExecutor = () => {
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (
                 <StatusMappingPopup
-                  initialValues={initialStatusMapping}
+                  initialValues={statusMappingData}
                   onClose={handleCloseStatusMappingPopup}
                   onSubmit={handleStatusMappingData}
                 />
@@ -488,6 +523,9 @@ const CurlRequestExecutor = () => {
                 let existingFlows = JSON.parse(inputJson || '{}')?.[
                   connector_name
                 ]?.flows;
+                let modifiedUpdatedRequestData =
+                  deepJsonSwap(updateRequestData);
+                let modifiedUpdatedResponseData = deepJsonSwap(responseMapping);
                 let x = JSON.stringify({
                   [connector_name]: {
                     authType: y.type,
@@ -500,8 +538,8 @@ const CurlRequestExecutor = () => {
                     flows: {
                       ...existingFlows,
                       [selectedFlowOption || 'Authorize']: {
-                        paymentsRequest: updateRequestData,
-                        paymentsResponse: addFieldsToNodes(responseFields),
+                        paymentsRequest: modifiedUpdatedRequestData,
+                        paymentsResponse: modifiedUpdatedResponseData,
                       },
                     },
                     attemptStatus: statusMappingData,

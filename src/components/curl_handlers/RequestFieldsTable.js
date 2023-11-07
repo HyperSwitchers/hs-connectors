@@ -84,13 +84,15 @@ function IRequestFieldsTable({
         (v) => v.length > 0 && !updatedVariants[field].includes(v)
       );
       updatedVariants[field] = updatedVariants[field].concat(filteredVariants);
-      const keys = field.split('.').flatMap((f) => [f, 'value']);
+      const fields = field.split('.');
+      const keys = fields.flatMap((f) => [f, 'value']);
       updatedMapping = updateNestedJson(
         updatedMapping,
         keys,
         updatedVariants[field]
       );
       setMapping(updatedMapping);
+      setRequestFields(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
     }
@@ -102,7 +104,8 @@ function IRequestFieldsTable({
     const index = updatedVariants[field].indexOf(variant);
     if (index > -1) {
       updatedVariants[field].splice(index, 1);
-      const keys = field.split('.').flatMap((f) => [f, 'value']);
+      const fields = field.split('.');
+      const keys = fields.flatMap((f) => [f, 'value']);
       if (updatedVariants[field].length === 0) {
         delete updatedVariants[field];
       }
@@ -112,6 +115,7 @@ function IRequestFieldsTable({
         updatedVariants[field]
       );
       setMapping(updatedMapping);
+      setRequestFields(updatedMapping);
       setVariants(updatedVariants);
     }
   };

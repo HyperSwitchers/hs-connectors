@@ -18,6 +18,7 @@ import { addFieldsToNodes, flattenObject, typesList } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 
 function IConnectorResponseTable({
+  setResponseMapping = (value) => {},
   connectorResponse,
   suggestions = {},
   setConnectorResponse = (value) => {},
@@ -36,13 +37,16 @@ function IConnectorResponseTable({
   const [variants, setVariants] = useState({});
 
   useEffect(() => {
-    setMapping(addFieldsToNodes(connectorResponse));
+    const mapping = addFieldsToNodes(connectorResponse);
     setFields(flattenObject(connectorResponse));
+    setMapping(mapping);
+    setResponseMapping(mapping);
   }, [connectorResponse]);
 
   function updateConnectorResponse() {
     let updated = { ...mapping };
     setMapping(updated);
+    setResponseMapping(mapping);
     setConnectorResponse(updated);
   }
 
@@ -104,6 +108,7 @@ function IConnectorResponseTable({
       updatedVariants[field] = updatedVariants[field].concat(filteredVariants);
       updatedMapping[field].value = updatedVariants[field];
       setMapping(updatedMapping);
+      setResponseMapping(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
     }
@@ -122,8 +127,8 @@ function IConnectorResponseTable({
         updatedMapping[field].value = updatedVariants[field];
       }
       setMapping(updatedMapping);
+      setResponseMapping(updatedMapping);
       setVariants(updatedVariants);
-      console.log(updatedMapping);
     }
   };
 
