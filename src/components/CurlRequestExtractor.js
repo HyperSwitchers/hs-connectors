@@ -6,9 +6,7 @@ import $ from 'jquery';
 import '../styles.css';
 import '../styles/styles.sass';
 import {
-  addFieldsToNodes,
-  synonymMapping,
-  authTypesMapping,
+  synonymMapping, authTypesMapping, download
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
@@ -311,6 +309,7 @@ const CurlRequestExecutor = () => {
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(codeSnippet);
+    download(codeSnippet, "transformer.rs", "text");
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
     setTimeout(() => {
