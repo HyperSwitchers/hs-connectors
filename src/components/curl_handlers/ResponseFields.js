@@ -38,10 +38,7 @@ function IResponseFieldsTable({
   }, [responseFields]);
   return (
     <div className="editor">
-      <TableContainer
-        component={Paper}
-        sx={{ maxHeight: '500px', overflow: 'scroll' }}
-      >
+      <TableContainer component={Paper} sx={{ overflow: 'scroll' }}>
         <Table aria-label="simple table" stickyHeader>
           <TableHead>
             <TableRow>

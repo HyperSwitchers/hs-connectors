@@ -11,6 +11,8 @@ import {
   authTypesMapping,
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
+import Tooltip from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/Info';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
@@ -202,9 +204,12 @@ const CurlRequestExecutor = () => {
       },
     };
     $.ajax(url, req_content).always(() => setLoading(false));
-    let targetElement = document.getElementById('response-header-div');
+    let targetElement = document.getElementById('generate-code');
 
-    targetElement.scrollIntoView({ behavior: 'instant' });
+    targetElement.scrollIntoView({
+      behavior: 'instant',
+      block: 'end',
+    });
   };
 
   const [selectedFlowOption, setSelectedFlowOption] = useState(
@@ -310,6 +315,15 @@ const CurlRequestExecutor = () => {
       <div className="dropdown-wrapper hs-headers">
         <div style={{ paddingRight: '10px' }}>
           <label htmlFor="dropdown">Connector: </label>
+          <Tooltip title="Text to be added.......">
+            <InfoIcon
+              style={{
+                height: '15px',
+                width: '15px',
+              }}
+            />
+          </Tooltip>
+
           {/* <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} /> */}
           <input
             className="conector"
@@ -354,42 +368,71 @@ const CurlRequestExecutor = () => {
                 <div className="loader"></div>
               </div>
             )}
-
-            <Paper elevation={0} className="curl-input-section">
-              <h3>cURL Request</h3>
-              <textarea
-                ref={curlTextareaRef} // Add the ref to the text area
-                style={{ height: '100%' }}
-                value={curlCommand}
-                onChange={(e) => updateCurlRequest(e.target.value)}
-                placeholder="Enter your cURL request here..."
-              />
-              <button onClick={sendRequest} disabled={loading}>
-                {loading ? <div className="loader"></div> : 'Send Request'}
-              </button>
-            </Paper>
-            <Paper elevation={0} className="request-body-section">
-              <h3>Request Header Fields:</h3>
-              <IRequestHeadersTable
-                requestHeaders={{ ...requestHeaderFields }}
-                suggestions={authTypesMapping}
-                setRequestHeaders={setRequestHeaderFields}
-              ></IRequestHeadersTable>
-              <h3>Request Body Fields:</h3>
-              <IRequestFieldsTable
-                updateRequestData={updateRequestData}
-                requestFields={{ ...requestFields }}
-                suggestions={synonymMapping}
-                setRequestFields={setUpdateRequestData}
-              ></IRequestFieldsTable>
-            </Paper>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'items-center',
+                justifyContent: 'space-between',
+                width: '100%',
+              }}
+            >
+              <Paper
+                elevation={0}
+                className="curl-input-section"
+                style={{
+                  height: '85vh',
+                  width: '45vw',
+                }}
+              >
+                <h3>cURL Request</h3>
+                <textarea
+                  ref={curlTextareaRef} // Add the ref to the text area
+                  style={{ height: '100%' }}
+                  value={curlCommand}
+                  onChange={(e) => updateCurlRequest(e.target.value)}
+                  placeholder="Enter your cURL request here..."
+                />
+                <button onClick={sendRequest} disabled={loading}>
+                  {loading ? <div className="loader"></div> : 'Send Request'}
+                </button>
+              </Paper>
+              <Paper
+                elevation={0}
+                className="request-body-section"
+                style={{
+                  height: '85vh',
+                  width: '45vw',
+                }}
+              >
+                <h3>Request Header Fields:</h3>
+                <IRequestHeadersTable
+                  requestHeaders={{ ...requestHeaderFields }}
+                  suggestions={authTypesMapping}
+                  setRequestHeaders={setRequestHeaderFields}
+                ></IRequestHeadersTable>
+                <h3>Request Body Fields:</h3>
+                <div
+                  style={{
+                    height: '100%',
+                    overflow: 'scroll',
+                  }}
+                >
+                  <IRequestFieldsTable
+                    updateRequestData={updateRequestData}
+                    requestFields={{ ...requestFields }}
+                    suggestions={synonymMapping}
+                    setRequestFields={setUpdateRequestData}
+                  ></IRequestFieldsTable>
+                </div>
+              </Paper>
+            </div>
 
             <Paper
               elevation={0}
               id="responseFieldsLeft"
               className="response-fields-left"
             >
-              <h3 id="response-header-div">Response</h3>
+              <h3>Response</h3>
               <IConnectorResponseTable
                 connectorResponse={responseFields}
               ></IConnectorResponseTable>
@@ -410,10 +453,17 @@ const CurlRequestExecutor = () => {
                   Status Mapping
                 </button>
               </div>
-              <IResponseFieldsTable
-                responseFields={hsMapping}
-                suggestions={responseFields}
-              ></IResponseFieldsTable>
+              <div
+                style={{
+                  height: '100%',
+                }}
+              >
+                <IResponseFieldsTable
+                  responseFields={hsMapping}
+                  suggestions={responseFields}
+                ></IResponseFieldsTable>
+              </div>
+
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (
                 <StatusMappingPopup
@@ -426,6 +476,7 @@ const CurlRequestExecutor = () => {
           </div>
           <div>
             <button
+              id="generate-code"
               onClick={(e) => {
                 let connector = localStorage.connector || 'tttt';
                 let props = localStorage.props
@@ -459,6 +510,12 @@ const CurlRequestExecutor = () => {
                 updateInputJson(x);
                 setCodeSnippet(generateRustCode(props.connector, x));
                 setConnectorContext({ ...{} });
+                let targetElement = document.getElementById(
+                  'generated-code-snippet'
+                );
+                targetElement.scrollIntoView({
+                  behavior: 'smooth',
+                });
               }}
             >
               Generate Code
@@ -466,7 +523,7 @@ const CurlRequestExecutor = () => {
           </div>
           <div style={{ display: 'flex', overflow: 'hidden' }}>
             <div style={{ width: '50%', padding: '10px' }}>
-              <h3>Generated Code Snippet</h3>
+              <h3 id="generated-code-snippet">Generated Code Snippet</h3>
               <button onClick={handleCopyClick}>Copy to Clipboard</button>
               {isCopied && (
                 <span style={{ marginLeft: '10px', color: 'green' }}>
