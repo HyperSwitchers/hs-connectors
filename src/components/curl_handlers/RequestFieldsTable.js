@@ -124,10 +124,7 @@ function IRequestFieldsTable({
 
   return (
     <div className="editor">
-      <TableContainer
-        component={Paper}
-        sx={{ maxHeight: '500px', overflow: 'scroll' }}
-      >
+      <TableContainer component={Paper} sx={{ overflow: 'scroll' }}>
         <Table
           className="request-body-table"
           aria-label="simple table"
