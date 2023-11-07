@@ -324,6 +324,12 @@ function generateConnectorAmount(connectorAmount) {
         case "string": amount = `utils::get_amount_as_string(currency_unit, amount, currency)`; unused_var = ''; break;
     };
     return `
+#[derive(Debug, Serialize)]
+pub struct ${connectorName}RouterData<T> {
+    pub amount: ${connectorAmount.unitType},
+    pub router_data: T,
+}
+
 impl<T>
     TryFrom<(
         &types::api::CurrencyUnit,
