@@ -433,7 +433,7 @@ const CurlRequestExecutor = () => {
                   <IRequestFieldsTable
                     updateRequestData={updateRequestData}
                     requestFields={{ ...requestFields }}
-                    suggestions={synonymMapping}
+                    suggestions={synonymMapping[selectedFlowOption]}
                     setUpdateRequestData={setUpdateRequestData}
                   ></IRequestFieldsTable>
                 </div>
@@ -568,6 +568,7 @@ const CurlRequestExecutor = () => {
                       hsResponse: hsResponse,
                     },
                   }}
+                  // @ts-ignore
                   context={connectorContext}
                 ></ConnectorTemplates>
               </div>

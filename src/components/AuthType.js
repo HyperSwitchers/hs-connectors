@@ -54,8 +54,15 @@ function AuthType() {
     );
   };
   const onAuthTypeChange = (e, jsonEditor) => {
-    setAuthType(e.target.value);
-    setContent(types[e.target.value]);
+    const authType = e.target.value;
+    setAuthType(authType);
+    const updatedContent = { ...types[authType], ...content };
+    Object.keys(updatedContent).map((k) => {
+      if (!Object.keys(types[authType]).includes(k)) {
+        delete updatedContent[k];
+      }
+    });
+    setContent(updatedContent);
   };
 
   const renderAuthKeyFields = (content) => {
@@ -65,6 +72,7 @@ function AuthType() {
           <input
             className="material-input"
             type="text"
+            defaultValue={content[key]}
             onKeyUp={(e) => {
               const target = e.target;
               let updatedContent = { ...content };
