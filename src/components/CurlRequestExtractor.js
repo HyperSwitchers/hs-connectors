@@ -1,25 +1,31 @@
 // @ts-check
 
-import { useState, useEffect, useRef } from "react";
-import { parse_curl } from "curl-parser";
-import $ from "jquery";
-import "../styles.css";
+import { useState, useEffect, useRef } from 'react';
+import { parse_curl } from 'curl-parser';
+import $ from 'jquery';
+import '../styles.css';
 import '../styles/styles.sass';
-import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping } from "../utils/search_utils";
+import {
+  addFieldsToNodes,
+  synonymMapping,
+  authTypesMapping,
+} from '../utils/search_utils';
 import Dropdown from './Dropdown';
-import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
-import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
-import copy from "copy-to-clipboard"; // Import the copy-to-clipboard library
-import React from "react";
-import AuthType from "./AuthType";
-import ConnectorTemplates, { defaultConnectorProps } from "./ConnectorTemplates";
-import StatusMappingPopup from "./StatusMappingPopup";
-import { generateRustCode } from "utils/Parser";
-import IRequestFieldsTable from "./curl_handlers/RequestFieldsTable";
-import { Paper } from "@mui/material";
-import IRequestHeadersTable from "./curl_handlers/RequestHeadersTable";
-import IResponseFieldsTable from "./curl_handlers/ResponseFields";
-import IConnectorResponseTable from "./curl_handlers/ConnectorResponseTable";
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
+import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
+import React from 'react';
+import AuthType from './AuthType';
+import ConnectorTemplates, {
+  defaultConnectorProps,
+} from './ConnectorTemplates';
+import StatusMappingPopup from './StatusMappingPopup';
+import { generateRustCode } from 'utils/Parser';
+import IRequestFieldsTable from './curl_handlers/RequestFieldsTable';
+import { Paper } from '@mui/material';
+import IRequestHeadersTable from './curl_handlers/RequestHeadersTable';
+import IResponseFieldsTable from './curl_handlers/ResponseFields';
+import IConnectorResponseTable from './curl_handlers/ConnectorResponseTable';
 
 const initialStatusMapping = {
   Started: null,
@@ -94,7 +100,7 @@ const CurlRequestExecutor = () => {
     response: {
       resource_id: '',
       redirection_data: `None`,
-      connector_response_reference_id: ``
+      connector_response_reference_id: ``,
     },
   });
   const [requestFields, setRequestFields] = useState({});
@@ -121,13 +127,15 @@ const CurlRequestExecutor = () => {
     try {
       const fetchRequest = parse_curl(ss);
       setCurlRequest(fetchRequest);
-      setRequestFields(JSON.parse(fetchRequest?.data?.ascii || "{}"));
+      setRequestFields(JSON.parse(fetchRequest?.data?.ascii || '{}'));
 
-      setRequestHeaderFields(fetchRequest?.headers.reduce((result, item) => {
-        let header = item.split(":");
-        result[header[0]] = header[1];
-        return result;
-      }, {}));
+      setRequestHeaderFields(
+        fetchRequest?.headers.reduce((result, item) => {
+          let header = item.split(':');
+          result[header[0]] = header[1];
+          return result;
+        }, {})
+      );
       saveFlowDetails(fetchRequest);
     } catch (e) {
       console.error(e);
@@ -135,38 +143,41 @@ const CurlRequestExecutor = () => {
   };
 
   const saveFlowDetails = (curl) => {
-    let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(localStorage.connector || 'tttt');
+    let props = localStorage.props
+      ? JSON.parse(localStorage.props)
+      : defaultConnectorProps(localStorage.connector || 'tttt');
     let flow = props.flows[selectedFlowOption];
     if (flow) {
       flow.url_path = new URL(curl.url).pathname;
       flow.http_method = curl.method;
       let headers = getHeaders(curl.headers);
       props.content_type = headers['Content-Type'] || headers['content-type'];
-      flow.headers = Object.keys(headers).map((key) => convertToValidVariableName(key));
+      flow.headers = Object.keys(headers).map((key) =>
+        convertToValidVariableName(key)
+      );
       // if request body is present then build request body
       if (curl.data.ascii) {
-        flow.enabled.push('get_request_body')
-      }
-      else {
-        flow.enabled = flow.enabled.filter(item => item !== 'get_request_body')
+        flow.enabled.push('get_request_body');
+      } else {
+        flow.enabled = flow.enabled.filter(
+          (item) => item !== 'get_request_body'
+        );
       }
       props.flows[selectedFlowOption] = flow;
     }
     localStorage.props = JSON.stringify(props);
-  }
+  };
 
   function convertToValidVariableName(str) {
-    return str
-      .toLowerCase()
-      .replace(/[^a-zA-Z0-9_]/g, '_');
+    return str.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
   }
   const getHeaders = (headers) => {
     return headers.reduce((acc, item) => {
-      const [key, value] = item.split(":").map((item) => item.trim());
+      const [key, value] = item.split(':').map((item) => item.trim());
       acc[key] = value;
       return acc;
     }, {});
-  }
+  };
   const sendRequest = () => {
     saveFlowDetails(curlRequest);
     setLoading(true);
@@ -191,12 +202,20 @@ const CurlRequestExecutor = () => {
       },
     };
     $.ajax(url, req_content).always(() => setLoading(false));
+    let targetElement = document.getElementById('response-header-div');
+
+    targetElement.scrollIntoView({ behavior: 'instant' });
   };
 
-  const [selectedFlowOption, setSelectedFlowOption] = useState(localStorage.last_selected_flow);
-  const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] = useState('');
-  const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] = useState('');
-  const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] = useState('');
+  const [selectedFlowOption, setSelectedFlowOption] = useState(
+    localStorage.last_selected_flow
+  );
+  const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
+    useState('');
+  const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] =
+    useState('');
+  const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] =
+    useState('');
 
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
@@ -235,8 +254,8 @@ const CurlRequestExecutor = () => {
   ];
   const paymentMethodOptions = ['Card', 'Wallet', 'BankRedirects'];
 
-  const CurrencyUnit = ["Minor", "Base"];
-  const CurrencyUnitType = ["String", "i64", "f64"];
+  const CurrencyUnit = ['Minor', 'Base'];
+  const CurrencyUnitType = ['String', 'i64', 'f64'];
 
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
@@ -247,14 +266,17 @@ const CurlRequestExecutor = () => {
     setStatusMappingPopupOpen(false);
   };
 
-  const [statusMappingData, setStatusMappingData] = useState(initialStatusMapping);
+  const [statusMappingData, setStatusMappingData] =
+    useState(initialStatusMapping);
   const handleStatusMappingData = (jsonData) => {
     setStatusMappingData(jsonData);
     // Do something with the submitted JSON data (jsonData)
-    console.log("Submitted JSON Data:", jsonData);
+    console.log('Submitted JSON Data:', jsonData);
   };
 
-  const connector_name = localStorage?.props ? JSON.parse(localStorage?.props)?.connector : 'Test';
+  const connector_name = localStorage?.props
+    ? JSON.parse(localStorage?.props)?.connector
+    : 'Test';
 
   const [inputJson, setInputJson] = useState('');
   const updateInputJson = (inputJsonData) => {
@@ -273,7 +295,9 @@ const CurlRequestExecutor = () => {
     }, 500);
   };
 
-  const [connectorName, setConnectorName] = useState(localStorage.connector_name || "Shift4");
+  const [connectorName, setConnectorName] = useState(
+    localStorage.connector_name || 'Shift4'
+  );
   const handleConnectorNameChange = (event) => {
     let connector_name = event.target.value;
     setConnectorName(connector_name);
@@ -283,19 +307,46 @@ const CurlRequestExecutor = () => {
   const [updateRequestData, setUpdateRequestData] = useState({});
   return (
     <div>
-      <div className='dropdown-wrapper hs-headers'>
+      <div className="dropdown-wrapper hs-headers">
         <div style={{ paddingRight: '10px' }}>
           <label htmlFor="dropdown">Connector: </label>
           {/* <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} /> */}
-          <input className='conector' type="text" placeholder="Connector Name" onChange={handleConnectorNameChange}
-            defaultValue={connectorName} />
+          <input
+            className="conector"
+            type="text"
+            placeholder="Connector Name"
+            onChange={handleConnectorNameChange}
+            defaultValue={connectorName}
+          />
         </div>
-        <Dropdown options={flowOptions} handleSelectChange={handleFlowOptionChange} selectedOption={selectedFlowOption} type='Flow Type' />
-        <Dropdown options={paymentMethodOptions} handleSelectChange={handlePaymentMethodOptionChange} selectedOption={selectedPaymentMethodOption} type='Payment Method' />
-        <Dropdown options={CurrencyUnit} handleSelectChange={handleCurrencyUnitOptionChange} selectedOption={selectedCurrencyUnitOption} type='Currency Unit' />
-        <Dropdown options={CurrencyUnitType} handleSelectChange={handleCurrencyUnitTypeOptionChange} selectedOption={selectedCurrencyUnitTypeOption} type='Currency Unit Type' />
+        <Dropdown
+          options={flowOptions}
+          handleSelectChange={handleFlowOptionChange}
+          selectedOption={selectedFlowOption}
+          type="Flow Type"
+        />
+        <Dropdown
+          options={paymentMethodOptions}
+          handleSelectChange={handlePaymentMethodOptionChange}
+          selectedOption={selectedPaymentMethodOption}
+          type="Payment Method"
+        />
+        <Dropdown
+          options={CurrencyUnit}
+          handleSelectChange={handleCurrencyUnitOptionChange}
+          selectedOption={selectedCurrencyUnitOption}
+          type="Currency Unit"
+        />
+        <Dropdown
+          options={CurrencyUnitType}
+          handleSelectChange={handleCurrencyUnitTypeOptionChange}
+          selectedOption={selectedCurrencyUnitTypeOption}
+          type="Currency Unit Type"
+        />
       </div>
-      {selectedFlowOption === 'AuthType' ? <AuthType></AuthType> :
+      {selectedFlowOption === 'AuthType' ? (
+        <AuthType></AuthType>
+      ) : (
         <div>
           <div className="container">
             {loading && (
@@ -314,63 +365,102 @@ const CurlRequestExecutor = () => {
                 placeholder="Enter your cURL request here..."
               />
               <button onClick={sendRequest} disabled={loading}>
-                {loading ? <div className="loader"></div> : "Send Request"}
+                {loading ? <div className="loader"></div> : 'Send Request'}
               </button>
             </Paper>
             <Paper elevation={0} className="request-body-section">
               <h3>Request Header Fields:</h3>
-              <IRequestHeadersTable requestHeaders={{ ...requestHeaderFields }} suggestions={authTypesMapping} setRequestHeaders={setRequestHeaderFields}></IRequestHeadersTable>
+              <IRequestHeadersTable
+                requestHeaders={{ ...requestHeaderFields }}
+                suggestions={authTypesMapping}
+                setRequestHeaders={setRequestHeaderFields}
+              ></IRequestHeadersTable>
               <h3>Request Body Fields:</h3>
-              <IRequestFieldsTable updateRequestData={updateRequestData} requestFields={{ ...requestFields }} suggestions={synonymMapping} setRequestFields={setUpdateRequestData}></IRequestFieldsTable>
+              <IRequestFieldsTable
+                updateRequestData={updateRequestData}
+                requestFields={{ ...requestFields }}
+                suggestions={synonymMapping}
+                setRequestFields={setUpdateRequestData}
+              ></IRequestFieldsTable>
             </Paper>
 
-            <Paper elevation={0} id="responseFieldsLeft" className="response-fields-left">
-              <h3>Response</h3>
-              <IConnectorResponseTable connectorResponse={responseFields}></IConnectorResponseTable>
+            <Paper
+              elevation={0}
+              id="responseFieldsLeft"
+              className="response-fields-left"
+            >
+              <h3 id="response-header-div">Response</h3>
+              <IConnectorResponseTable
+                connectorResponse={responseFields}
+              ></IConnectorResponseTable>
               {/* <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor> */}
             </Paper>
 
-            <Paper elevation={0} id="responseFieldsRight" className="response-fields-right">
+            <Paper
+              elevation={0}
+              id="responseFieldsRight"
+              className="response-fields-right"
+            >
               <div className="responseButtonStatus">
                 <h3>Response Fields Mapping</h3>
-                <button id="responseStatusMapping" onClick={handleStatusMappingButtonClick}>
+                <button
+                  id="responseStatusMapping"
+                  onClick={handleStatusMappingButtonClick}
+                >
                   Status Mapping
                 </button>
               </div>
-              <IResponseFieldsTable responseFields={hsMapping} suggestions={responseFields}></IResponseFieldsTable>
+              <IResponseFieldsTable
+                responseFields={hsMapping}
+                suggestions={responseFields}
+              ></IResponseFieldsTable>
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
-              {isStatusMappingPopupOpen && (<StatusMappingPopup initialValues={initialStatusMapping} onClose={handleCloseStatusMappingPopup} onSubmit={handleStatusMappingData} />)
-              }
+              {isStatusMappingPopupOpen && (
+                <StatusMappingPopup
+                  initialValues={initialStatusMapping}
+                  onClose={handleCloseStatusMappingPopup}
+                  onSubmit={handleStatusMappingData}
+                />
+              )}
             </Paper>
           </div>
           <div>
-            <button onClick={(e) => {
-              let connector = localStorage.connector || 'tttt';
-              let props = localStorage.props ? JSON.parse(localStorage.props) : defaultConnectorProps(connector);
-              let y = localStorage?.auth_type ? JSON.parse(localStorage?.auth_type) : {};
-              let existingFlows = JSON.parse(inputJson || '{}')?.[connector_name]?.flows;
-              let x = JSON.stringify({
-                [connector_name]: {
-                  "authType": y.type,
-                  "authKeys": JSON.parse(localStorage.auth_type || '{}').content || {},
-                  "amount": {
-                    "unit": selectedCurrencyUnitOption,
-                    "unitType": selectedCurrencyUnitTypeOption
+            <button
+              onClick={(e) => {
+                let connector = localStorage.connector || 'tttt';
+                let props = localStorage.props
+                  ? JSON.parse(localStorage.props)
+                  : defaultConnectorProps(connector);
+                let y = localStorage?.auth_type
+                  ? JSON.parse(localStorage?.auth_type)
+                  : {};
+                let existingFlows = JSON.parse(inputJson || '{}')?.[
+                  connector_name
+                ]?.flows;
+                let x = JSON.stringify({
+                  [connector_name]: {
+                    authType: y.type,
+                    authKeys:
+                      JSON.parse(localStorage.auth_type || '{}').content || {},
+                    amount: {
+                      unit: selectedCurrencyUnitOption,
+                      unitType: selectedCurrencyUnitTypeOption,
+                    },
+                    flows: {
+                      ...existingFlows,
+                      [selectedFlowOption || 'Authorize']: {
+                        paymentsRequest: updateRequestData,
+                        paymentsResponse: addFieldsToNodes(responseFields),
+                      },
+                    },
+                    attemptStatus: statusMappingData,
                   },
-                  "flows": {
-                    ...existingFlows,
-                    [selectedFlowOption || 'Authorize']: {
-                      "paymentsRequest": updateRequestData,
-                      "paymentsResponse": addFieldsToNodes(responseFields)
-                    }
-                  },
-                  "attemptStatus": statusMappingData
-                }
-              });
-              updateInputJson(x);
-              setCodeSnippet(generateRustCode(props.connector, x));
-              setConnectorContext({ ...{} });
-            }}>
+                });
+                updateInputJson(x);
+                setCodeSnippet(generateRustCode(props.connector, x));
+                setConnectorContext({ ...{} });
+              }}
+            >
               Generate Code
             </button>
           </div>
@@ -378,7 +468,11 @@ const CurlRequestExecutor = () => {
             <div style={{ width: '50%', padding: '10px' }}>
               <h3>Generated Code Snippet</h3>
               <button onClick={handleCopyClick}>Copy to Clipboard</button>
-              {isCopied && <span style={{ marginLeft: '10px', color: 'green' }}>Copied to clipboard!</span>}
+              {isCopied && (
+                <span style={{ marginLeft: '10px', color: 'green' }}>
+                  Copied to clipboard!
+                </span>
+              )}
               <SyntaxHighlighter language="rust" style={githubGist}>
                 {codeSnippet}
               </SyntaxHighlighter>
@@ -386,12 +480,24 @@ const CurlRequestExecutor = () => {
             <div style={{ padding: '10px' }}>
               <div style={{ width: '50%' }}>
                 <ConnectorTemplates
-                  curl={{ ...{ connector: connectorName, flow: selectedFlowOption, input: curlCommand, body: requestFields, headers: requestHeaderFields, response: responseFields, hsResponse: hsMapping } }}
-                  context={connectorContext}></ConnectorTemplates>
+                  curl={{
+                    ...{
+                      connector: connectorName,
+                      flow: selectedFlowOption,
+                      input: curlCommand,
+                      body: requestFields,
+                      headers: requestHeaderFields,
+                      response: responseFields,
+                      hsResponse: hsMapping,
+                    },
+                  }}
+                  context={connectorContext}
+                ></ConnectorTemplates>
               </div>
             </div>
           </div>
-        </div>}
+        </div>
+      )}
     </div>
   );
 };

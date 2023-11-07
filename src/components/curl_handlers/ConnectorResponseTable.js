@@ -9,20 +9,12 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Checkbox,
   Autocomplete,
   TextField,
-  Tooltip,
 } from '@mui/material';
 
 import 'jsoneditor/dist/jsoneditor.css';
-import {
-  addFieldsToNodes,
-  flattenObject,
-  is_mapped_field,
-  mapFieldNames,
-  typesList,
-} from 'utils/search_utils';
+import { addFieldsToNodes, flattenObject, typesList } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 
 function IConnectorResponseTable({
@@ -97,24 +89,23 @@ function IConnectorResponseTable({
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
-    if (input?.value) {
+    if (input instanceof HTMLInputElement) {
       let updatedVariants = { ...variants };
       let updatedMapping = { ...mapping };
       const newVariants = [mapping[field].value].concat(
-        input.value.split(',').map((v) => v.trim())
+        input?.value?.split(',')?.map((v) => v?.trim())
       );
       if (!updatedVariants[field]) {
         updatedVariants[field] = [];
       }
       const filteredVariants = newVariants.filter(
-        (v) => v.length > 0 && !updatedVariants[field].includes(v)
+        (v) => v?.length > 0 && !updatedVariants[field].includes(v)
       );
       updatedVariants[field] = updatedVariants[field].concat(filteredVariants);
       updatedMapping[field].value = updatedVariants[field];
       setMapping(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
-      console.log(updatedMapping);
     }
   };
 

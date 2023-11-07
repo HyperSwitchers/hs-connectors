@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import handlebars from 'handlebars';
 import { ConnectorIntegration } from 'templates/ConnectorIntegration';
 
-const Connector = ({context = {
-  trait_name: 'api::PSync',
-  data_type: 'types::PaymentsSyncData',
-  router_type: 'types::PaymentsSyncRouterData',
-  response_data: 'types::PaymentsResponseData',
-  struct_name: 'Shift4',
-  connector_name: 'shift4'
-}}) => {
+const Connector = ({
+  context = {
+    trait_name: 'api::PSync',
+    data_type: 'types::PaymentsSyncData',
+    router_type: 'types::PaymentsSyncRouterData',
+    response_data: 'types::PaymentsResponseData',
+    struct_name: 'Shift4',
+    connector_name: 'shift4',
+  },
+}) => {
   const [templateContent] = useState(ConnectorIntegration);
   const [generatedCode, setGeneratedCode] = useState('');
 
