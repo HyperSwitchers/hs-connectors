@@ -15,6 +15,7 @@ use error_stack::{IntoReport, ResultExt};
 use masking::ExposeInterface;
 use transformers as {{connector_name}};
 
+use diesel_models::enums;
 use crate::{
     configs::settings,
     core::errors::{self, CustomResult},
@@ -22,7 +23,7 @@ use crate::{
     services::{
         self,
         request::{self, Mask},
-        ConnectorIntegration,
+        ConnectorIntegration, ConnectorValidation
     },
     types::{
         self,
@@ -38,7 +39,7 @@ pub struct {{struct_name}};
 impl api::Payment for {{struct_name}} {}
 impl api::PaymentSession for {{struct_name}} {}
 impl api::ConnectorAccessToken for {{struct_name}} {}
-impl api::PreVerify for {{struct_name}} {}
+impl api::MandateSetup for {{struct_name}} {}
 impl api::PaymentAuthorize for {{struct_name}} {}
 impl api::PaymentSync for {{struct_name}} {}
 impl api::PaymentCapture for {{struct_name}} {}
@@ -103,7 +104,23 @@ impl ConnectorCommon for {{struct_name}} {
         )])
     }
 }
+
+impl ConnectorValidation for {{struct_name}} {
+    fn validate_capture_method(
+        &self,
+        capture_method: Option<enums::CaptureMethod>,
+    ) -> CustomResult<(), errors::ConnectorError> {
+        let capture_method = capture_method.unwrap_or_default();
+        match capture_method {
+            enums::CaptureMethod::Automatic | enums::CaptureMethod::Manual => Ok(()),
+            enums::CaptureMethod::ManualMultiple | enums::CaptureMethod::Scheduled => Err(
+                super::utils::construct_not_supported_error_report(capture_method, self.id()),
+            ),
+        }
+    }
+}
 `
+
 export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {{data_type}}, {{response_data}}> for {{struct_name}} {
     {{#contains enabled "get_headers"}}
     fn get_headers(

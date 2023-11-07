@@ -25,7 +25,7 @@ import ConnectorTemplates, {
   defaultConnectorProps,
 } from './ConnectorTemplates';
 import StatusMappingPopup from './StatusMappingPopup';
-import { generateRustCode } from 'utils/Parser';
+import { generateRustCode, toPascalCase } from 'utils/Parser';
 import IRequestFieldsTable from './curl_handlers/RequestFieldsTable';
 import { Paper } from '@mui/material';
 import IRequestHeadersTable from './curl_handlers/RequestHeadersTable';
@@ -132,7 +132,7 @@ const CurlRequestExecutor = () => {
     let flow = props.flows[selectedFlowOption];
     if (flow) {
       flow.url_path = new URL(curl.url).pathname;
-      flow.http_method = curl.method;
+      flow.http_method = toPascalCase(curl.method);
       let headers = getHeaders(curl.headers);
       props.content_type = headers['Content-Type'] || headers['content-type'];
       flow.headers = Object.keys(headers).map((key) =>

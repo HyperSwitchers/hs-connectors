@@ -1,5 +1,3 @@
-// @ts-check
-
 const nestedStructsMap = new Map();
 const structOccurrences = new Map();
 var nestedFields = {};
@@ -55,17 +53,17 @@ impl From<RefundStatus> for enums::RefundStatus {
 
 //TODO: Fill the struct with respective fields
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct RefundResponse {
+pub struct ${connectorName}RefundResponse {
     id: String,
     status: RefundStatus
 }
 
-impl TryFrom<types::RefundsResponseRouterData<api::Execute, RefundResponse>>
+impl TryFrom<types::RefundsResponseRouterData<api::Execute, ${connectorName}RefundResponse>>
     for types::RefundsRouterData<api::Execute>
 {
     type Error = error_stack::Report<errors::ConnectorError>;
     fn try_from(
-        item: types::RefundsResponseRouterData<api::Execute, RefundResponse>,
+        item: types::RefundsResponseRouterData<api::Execute, ${connectorName}RefundResponse>,
     ) -> Result<Self, Self::Error> {
         Ok(Self {
             response: Ok(types::RefundsResponseData {
@@ -77,10 +75,10 @@ impl TryFrom<types::RefundsResponseRouterData<api::Execute, RefundResponse>>
     }
 }
 
-impl TryFrom<types::RefundsResponseRouterData<api::RSync, RefundResponse>> for types::RefundsRouterData<api::RSync>
+impl TryFrom<types::RefundsResponseRouterData<api::RSync, ${connectorName}RefundResponse>> for types::RefundsRouterData<api::RSync>
 {
      type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: types::RefundsResponseRouterData<api::RSync, RefundResponse>) -> Result<Self,Self::Error> {
+    fn try_from(item: types::RefundsResponseRouterData<api::RSync, ${connectorName}RefundResponse>) -> Result<Self,Self::Error> {
         Ok(Self {
             response: Ok(types::RefundsResponseData {
                 connector_refund_id: item.response.id.to_string(),
@@ -161,6 +159,10 @@ export const responseReplacements = {
 
 const hsFieldTypes = {
     card_number: "CardNumber",
+    card_exp_month: "Secret<String>",
+    card_exp_year: "Secret<String>",
+    card_cvc: "Secret<String>",
+    card_holder_name: "Secret<String>",
     email: "Email",
     ip_address: "pii::IpAddress",
     currency: "diesel_models::enums::Currency",
@@ -208,7 +210,10 @@ function removeQuotes(jsonString) {
     // console.log(res2);
     // console.log(res2.replace(/"([^"]+)":/g, '$1:'));
     let res3 = res2.replace(/"([^"]+)":/g, '$1:');
-    return res3.replace(/&dq/g, '"');
+    // console.log(res3);
+    let res4 = res3.replace(/"/g, '');
+    // console.log(res4);
+    return res4.replace(/&dq/g, '"');
 
 }
 
@@ -416,11 +421,11 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
             status: enums::AttemptStatus::from(item.response.${hsResponse.status.substring(1)}),
             response: Ok(types::PaymentsResponseData::TransactionResponse {
                 resource_id: types::ResponseId::ConnectorTransactionId(item.response.${hsResponse.response.resource_id.substring(1)}),
-                redirection_data: item.response.${hsResponse.response.redirection_data.substring(1)},
+                redirection_data:  ${hsResponse.response.redirection_data.startsWith('$') ? "item.response" + hsResponse.response.redirection_data.substring(1) : "None"},
                 mandate_reference: None,
                 connector_metadata: None,
                 network_txn_id: None,
-                connector_response_reference_id: item.response.${hsResponse.response.connector_response_reference_id.substring(1)},
+                connector_response_reference_id: ${hsResponse.response.redirection_data.startsWith('$') ? "item.response" + hsResponse.response.connector_response_reference_id.substring(1) : "None"},
             }),
             ..item.data
         })
@@ -531,7 +536,7 @@ function generateRustStructField(fieldName, fieldValue, parentName) {
     }
 
 
-    if (fieldValue.secret) {
+    if (fieldValue.secret && !fieldValue.type.includes(fieldValue.type.substring(1))) {
         fieldType = `Secret<${fieldType}>`
     }
     if (fieldValue.optional) {
@@ -760,7 +765,7 @@ function generateNestedInitStructs(inputObject, parentName) {
         return nestedFields;
     }
     const nestedFieldsStruct = processObject(inputObject, parentName);
-    console.log(`$$$$ ${JSON.stringify(nestedFieldsStruct)}`);
+    // console.log(`$$$$ ${JSON.stringify(nestedFieldsStruct)}`);
     // const structString = JSON.stringify(nestedFieldsStruct);
     const structString = removeQuotes(JSON.stringify(nestedFieldsStruct));
     structs.push(`let ${toSnakeCase(parentName)} = ${toPascalCase(parentName)}${structString};`)
