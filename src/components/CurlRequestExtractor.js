@@ -5,11 +5,15 @@ import { parse_curl } from 'curl-parser';
 import $ from 'jquery';
 import '../styles.css';
 import '../styles/styles.sass';
+<<<<<<< Updated upstream
 import {
   addFieldsToNodes,
   synonymMapping,
   authTypesMapping,
 } from '../utils/search_utils';
+=======
+import { mapFieldNames, addFieldsToNodes, synonymMapping, authTypesMapping, download } from "../utils/search_utils";
+>>>>>>> Stashed changes
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
@@ -311,6 +315,7 @@ const CurlRequestExecutor = () => {
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(codeSnippet);
+    download(codeSnippet, "transformer.rs", "text");
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
     setTimeout(() => {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import handlebars from 'handlebars';
+<<<<<<< Updated upstream
 import {
   ConnectorCommon,
   ConnectorIntegration,
@@ -8,6 +9,13 @@ import {
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
+=======
+import { ConnectorCommon, ConnectorIntegration, ConnectorWebhook } from 'templates/ConnectorIntegration';
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import { githubGist } from "react-syntax-highlighter/dist/esm/styles/hljs"; // Import a suitable style for SyntaxHighlighter
+import copy from "copy-to-clipboard"; // Import the copy-to-clipboard library
+import { download } from 'utils/search_utils';
+>>>>>>> Stashed changes
 
 function toPascalCase(str) {
   return str
@@ -308,6 +316,7 @@ const ConnectorTemplate = ({
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(generatedCode);
+    download(generatedCode, "connector.rs", "text");
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
     setTimeout(() => {
