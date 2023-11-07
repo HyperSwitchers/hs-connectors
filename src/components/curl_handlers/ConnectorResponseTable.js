@@ -97,7 +97,10 @@ function IConnectorResponseTable({
       let updatedVariants = { ...variants };
       let updatedMapping = { ...mapping };
       const newVariants = [mapping[field].value].concat(
-        input?.value?.split(',')?.map((v) => v?.trim())
+        input?.value
+          ?.split(',')
+          ?.map((v) => v?.trim())
+          .filter((f) => f !== mapping[field].value)
       );
       if (!updatedVariants[field]) {
         updatedVariants[field] = [];

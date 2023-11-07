@@ -75,7 +75,10 @@ function IRequestFieldsTable({
           '$.' + field.replaceAll('.', '.value.').replaceAll('-', '')
         )[0] || {};
       const newVariants = [currentVal].concat(
-        input.value.split(',').map((v) => v.trim())
+        input.value
+          .split(',')
+          .map((v) => v.trim())
+          .filter((f) => f !== currentVal)
       );
       if (!updatedVariants[field]) {
         updatedVariants[field] = [];
