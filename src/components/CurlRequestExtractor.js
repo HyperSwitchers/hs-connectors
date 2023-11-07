@@ -128,7 +128,7 @@ const CurlRequestExecutor = () => {
   const saveFlowDetails = (curl) => {
     let props = localStorage.props
       ? JSON.parse(localStorage.props)
-      : defaultConnectorProps(localStorage.connector || 'tttt');
+      : defaultConnectorProps(localStorage.connector || 'DemoCon');
     let flow = props.flows[selectedFlowOption];
     if (flow) {
       flow.url_path = new URL(curl.url).pathname;
@@ -494,7 +494,7 @@ const CurlRequestExecutor = () => {
             <button
               id="generate-code"
               onClick={(e) => {
-                let connector = localStorage.connector || 'tttt';
+                let connector = localStorage.connector || 'DemoCon';
                 let props = localStorage.props
                   ? JSON.parse(localStorage.props)
                   : defaultConnectorProps(connector);
