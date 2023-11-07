@@ -82,7 +82,6 @@ function IResponseFieldsTable({
                             keys,
                             newValue
                           );
-                          debugger;
                           setHsResponse(updatedResponse);
                           setMapping(updated);
                           setHsMapping(updated);
