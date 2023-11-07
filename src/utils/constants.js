@@ -25,3 +25,5 @@ export const HYPERSWITCH_STATUS_LIST = [
   'ConfirmationAwaited',
   'DeviceDataCollectionPending',
 ];
+
+export const codeSnippets = ['cURL', 'Python', 'JavaScript', 'PHP', 'Go', 'Java'];

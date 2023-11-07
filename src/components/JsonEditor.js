@@ -112,7 +112,7 @@ function JsonEditor({
     } else {
       storeItem('auth_type', requestData);
     }
-    onSave(jsonEditor);
+    onSave(requestData);
   };
 
   useEffect(() => {
