@@ -392,7 +392,7 @@ const CurlRequestExecutor = () => {
           type="Currency Unit Type"
         />
         <button>
-          <a style={{textDecoration:"none", color: '#fff'}} target="_blank" rel="noopener noreferrer" href="https://github.com/juspay/hyperswitch/fork">Fork Hyperswitch</a>
+          <a style={{ textDecoration: "none", color: '#fff' }} target="_blank" rel="noopener noreferrer" href="https://github.com/juspay/hyperswitch/fork">Fork Hyperswitch</a>
         </button>
       </div>
       {selectedFlowOption === 'AuthType' ? (
@@ -545,7 +545,7 @@ const CurlRequestExecutor = () => {
                       [selectedFlowOption || 'Authorize']: {
                         paymentsRequest: modifiedUpdatedRequestData,
                         paymentsResponse: modifiedUpdatedResponseData,
-                        hsResponse: hsMapping,
+                        hsResponse: hsResponse,
                       },
                     },
                     attemptStatus: statusMappingData,

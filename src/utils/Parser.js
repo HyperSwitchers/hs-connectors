@@ -9,7 +9,7 @@ const connectorImports = `use api_models::payments::Card;
 use serde::{Deserialize, Serialize};
 use cards::CardNumber;
 use masking::Secret;
-use crate::{connector::utils::{PaymentsAuthorizeRequestData, RouterData},core::errors,types::{self,api, storage::enums::{self, Currency}}};`;
+use crate::{connector::utils::{self, PaymentsAuthorizeRequestData, RouterData},core::errors,types::{self,api, storage::enums::{self, Currency}}};`;
 
 
 const connectorTemplate = `//TODO: Fill the struct with respective fields
@@ -382,18 +382,18 @@ function generateTryFroms(flowType, request, hsResponse) {
 
         if (flowType === "Authorize") {
 
-            generatedRequestTryFrom = `impl TryFrom<(&types::PaymentsAuthorizeRouterData, &Card)> for ${connectorName}${flowType}Request {
+            generatedRequestTryFrom = `impl TryFrom<(&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>, &Card)> for ${connectorName}${flowType}Request {
             type Error = error_stack::Report<errors::ConnectorError>;
-            fn try_from(value: (&types::PaymentsAuthorizeRouterData, &Card)) -> Result<Self, Self::Error> {
+            fn try_from(value: (&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>, &Card)) -> Result<Self, Self::Error> {
                 let (item, ccard) = value;
                 ${request.join('\n\t\t\t')}
                 Ok(${connectorName.toLowerCase()}_${flowType.toLowerCase()}_request)
             }
         }    
-impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType}Request {
+impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> for ${connectorName}${flowType}Request {
     type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: &types::PaymentsAuthorizeRouterData) -> Result<Self, Self::Error> {
-        match &item.request.payment_method_data {
+    fn try_from(item: &${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>) -> Result<Self, Self::Error> {
+        match &item.router_data.request.payment_method_data {
             api_models::payments::PaymentMethodData::Card(card) => Self::try_from((item, card)),
             _ => Err(errors::ConnectorError::NotImplemented(
                 "payment method".to_string(),
@@ -408,7 +408,7 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType
     for types::${requestRouterDataType}
 {
     type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: types::${responseRouterDataType}<${connectorName}${flowType}Response>>,
+    fn try_from(item: types::${responseRouterDataType}<${connectorName}${flowType}Response>,
     ) -> Result<Self,Self::Error> {
         Ok(Self {
             status: enums::AttemptStatus::from(item.response.${hsResponse.status.substring(1)}),
@@ -450,9 +450,9 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for ${connectorName}${flowType
 function generateStatusMapping(statusType, inputJson) {
     let statusArray = [];
     let tryFromArray = [];
-    Object.entries(inputJson).forEach(([AttempStatus, ConnectorStatus]) => {
+    Object.entries(inputJson).forEach(([ConnectorStatus, AttemptStatus]) => {
         statusArray.push(`${toPascalCase(ConnectorStatus)}`);
-        tryFromArray.push(`${toPascalCase(connectorName)}${statusType}::${ConnectorStatus} => Self::${AttempStatus}`);
+        tryFromArray.push(`${toPascalCase(connectorName)}${statusType}::${ConnectorStatus} => Self::${AttemptStatus}`);
     });
     const header = shouldAddCamelCaseHeader(Object.values(inputJson).map(([fieldName]) => fieldName))
         ? '#[serde(rename_all = "camelCase")]'
