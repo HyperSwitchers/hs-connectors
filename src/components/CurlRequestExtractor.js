@@ -390,6 +390,9 @@ const CurlRequestExecutor = () => {
           selectedOption={selectedCurrencyUnitTypeOption}
           type="Currency Unit Type"
         />
+        <button>
+          <a style={{textDecoration:"none", color: '#fff'}} target="_blank" rel="noopener noreferrer" href="https://github.com/juspay/hyperswitch/fork">Fork Hyperswitch</a>
+        </button>
       </div>
       {selectedFlowOption === 'AuthType' ? (
         <AuthType></AuthType>
