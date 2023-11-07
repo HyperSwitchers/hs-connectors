@@ -66,7 +66,7 @@ function IRequestFieldsTable({
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
-    if (input?.value) {
+    if (input instanceof HTMLInputElement) {
       let updatedVariants = { ...variants };
       let updatedMapping = { ...mapping };
       const currentVal =

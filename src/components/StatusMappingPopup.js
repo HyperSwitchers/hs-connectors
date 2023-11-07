@@ -1,22 +1,24 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-    const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
-    const [jsonInput, setJsonInput] = useState(JSON.stringify(initialValues, null, 2));
-  
-    const handleSubmit = () => {
-      // Parse the edited JSON and submit it
-      const editedJson = JSON.parse(jsonInput);
-      localStorage.status = JSON.stringify(editedJson);
-      console.log(editedJson);
-      onSubmit(editedJson);
-      onClose();
-    };
+const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
+  const [jsonInput, setJsonInput] = useState(
+    JSON.stringify(initialValues, null, 2)
+  );
+
+  const handleSubmit = () => {
+    // Parse the edited JSON and submit it
+    const editedJson = JSON.parse(jsonInput);
+    localStorage.status = JSON.stringify(editedJson);
+    onSubmit(editedJson);
+    onClose();
+  };
 
   return (
     <div className="popup-container">
       <div className="popup">
         <h2>Enter Connector Satus</h2>
-        <textarea id="textarea-popup"
+        <textarea
+          id="textarea-popup"
           rows={20}
           value={jsonInput}
           onChange={(e) => setJsonInput(e.target.value)}
@@ -24,7 +26,9 @@ import React, { useState } from "react";
         />
         <div className="button-group">
           <button onClick={handleSubmit}>Submit</button>
-          <button id="cancel-button" onClick={onClose}>Cancel</button>
+          <button id="cancel-button" onClick={onClose}>
+            Cancel
+          </button>
         </div>
       </div>
     </div>

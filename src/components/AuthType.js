@@ -62,8 +62,11 @@ function AuthType() {
             className="material-input"
             type="text"
             onKeyUp={(e) => {
+              const target = e.target;
               let updatedContent = { ...content };
-              updatedContent[key] = e.target.value;
+              if (target instanceof HTMLInputElement) {
+                updatedContent[key] = target.value;
+              }
               setContent(updatedContent);
             }}
           />
