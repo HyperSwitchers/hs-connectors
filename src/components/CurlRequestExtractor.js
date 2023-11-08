@@ -169,12 +169,16 @@ const CurlRequestExecutor = () => {
         convertToValidVariableName(key)
       );
       // if request body is present then build request body
-      if (curl.data.ascii) {
+      flow.enabled.push(
+        'get_headers',
+        'get_content_type',
+        'get_url',
+        'build_request',
+        'handle_response',
+        'get_error_response',
+      )
+      if (Object.keys(JSON.parse(curl.data.ascii)).length > 0) {
         flow.enabled.push('get_request_body');
-      } else {
-        flow.enabled = flow.enabled.filter(
-          (item) => item !== 'get_request_body'
-        );
       }
       props.flows[appContext.selectedFlow] = flow;
     }
@@ -202,7 +206,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = curlRequest.url;
+    let url = "/cors/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -272,10 +276,10 @@ const CurlRequestExecutor = () => {
           jsonpath.query(
             appContext.flows[appContext.selectedFlow].responseFields.mapping,
             '$.' +
-              selectedStatusVariable
-                // @ts-ignore
-                .replaceAll('.', '.value.')
-                .replaceAll('-', '')
+            selectedStatusVariable
+              // @ts-ignore
+              .replaceAll('.', '.value.')
+              .replaceAll('-', '')
           )[0] || {};
       } catch (error) {
         console.error('jsonpath query failed', error);
@@ -484,14 +488,13 @@ const CurlRequestExecutor = () => {
                 <h3>Response Fields Mapping</h3>
                 <button
                   id="responseStatusMapping"
-                  className={`${
-                    !(
-                      typeof selectedStatusVariable === 'string' &&
-                      selectedStatusVariable.length > 0
-                    )
-                      ? 'disabled'
-                      : ''
-                  }`}
+                  className={`${!(
+                    typeof selectedStatusVariable === 'string' &&
+                    selectedStatusVariable.length > 0
+                  )
+                    ? 'disabled'
+                    : ''
+                    }`}
                   onClick={handleStatusMappingButtonClick}
                 >
                   {!(

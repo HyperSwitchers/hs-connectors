@@ -150,7 +150,17 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
     {{/contains}}
     {{#contains enabled "get_request_body"}}
     fn get_request_body(&self, req: &{{{router_type}}}) -> CustomResult<Option<types::RequestBody>, errors::ConnectorError> {
+        {{#contains enabled "convert_router_amount"}} 
+        let connector_router_data = {{connector_name}}::{{struct_name}}RouterData::try_from((
+            &self.get_currency_unit(),
+            req.request.currency,
+            req.request.amount,
+            req,
+        ))?;
+        let req_obj = {{connector_name}}::{{struct_name}}{{request_type}}::try_from(&connector_router_data)?;
+        {{else}}
         let req_obj = {{connector_name}}::{{struct_name}}{{request_type}}::try_from(req)?;
+        {{/contains}}
         let {{connector_name}}_req = types::RequestBody::log_and_get_request_body(&req_obj, utils::Encode::<{{connector_name}}::{{struct_name}}{{request_type}}>::encode_to_string_of_json)
             .change_context(errors::ConnectorError::RequestEncodingFailed)?;
         Ok(Some({{connector_name}}_req))

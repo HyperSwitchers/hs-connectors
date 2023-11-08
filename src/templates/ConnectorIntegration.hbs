@@ -1,60 +1,66 @@
-impl ConnectorIntegration<{{trait_name}}, {{data_type}}, {{response_type}}> for {{struct_name}} {
+{{!-- impl ConnectorIntegration<{{trait_name}}, {{data_type}}, {{response_type}}> for {{struct_name}} {
     fn get_headers(
-        &self,
-        req: &{{data_type}},
-        connectors: &settings::Connectors,
+    &self,
+    req: &{{data_type}},
+    connectors: &settings::Connectors,
     ) -> CustomResult<Vec<(String, request::Maskable<String>)>, errors::ConnectorError> {
         {{struct_name}}::build_headers(req, connectors)
-    }
+        }
 
-    fn get_content_type(&self) -> &'static str {
+        fn get_content_type(&self) -> &'static str {
         self.common_get_content_type()
-    }
+        }
 
-    fn get_url(&self, _req: &{{data_type}}, _connectors: &settings::Connectors,) -> CustomResult<String,errors::ConnectorError> {
-        Err(errors::ConnectorError::NotImplemented("get_url method".to_string()).into())
-    }
+        fn get_url(&self, _req: &{{data_type}}, _connectors: &settings::Connectors,) -> CustomResult
+        <String,errors::ConnectorError> {
+            Err(errors::ConnectorError::NotImplemented("get_url method".to_string()).into())
+            }
 
-    fn get_request_body(&self, req: &{{data_type}}) -> CustomResult<Option<types::RequestBody>, errors::ConnectorError> {
-        let req_obj = {{connector_name}}::{{struct_name}}PaymentsRequest::try_from(req)?;
-        let {{connector_name}}_req = types::RequestBody::log_and_get_request_body(&req_obj, utils::Encode::<{{connector_name}}::{{struct_name}}PaymentsRequest>::encode_to_string_of_json)
-            .change_context(errors::ConnectorError::RequestEncodingFailed)?;
-        Ok(Some({{connector_name}}_req))
-    }
+            fn get_request_body(&self, req: &{{data_type}}) -> CustomResult<Option<types::RequestBody>,
+                errors::ConnectorError> {
+                let req_obj = {{connector_name}}::{{struct_name}}PaymentsRequest::try_from(req)?;
+                let {{connector_name}}_req = types::RequestBody::log_and_get_request_body(&req_obj, utils::Encode::
+                <{{connector_name}}::{{struct_name}}PaymentsRequest>::encode_to_string_of_json)
+                    .change_context(errors::ConnectorError::RequestEncodingFailed)?;
+                    Ok(Some({{connector_name}}_req))
+                    }
 
-    fn build_request(
-        &self,
-        req: &{{data_type}},
-        connectors: &settings::Connectors,
-    ) -> CustomResult<Option<services::Request>, errors::ConnectorError> {
-        Ok(Some(
-            services::RequestBuilder::new()
-                .method(services::Method::Post)
-                .url(&{{flow_type}}::get_url(
-                    self, req, connectors,
-                )?)
-                .attach_default_headers()
-                .headers({{flow_type}}::get_headers(
-                    self, req, connectors,
-                )?)
-                .body({{flow_type}}::get_request_body(self, req)?)
-                .build(),
-        ))
-    }
-    fn handle_response(
-        &self,
-        data: &{{data_type}},
-        res: Response,
-    ) -> CustomResult<{{data_type}},errors::ConnectorError> {
-        let response: {{connector_name}}::{{struct_name}}PaymentsResponse = res.response.parse_struct("{{struct_name}} PaymentsAuthorizeResponse").change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
-        types::RouterData::try_from(types::ResponseRouterData {
-            response,
-            data: data.clone(),
-            http_code: res.status_code,
-        })
-    }
+                    fn build_request(
+                    &self,
+                    req: &{{data_type}},
+                    connectors: &settings::Connectors,
+                    ) -> CustomResult<Option<services::Request>, errors::ConnectorError> {
+                        Ok(Some(
+                        services::RequestBuilder::new()
+                        .method(services::Method::Post)
+                        .url(&{{flow_type}}::get_url(
+                        self, req, connectors,
+                        )?)
+                        .attach_default_headers()
+                        .headers({{flow_type}}::get_headers(
+                        self, req, connectors,
+                        )?)
+                        .body({{flow_type}}::get_request_body(self, req)?)
+                        .build(),
+                        ))
+                        }
+                        fn handle_response(
+                        &self,
+                        data: &{{data_type}},
+                        res: Response,
+                        ) -> CustomResult<{{data_type}},errors::ConnectorError> {
+                            let response: {{connector_name}}::{{struct_name}}PaymentsResponse =
+                            res.response.parse_struct("{{struct_name}}
+                            PaymentsAuthorizeResponse").change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
+                            types::RouterData::try_from(types::ResponseRouterData {
+                            response,
+                            data: data.clone(),
+                            http_code: res.status_code,
+                            })
+                            }
 
-    fn get_error_response(&self, res: Response) -> CustomResult<ErrorResponse,errors::ConnectorError> {
-        self.build_error_response(res)
-    }
-}
+                            fn get_error_response(&self, res: Response) -> CustomResult
+                            <ErrorResponse,errors::ConnectorError> {
+                                self.build_error_response(res)
+                                }
+                                } --}}

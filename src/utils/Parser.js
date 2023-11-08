@@ -111,43 +111,45 @@ const replacements = {
     card_holder_name: "ccard.card_holder_name.clone()",
     card_holder_name_String: "ccard.card_holder_name.clone()",
     amount: "item.amount",
-    amount_type_i64: "item.request.amount",
-    amount_type_decimal: "utils::to_currency_base_unit_asf64(item.request.amount, item.request.currency)?",
-    amount_type_decimal_string: "utils::to_currency_base_unit(item.request.amount, item.request.currency)?",
-    amount_type_base_string: "item.request.amount.to_string()",
-    email: `item.request.get_email()?`,
-    email_Email: `item.request.get_email()?`,
-    currency: "item.request.currency",
-    currency_Currency: "item.request.currency",
-    router_return_url: `item.request.get_return_url()?`,
-    webhook_url: `item.request.get_webhook_url()?`,
-    complete_authorize_url: `item.request.complete_authotrize_url`,
-    browser_info_accept_header: `item.request.get_browser_info()?.get_accept_header()?`,
-    browser_info_language: `item.request.get_browser_info()?.get_language()?`,
-    browser_info_screen_height: `item.request.get_browser_info()?.get_screen_height()?`,
-    browser_info_screen_width: `item.request.get_browser_info()?.get_screen_width()?`,
-    browser_info_color_depth: `item.request.get_browser_info()?.get_color_depth()?`,
-    browser_info_user_agent: `item.request.get_browser_info()?.get_user_agent()?`,
-    browser_info_time_zone_i32: `item.request.get_browser_info()?.get_time_zone()?`,
-    browser_info_java_enabled_bool: `item.request.get_browser_info()?.get_java_enabled()?`,
-    browser_info_java_script_enabled_bool: `item.request.get_browser_info()?.get_java_script_enabled()?`,
+    amount_type_i64: "item.router_data.request.amount",
+    amount_type_decimal: "utils::to_currency_base_unit_asf64(item.router_data.request.amount, item.router_data.request.currency)?",
+    amount_type_decimal_string: "utils::to_currency_base_unit(item.router_data.request.amount, item.router_data.request.currency)?",
+    amount_type_base_string: "item.router_data.request.amount.to_string()",
+    email: `item.router_data.request.get_email()?`,
+    email_Email: `item.router_data.request.get_email()?`,
+    currency: "item.router_data.request.currency",
+    currency_Currency: "item.router_data.request.currency",
+    router_return_url: `item.router_data.request.get_return_url()?`,
+    webhook_url: `item.router_data.request.get_webhook_url()?`,
+    complete_authorize_url: `item.router_data.request.complete_authotrize_url`,
+    browser_info_accept_header: `item.router_data.request.get_browser_info()?.get_accept_header()?`,
+    browser_info_language: `item.router_data.request.get_browser_info()?.get_language()?`,
+    browser_info_screen_height: `item.router_data.request.get_browser_info()?.get_screen_height()?`,
+    browser_info_screen_width: `item.router_data.request.get_browser_info()?.get_screen_width()?`,
+    browser_info_color_depth: `item.router_data.request.get_browser_info()?.get_color_depth()?`,
+    browser_info_user_agent: `item.router_data.request.get_browser_info()?.get_user_agent()?`,
+    browser_info_time_zone_i32: `item.router_data.request.get_browser_info()?.get_time_zone()?`,
+    browser_info_java_enabled_bool: `item.router_data.request.get_browser_info()?.get_java_enabled()?`,
+    browser_info_java_script_enabled_bool: `item.router_data.request.get_browser_info()?.get_java_script_enabled()?`,
     description: `item.get_description()?`,
     return_url: `item.get_return_url()?`,
-    billing_country: `item.request.billing.address.get_country()?`,
-    billing_country_CountryAlpha2: `item.request.billing.address.get_country()?`,
-    billing_address_line1: `item.request.billing.address.get_line1()?`,
-    billing_address_line2: `item.request.billing.address.get_line2()?`,
-    billing_address_city: `item.request.billing.address.get_city()?`,
-    billing_address_state: `item.request.billing.address.get_state()?`,
-    billing_address_zip: `item.request.billing.address.get_zip()?`,
-    billing_address_firstname: `item.request.billing.address.get_firstname()?`,
-    billing_address_lastname: `item.request.billing.address.get_lastname()?`,
-    shipping_country: `item.request.shipping.address.get_country()?`,
-    shipping_country_CountryAlpha2: `item.request.shipping.address.get_country()?`,
+    billing_country: `item.router_data.request.billing.address.get_country()?`,
+    billing_country_CountryAlpha2: `item.router_data.request.billing.address.get_country()?`,
+    billing_address_line1: `item.router_data.request.billing.address.get_line1()?`,
+    billing_address_line2: `item.router_data.request.billing.address.get_line2()?`,
+    billing_address_city: `item.router_data.request.billing.address.get_city()?`,
+    billing_address_state: `item.router_data.request.billing.address.get_state()?`,
+    billing_address_zip: `item.router_data.request.billing.address.get_zip()?`,
+    billing_address_firstname: `item.router_data.request.billing.address.get_firstname()?`,
+    billing_address_lastname: `item.router_data.request.billing.address.get_lastname()?`,
+    shipping_country: `item.router_data.request.shipping.address.get_country()?`,
+    shipping_country_CountryAlpha2: `item.router_data.request.shipping.address.get_country()?`,
     payment_id: "item.attempt_id.clone()",
-    connector_request_reference_id: "item.connector_request_reference_id.clone()",
-    connector_transaction_id: "item.request.connector_transaction_id.clone()",
-    refund_reason: "item.router_data.request.reason.clone()"
+    connector_request_reference_id: "item.router_data.connector_request_reference_id.clone()",
+    connector_transaction_id: "item.router_data.request.connector_transaction_id.clone()",
+    refund_reason: "item.router_data.request.reason.clone()",
+    is_auto_capture: "item.router_data.request.is_auto_capture()?",
+    amount_to_capture: "item.request.amount_to_capture.clone()"
 };
 
 export const responseReplacements = {
@@ -166,8 +168,8 @@ const hsFieldTypes = {
     email: "Email",
     ip_address: "pii::IpAddress",
     currency: "diesel_models::enums::Currency",
-    shipping_country: "CountryAlpha2",
-    billing_country: "CountryAlpha2"
+    shipping_country: "api_models::enums::CountryAlpha2",
+    billing_country: "api_models::enums::CountryAlpha2"
 };
 
 function toSnakeCase(str) {
@@ -256,7 +258,7 @@ function generateAuthType(authKeys) {
         const [value1] = jsonValues.map(item => toSnakeCase(item));
         return `
 // Auth Struct
-pub struct ${connectorName}AuthType {
+pub struct ${toPascalCase(connectorName)}AuthType {
     pub(super) ${value1}: Secret<String>,
 }
 
@@ -409,8 +411,22 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
     }
 }`;
         }
+
+        if (flowType === "Refund") {
+
+            generatedRequestTryFrom = `impl TryFrom<&${connectorName}RouterData<&types::RefundsRouterData> for ${connectorName}${flowType}Request {
+    type Error = error_stack::Report<errors::ConnectorError>;
+    fn try_from(item: &${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>) -> Result<Self, Self::Error> {
+        match &item.router_data.request.payment_method_data {
+            ${request.join('\n\t\t\t')}
+            Ok(${connectorName.toLowerCase()}_${flowType.toLowerCase()}_request)
+        }
     }
-    if (hsResponse != undefined && (hsResponse.status || hsResponse.response.resource_id)) {
+}`;
+        }
+    }
+
+    if (hsResponse != undefined && hsResponse.status || hsResponse.response.resource_id) {
         generatedResponseTryFrom = `impl TryFrom<types::${responseRouterDataType}<${connectorName}${flowType}Response>> 
     for types::${requestRouterDataType}
 {
@@ -418,7 +434,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
     fn try_from(item: types::${responseRouterDataType}<${connectorName}${flowType}Response>,
     ) -> Result<Self,Self::Error> {
         Ok(Self {
-            status: enums::AttemptStatus::from(item.response.${hsResponse.status.substring(1)}),
+            status: enums::AttemptStatus::${hsResponse.status.startsWith('$') ? "from(item.response." + hsResponse.status.substring(1) + ")" : "Pending"},
             response: Ok(types::PaymentsResponseData::TransactionResponse {
                 resource_id: types::ResponseId::ConnectorTransactionId(item.response.${hsResponse.response.resource_id.substring(1)}),
                 redirection_data:  ${hsResponse.response.redirection_data.startsWith('$') ? "item.response" + hsResponse.response.redirection_data.substring(1) : "None"},
@@ -438,7 +454,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
 {
     type Error = error_stack::Report<errors::ConnectorError>;
     fn try_from(
-        item: types::RefundsResponseRouterData<api::${apiType}, ${connectorName}${flowType}Response>>,
+        item: types::RefundsResponseRouterData<api::${apiType}, ${connectorName}${flowType}Response>,
     ) -> Result<Self, Self::Error> {
         Ok(Self {
             response: Ok(types::RefundsResponseData {
@@ -459,18 +475,28 @@ function generateStatusMapping(statusType, inputJson) {
     let tryFromArray = [];
     Object.entries(inputJson).forEach(([ConnectorStatus, AttemptStatus]) => {
         statusArray.push(`${toPascalCase(ConnectorStatus)}`);
-        tryFromArray.push(`${toPascalCase(connectorName)}${statusType}::${ConnectorStatus} => Self::${AttemptStatus}`);
+        statusType == "AttemptStatus" ?
+            tryFromArray.push(`${toPascalCase(connectorName)}AuthorizeResponseStatus::${toPascalCase(ConnectorStatus)} => Self::${AttemptStatus}`) :
+            tryFromArray.push(`${toPascalCase(connectorName)}RefundResponseStatus::${toPascalCase(ConnectorStatus)} => Self::${AttemptStatus}`)
     });
     const header = shouldAddCamelCaseHeader(Object.values(inputJson).map(([fieldName]) => fieldName))
         ? '#[serde(rename_all = "camelCase")]'
         : '';
-    return `#[derive(Debug, Serialize, Deserialize)]
-${header}
-pub enum ${connectorName}${statusType} {
-    ${statusArray.join(',\n\t')}
-}
-impl From<${toPascalCase(connectorName)}${statusType}> for enums::${statusType} {
-    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
+    //     return `#[derive(Debug, Serialize, Deserialize)]
+    // ${header}
+    // pub enum ${connectorName}${statusType} {
+    //     ${statusArray.join(',\n\t')}
+    // }`
+    return statusType == "AttemptStatus" ? `
+impl From<${toPascalCase(connectorName)}AuthorizeResponseStatus> for enums::${statusType} {
+    fn from(item: ${toPascalCase(connectorName)}AuthorizeResponseStatus) -> Self {
+        match item {
+            ${tryFromArray.join(',\n\t\t\t')}
+        }
+    }
+}` : `
+impl From<${toPascalCase(connectorName)}RefundResponseStatus> for enums::${statusType} {
+    fn from(item: ${toPascalCase(connectorName)}RefundResponseStatus) -> Self {
         match item {
             ${tryFromArray.join(',\n\t\t\t')}
         }
@@ -869,6 +895,9 @@ export const generateRustCode = (connector, inputJson) => {
 
         // tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, nestedStructs3));
         tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, inputObject[connectorName]?.flows[flowType].hsResponse));
+
+        nestedStructs2 = [];
+        nestedStructs3 = [];
 
         // printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode, attemptStatusMapping);
     });
