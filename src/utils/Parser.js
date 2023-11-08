@@ -149,7 +149,8 @@ const replacements = {
     connector_transaction_id: "item.router_data.request.connector_transaction_id.clone()",
     refund_reason: "item.router_data.request.reason.clone()",
     is_auto_capture: "item.router_data.request.is_auto_capture()?",
-    amount_to_capture: "item.request.amount_to_capture.clone()"
+    amount_to_capture: "item.request.amount_to_capture.clone()",
+    refund_amount: "item.amount"
 };
 
 export const responseReplacements = {
@@ -414,13 +415,11 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
 
         if (flowType === "Refund") {
 
-            generatedRequestTryFrom = `impl TryFrom<&${connectorName}RouterData<&types::RefundsRouterData> for ${connectorName}${flowType}Request {
+            generatedRequestTryFrom = `impl<F> TryFrom<&${connectorName}RouterData<&types::RefundsRouterData<F>>> for ${connectorName}${flowType}Request {
     type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: &${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>) -> Result<Self, Self::Error> {
-        match &item.router_data.request.payment_method_data {
+    fn try_from(item: &${connectorName}RouterData<&types::RefundsRouterData<F>>) -> Result<Self, Self::Error> {
             ${request.join('\n\t\t\t')}
             Ok(${connectorName.toLowerCase()}_${flowType.toLowerCase()}_request)
-        }
     }
 }`;
         }

@@ -154,7 +154,11 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
         let connector_router_data = {{connector_name}}::{{struct_name}}RouterData::try_from((
             &self.get_currency_unit(),
             req.request.currency,
+            {{#if refund_amount}}
+            req.request.refund_amount,
+            {{else}}
             req.request.amount,
+            {{/if}}
             req,
         ))?;
         let req_obj = {{connector_name}}::{{struct_name}}{{request_type}}::try_from(&connector_router_data)?;

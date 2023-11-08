@@ -137,6 +137,7 @@ export const defaultConnectorProps = (connector) => {
         enabled: [
           'convert_router_amount',
         ],
+        refund_amount: true
       },
       RSync: {
         trait_name: 'api::RSync',
@@ -192,10 +193,10 @@ const ConnectorTemplate = ({
   const build_auth_header_key = (data) => {
     if (data.includes('$base_64_encode')) {
       let fields = data.split('_colon_');
-      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.'+fields[0].substr('$base_64_encode_'.length)+'.peek(), auth.'+fields[1]+'.peek()))';
+      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.' + fields[0].substr('$base_64_encode_'.length) + '.peek(), auth.' + fields[1] + '.peek()))';
     }
     else {
-      return 'auth.'+data.substr(1)+'.expose()';
+      return 'auth.' + data.substr(1) + '.expose()';
     }
   };
   const get_auth_header_key = (data) => {
