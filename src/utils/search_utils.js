@@ -69,7 +69,12 @@ export const synonymMapping = {
     currency: ['currency', 'currency_code'],
     description: ['description', 'softDescriptor'],
     email: ['email'],
-    connector_request_reference_id: ['reference', 'reference_id', 'payment_id', 'order_id'],
+    connector_request_reference_id: [
+      'reference',
+      'reference_id',
+      'payment_id',
+      'order_id',
+    ],
     phone_number: ['phone', 'contact_number', 'phone_number'],
     setup_future_usage: ['storePaymentMethod'],
     return_url: ['returnUrl', ''],
@@ -126,9 +131,11 @@ export function mapFieldNames(input) {
         if (_.isObject(value)) {
           return mapFieldNames(value);
         } else {
-          const synonymKey = _.map(synonymMapping, (value, kk) =>
-            _.find(value, (synonym) => synonym === key) ? kk : undefined
-          ).filter((a) => a);
+          const synonymKey = Object.keys(synonymMapping).flatMap((flow) => {
+            return _.map(synonymMapping[flow], (value, kk) =>
+              _.find(value, (synonym) => synonym === key) ? kk : undefined
+            ).filter((a) => a);
+          });
           return synonymKey[0] ? '$' + synonymKey[0] : mapFieldNames(value);
         }
       });
@@ -182,6 +189,14 @@ export function flattenObject(obj, parent = '', res = []) {
   }
   return res;
 }
+
+export const deepCopy = (object) => {
+  if (typeof object === 'object') {
+    return JSON.parse(JSON.stringify(object));
+  } else {
+    return object;
+  }
+};
 
 export const typesList = [
   'String',

@@ -3,11 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import Dropdown from './Dropdown';
 import 'jsoneditor/dist/jsoneditor.css';
-import JsonEditor from './JsonEditor';
-import { storeItem } from 'utils/state';
+import { APP_CONTEXT } from 'utils/state';
 import { codeSnippets } from 'utils/constants';
+import { useRecoilValue } from 'recoil';
+import { deepCopy } from 'utils/search_utils';
 
-function AuthType({ saveAuthType = (v) => {} }) {
+function AuthType({ updateAppContext = (v) => {} }) {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
   const types = {
     HeaderKey: { api_key: '' },
@@ -39,8 +40,11 @@ function AuthType({ saveAuthType = (v) => {} }) {
       key2: 'Additional Key 2',
     },
   };
-  let auth = JSON.parse(localStorage.auth_type || '{}');
-  const [authType, setAuthType] = useState(auth?.type || 'HeaderKey');
+  const appContext = useRecoilValue(APP_CONTEXT);
+  const auth = appContext.authType.value;
+  const [selectedAuthType, setSelectedAuthType] = useState(
+    auth?.type || 'HeaderKey'
+  );
   const [content, setContent] = useState(auth?.content || types['HeaderKey']);
   const [codeIntegration, selectCodeIntegration] = useState(codeSnippets[0]);
   const [isSaved, setIsSaved] = useState(false);
@@ -49,17 +53,29 @@ function AuthType({ saveAuthType = (v) => {} }) {
     setIsSaved(false);
   }, [content]);
 
+  useEffect(() => {
+    const auth = appContext.authType.value;
+    if (auth?.type) {
+      setSelectedAuthType(auth.type);
+    }
+    if (auth?.content) {
+      setContent(auth.content);
+    }
+  }, [appContext.authType]);
+
   const onSaveClick = (requestData) => {
-    saveAuthType({
-      ...JSON.parse(localStorage.auth_type || '{}'),
-      type: authType,
+    const updatedAuthTypeContent = {
+      type: selectedAuthType,
       content: requestData,
-    });
+    };
     setIsSaved(true);
+    const updatedAuthType = deepCopy(appContext.authType);
+    updatedAuthType.value = updatedAuthTypeContent;
+    updateAppContext({ authType: updatedAuthType });
   };
   const onAuthTypeChange = (e, jsonEditor) => {
     const authType = e.target.value;
-    setAuthType(authType);
+    setSelectedAuthType(authType);
     const updatedContent = { ...types[authType], ...content };
     Object.keys(updatedContent).map((k) => {
       if (!Object.keys(types[authType]).includes(k)) {
@@ -67,6 +83,9 @@ function AuthType({ saveAuthType = (v) => {} }) {
       }
     });
     setContent(updatedContent);
+    const updatedAuthType = deepCopy(appContext.authType);
+    updatedAuthType.value = { type: authType, content: updatedContent };
+    updateAppContext({ authType: updatedAuthType });
   };
 
   const renderAuthKeyFields = (content) => {
@@ -74,7 +93,9 @@ function AuthType({ saveAuthType = (v) => {} }) {
       <React.Fragment key={key}>
         <div className="auth-key-field">
           <div className="auth-key-field-value">{key}</div>
-          <div className="auth-key-field-info">{typesInfo[authType][key]}</div>
+          <div className="auth-key-field-info">
+            {typesInfo[selectedAuthType][key]}
+          </div>
         </div>
         <input
           id={`${key}-input`}
@@ -115,7 +136,7 @@ function AuthType({ saveAuthType = (v) => {} }) {
         <div className="flow-type-header">Flow Type</div>
         <Dropdown
           options={authTypes}
-          selectedOption={authType}
+          selectedOption={selectedAuthType}
           handleSelectChange={onAuthTypeChange}
           type="Flow Type"
         />
@@ -134,7 +155,13 @@ function AuthType({ saveAuthType = (v) => {} }) {
               className="clear button"
               onClick={() => {
                 Object.keys(types).map((type) => {});
-                setContent(types[authType]);
+                setContent(types[selectedAuthType]);
+                const updatedAuthType = deepCopy(appContext.authType);
+                updatedAuthType.value = {
+                  type: selectedAuthType,
+                  content: types[selectedAuthType],
+                };
+                updateAppContext({ authType: updatedAuthType });
               }}
             >
               Clear
@@ -151,6 +178,7 @@ function AuthType({ saveAuthType = (v) => {} }) {
           <div className="code-snippet-header">
             {codeSnippets.map((l) => (
               <div
+                key={l}
                 className={`integration${
                   l === codeIntegration ? ' selected' : ''
                 }`}

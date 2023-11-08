@@ -15,6 +15,7 @@ import {
 import 'jsoneditor/dist/jsoneditor.css';
 import {
   addFieldsToNodes,
+  deepCopy,
   flattenObject,
   is_mapped_field,
   mapFieldNames,
@@ -22,17 +23,19 @@ import {
   updateNestedJson,
 } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
+import { useRecoilValue } from 'recoil';
+import { APP_CONTEXT } from 'utils/state';
 
 function IRequestFieldsTable({
-  requestFields,
   suggestions = {},
-  setUpdateRequestData = (value) => {},
-  updateRequestData = {},
+  updateAppContext = (v) => {},
 }) {
   const defaultProps = {
     options: Object.keys(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
   };
+
+  const appContext = useRecoilValue(APP_CONTEXT);
 
   const [fields, setFields] = useState([]);
   const [mapping, setMapping] = useState({});
@@ -40,13 +43,19 @@ function IRequestFieldsTable({
   const [variants, setVariants] = useState({});
 
   useEffect(() => {
+    const requestFields = deepCopy(
+      appContext.flows[appContext.selectedFlow].requestFields.value || {}
+    );
+    const requestFieldsMapping = deepCopy(
+      appContext.flows[appContext.selectedFlow].requestFields.mapping || {}
+    );
     let mapping =
-      Object.keys(updateRequestData).length > 0
-        ? updateRequestData
+      Object.keys(requestFieldsMapping).length > 0
+        ? requestFieldsMapping
         : addFieldsToNodes(mapFieldNames(requestFields));
     setMapping(mapping);
     setFields(flattenObject(requestFields));
-  }, [requestFields]);
+  }, [appContext.flows[appContext.selectedFlow].requestFields]);
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
@@ -81,12 +90,15 @@ function IRequestFieldsTable({
       setMapping(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
-      setUpdateRequestData(updatedMapping);
+      const updatedFlows = deepCopy(appContext.flows);
+      updatedFlows[appContext.selectedFlow].requestFields.mapping =
+        updatedMapping;
+      updateAppContext({ flows: updatedFlows });
     }
   };
 
   const handleVariantDeletion = (field, variant) => {
-    let updatedVariants = { ...variants };
+    let updatedVariants = deepCopy(variants);
     let updatedMapping = { ...mapping };
     const index = updatedVariants[field].indexOf(variant);
     if (index > -1) {
@@ -103,14 +115,19 @@ function IRequestFieldsTable({
       );
       setMapping(updatedMapping);
       setVariants(updatedVariants);
-      setUpdateRequestData(updatedMapping);
+      const updatedFlows = deepCopy(appContext.flows);
+      updatedFlows[appContext.selectedFlow].requestFields.mapping =
+        updatedMapping;
+      updateAppContext({ flows: updatedFlows });
     }
   };
 
   function updateRequestFields(row, update) {
     let updated = { ...mapping };
     setMapping(updated);
-    setUpdateRequestData(updated);
+    const updatedFlows = deepCopy(appContext.flows);
+    updatedFlows[appContext.selectedFlow].requestFields.mapping = updated;
+    updateAppContext({ flows: updatedFlows });
   }
 
   return (

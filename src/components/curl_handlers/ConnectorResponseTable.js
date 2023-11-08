@@ -14,20 +14,18 @@ import {
 } from '@mui/material';
 
 import 'jsoneditor/dist/jsoneditor.css';
-import { addFieldsToNodes, flattenObject, typesList } from 'utils/search_utils';
+import {
+  addFieldsToNodes,
+  deepCopy,
+  flattenObject,
+  typesList,
+} from 'utils/search_utils';
 import jsonpath from 'jsonpath';
+import { useRecoilValue } from 'recoil';
+import { APP_CONTEXT } from 'utils/state';
 
-function IConnectorResponseTable({
-  setResponseMapping = (value) => {},
-  connectorResponse,
-  suggestions = {},
-  setConnectorResponse = (value) => {},
-}) {
-  const defaultProps = {
-    options: Object.keys(suggestions).map((s) => '$' + s),
-    getOptionLabel: (option) => option,
-  };
-
+function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
+  const appContext = useRecoilValue(APP_CONTEXT);
   const [fields, setFields] = useState([]);
   const [mapping, setMapping] = useState({});
   const [contextMenu, setContextMenu] = React.useState(null);
@@ -37,17 +35,22 @@ function IConnectorResponseTable({
   const [variants, setVariants] = useState({});
 
   useEffect(() => {
-    const mapping = addFieldsToNodes(connectorResponse);
+    const connectorResponse = deepCopy(
+      appContext.flows[appContext.selectedFlow].responseFields.value || {}
+    );
+    const mapping = deepCopy(
+      appContext.flows[appContext.selectedFlow].responseFields.mapping || {}
+    );
     setFields(flattenObject(connectorResponse));
     setMapping(mapping);
-    setResponseMapping(mapping);
-  }, [connectorResponse]);
+  }, [appContext.flows[appContext.selectedFlow].responseFields]);
 
   function updateConnectorResponse() {
     let updated = { ...mapping };
     setMapping(updated);
-    setResponseMapping(mapping);
-    setConnectorResponse(updated);
+    const updatedFlows = deepCopy(appContext.flows);
+    updatedFlows[appContext.selectedFlow].responseFields.mapping = updated;
+    updateAppContext({ flows: updatedFlows });
   }
 
   const handleFieldClick = (row) => {
@@ -111,26 +114,36 @@ function IConnectorResponseTable({
       updatedVariants[field] = updatedVariants[field].concat(filteredVariants);
       updatedMapping[field].value = updatedVariants[field];
       setMapping(updatedMapping);
-      setResponseMapping(updatedMapping);
       setVariantRequestor(null);
       setVariants(updatedVariants);
+      const updatedFlows = deepCopy(appContext.flows);
+      updatedFlows[appContext.selectedFlow].responseFields.mapping =
+        updatedMapping;
+      updateAppContext({ flows: updatedFlows });
     }
   };
 
   const handleVariantDeletion = (field, variant) => {
-    let updatedVariants = { ...variants };
+    let updatedVariants = deepCopy(variants);
     let updatedMapping = { ...mapping };
     const index = updatedVariants[field].indexOf(variant);
     if (index > -1) {
       updatedVariants[field].splice(index, 1);
       if (updatedVariants[field].length === 0) {
         delete updatedVariants[field];
-        updatedMapping[field] = addFieldsToNodes(connectorResponse)[field];
+        updatedMapping[field] = addFieldsToNodes(
+          deepCopy(
+            appContext.flows[appContext.selectedFlow].responseFields.value || {}
+          )
+        )[field];
       } else {
         updatedMapping[field].value = updatedVariants[field];
       }
       setMapping(updatedMapping);
-      setResponseMapping(updatedMapping);
+      const updatedFlows = deepCopy(appContext.flows);
+      updatedFlows[appContext.selectedFlow].responseFields.mapping =
+        updatedMapping;
+      updateAppContext({ flows: updatedFlows });
       setVariants(updatedVariants);
     }
   };
@@ -169,6 +182,7 @@ function IConnectorResponseTable({
             </TableRow>
           </TableHead>
           <TableBody>
+            {' '}
             {fields?.map((row) => {
               const field =
                 jsonpath.query(
@@ -176,7 +190,7 @@ function IConnectorResponseTable({
                   '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                 )[0] || {};
               return (
-                <React.Fragment>
+                <React.Fragment key={row}>
                   <TableRow
                     id={row}
                     onContextMenu={handleContextMenu}

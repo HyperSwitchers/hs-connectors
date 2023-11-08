@@ -12,14 +12,16 @@ import {
   Tooltip,
 } from '@mui/material';
 import 'jsoneditor/dist/jsoneditor.css';
-import { flattenObject, mapFieldNames } from 'utils/search_utils';
+import { deepCopy, flattenObject, mapFieldNames } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
+import { useRecoilValue } from 'recoil';
+import { APP_CONTEXT } from 'utils/state';
 
 function IRequestHeadersTable({
-  requestHeaders,
   suggestions = {},
-  setRequestHeaders = (value) => {},
+  updateAppContext = (v) => {},
 }) {
+  const appContext = useRecoilValue(APP_CONTEXT);
   const defaultProps = {
     options: Object.keys(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
@@ -27,10 +29,15 @@ function IRequestHeadersTable({
   const [mapping, setMapping] = useState({});
   const [fields, setFields] = useState([]);
   useEffect(() => {
-    setMapping(mapFieldNames(requestHeaders));
-    setFields(flattenObject(requestHeaders));
-  }, [requestHeaders]);
-  console.log(requestHeaders);
+    const requestHeaders =
+      appContext.flows[appContext.selectedFlow]?.requestHeaderFields?.value;
+    const f = flattenObject(requestHeaders);
+    const m = mapFieldNames(requestHeaders);
+    console.log(requestHeaders, m, f);
+    setMapping(m);
+    setFields(f);
+    // console.log(requestHeaders?.mapping, f, requestHeaders);
+  }, [appContext]);
   return (
     <div className="editor">
       <TableContainer
@@ -68,7 +75,19 @@ function IRequestHeadersTable({
                         onInputChange={(event, newValue) => {
                           let updated = { ...mapping, [row]: newValue };
                           setMapping(updated);
-                          setRequestHeaders(updated);
+                          const updatedFlows = deepCopy(appContext.flows);
+                          if (
+                            !(
+                              typeof newValue === 'string' &&
+                              newValue.length > 0
+                            )
+                          ) {
+                            delete updated[row];
+                          }
+                          updatedFlows[
+                            appContext.selectedFlow
+                          ].requestHeaderFields.value = updated;
+                          updateAppContext({ flows: updatedFlows });
                         }}
                         renderInput={(params) => (
                           <TextField

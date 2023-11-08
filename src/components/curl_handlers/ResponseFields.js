@@ -14,31 +14,36 @@ import {
 import 'jsoneditor/dist/jsoneditor.css';
 import {
   addFieldsToNodes,
+  deepCopy,
   flattenObject,
   is_mapped_field,
   mapFieldNames,
   updateNestedJson,
 } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
+import { useRecoilValue } from 'recoil';
+import { APP_CONTEXT } from 'utils/state';
 
 function IResponseFieldsTable({
-  hsResponse,
   suggestions = {},
-  setHsMapping = (value) => {},
-  setHsResponse = (value) => {},
   setSelectedStatusVariable = (v) => {},
+  updateAppContext = (v) => {},
 }) {
   const defaultProps = {
     options: flattenObject(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
   };
 
+  const appContext = useRecoilValue(APP_CONTEXT);
+
   const [mapping, setMapping] = useState({});
   const [fields, setFields] = useState([]);
   useEffect(() => {
+    const hsResponse =
+      appContext.flows[appContext.selectedFlow].hsResponseFields.value;
     setMapping(addFieldsToNodes(mapFieldNames(hsResponse)));
     setFields(flattenObject(hsResponse));
-  }, [hsResponse]);
+  }, [appContext.flows[appContext.selectedFlow].hsResponseFields.value]);
   return (
     <div className="editor">
       <TableContainer component={Paper} sx={{ overflow: 'scroll' }}>
@@ -76,18 +81,26 @@ function IResponseFieldsTable({
                         onChange={(event, newValue) => {
                           field.value = newValue;
                           let updated = { ...mapping };
-                          let updatedResponse = { ...hsResponse };
+                          let updatedResponse = {
+                            ...appContext.flows[appContext.selectedFlow]
+                              .hsResponseFields.value,
+                          };
                           const keys = row.split('.');
                           updatedResponse = updateNestedJson(
                             updatedResponse,
                             keys,
                             newValue
                           );
-                          setHsResponse(updatedResponse);
                           setMapping(updated);
-                          setHsMapping(updated);
+                          const updatedFlows = deepCopy(appContext.flows);
+                          updatedFlows[
+                            appContext.selectedFlow
+                          ].hsResponseFields.value = updatedResponse;
+                          updatedFlows[
+                            appContext.selectedFlow
+                          ].hsResponseFields.mapping = updated;
+                          updateAppContext({ flows: updatedFlows });
                           if (newValue === '$status') {
-                            debugger
                             setSelectedStatusVariable(row);
                           }
                         }}

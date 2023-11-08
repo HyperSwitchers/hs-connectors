@@ -13,6 +13,7 @@ import {
   synonymMapping,
   addFieldsToNodes,
   mapFieldNames,
+  deepCopy,
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
@@ -32,12 +33,10 @@ import { Paper } from '@mui/material';
 import IRequestHeadersTable from './curl_handlers/RequestHeadersTable';
 import IResponseFieldsTable from './curl_handlers/ResponseFields';
 import IConnectorResponseTable from './curl_handlers/ConnectorResponseTable';
-import { fetchItem, storeItem } from 'utils/state';
+import { APP_CONTEXT, fetchItem, storeItem } from 'utils/state';
+import { useRecoilState } from 'recoil';
 
 const CurlRequestExecutor = () => {
-  const connector_name = localStorage?.props
-    ? JSON.parse(localStorage?.props)?.connector
-    : 'Test';
   const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
@@ -61,29 +60,12 @@ const CurlRequestExecutor = () => {
     // In a real scenario, you might generate the code dynamically based on some logic
   };
 
-  const [curlRequest, setCurlRequest] = useState({
-    url: '',
-    method: '',
-    headers: [],
-    data: {},
-  });
-  const [authType, setAuthType] = useState(null);
-  const [responseFields, setResponseFields] = useState({});
-  const [hsMapping, setHsMapping] = useState({});
-  const [requestFields, setRequestFields] = useState({});
-  const [requestHeaderFields, setRequestHeaderFields] = useState({});
-  const [responseMapping, setResponseMapping] = useState({});
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
   const [connectorContext, setConnectorContext] = useState({});
   const [loading, setLoading] = useState(false);
   const [inputJson, setInputJson] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-  const [connectorName, setConnectorName] = useState(connector_name);
-  const [updateRequestData, setUpdateRequestData] = useState({});
-  const [statusMappingData, setStatusMappingData] = useState({});
-  const [selectedFlowOption, setSelectedFlowOption] = useState(
-    localStorage?.last_selected_flow || 'AuthType'
-  );
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
     useState('');
   const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] =
@@ -92,56 +74,65 @@ const CurlRequestExecutor = () => {
     useState('');
   const [selectedStatusVariable, setSelectedStatusVariable] = useState(null);
 
-  const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
-      "source": {
-        "type": "card",
-        "number": "4242424242424242",
-        "expiry_month": 1,
-        "expiry_year": 30,
-        "name": "John Smith",
-        "cvv": "100"
-      },
-      "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
-      "amount": 1040,
-      "currency": "GBP",
-      "reference": "123lala",
-      "capture": false
-    }'
-    `);
-  const [hsResponse, setHsResponse] = useState({
-    status: '',
-    response: {
-      resource_id: '',
-      redirection_data: 'None',
-      connector_response_reference_id: '',
-    },
-  });
+  const updateAppContextInLocalStorage = () => {
+    const storedAppContext = fetchItem('app_context');
+    const updatedAppContext = {
+      ...(storedAppContext || deepCopy(appContext)),
+    };
+    // Update in localStorage
+    storeItem('app_context', JSON.stringify(updatedAppContext));
+  };
 
-  let isLoaded = false;
+  const updateAppContext = (updates) => {
+    const storedAppContext = fetchItem('app_context');
+    const updatedAppContext = {
+      ...(storedAppContext || deepCopy(appContext)),
+      ...updates,
+    };
+    setAppContext(updatedAppContext);
+  };
 
   /// Effects
   /**
    * Trigger - Run on every mount
-   * Uses
-   *  - Update curlRequest's state
-   *  - Fetch and update authType's state in app from localStorage
+   * Use - Setup app's state
    */
   useEffect(() => {
-    if (!isLoaded) {
-      isLoaded = true;
-      updateCurlRequest(curlCommand);
-    }
+    const storedAppContext = fetchItem('app_context');
+    const updatedAppContext = storedAppContext || deepCopy(appContext);
+    const selectedFlow = updatedAppContext.selectedFlow;
 
-    let authType = null;
-    try {
-      if (typeof localStorage.auth_type === 'string') {
-        authType = JSON.parse(localStorage.auth_type);
-        setAuthType(authType);
-      }
-    } catch (error) {
-      console.error('Failed while parsing auth_type from localStorage', error);
+    const {
+      updatedCurlCommand,
+      updatedCurlRequest,
+      requestFields,
+      requestHeaderFields,
+    } = updateCurlRequest(appContext.curlCommand);
+    updatedAppContext.curlCommand = updatedCurlCommand;
+    updatedAppContext.curlRequest = updatedCurlRequest;
+    if (!updatedAppContext.flows[selectedFlow].curlCommand) {
+      updatedAppContext.flows[selectedFlow].curlCommand = updatedCurlCommand;
     }
+    if (!updatedAppContext.flows[selectedFlow].curlRequest) {
+      updatedAppContext.flows[selectedFlow].curlRequest = updatedCurlRequest;
+    }
+    if (
+      !updatedAppContext.flows[selectedFlow].requestFields?.value ||
+      Object.keys(updatedAppContext.flows[selectedFlow].requestFields?.value)
+        .length === 0
+    ) {
+      updatedAppContext.flows[selectedFlow].requestFields = requestFields;
+    }
+    if (
+      !updatedAppContext.flows[selectedFlow].requestHeaderFields?.value ||
+      Object.keys(
+        updatedAppContext.flows[selectedFlow].requestHeaderFields?.value
+      ).length === 0
+    ) {
+      updatedAppContext.flows[selectedFlow].requestHeaderFields =
+        requestHeaderFields;
+    }
+    updateAppContext(updatedAppContext);
   }, []);
 
   /**
@@ -157,36 +148,39 @@ const CurlRequestExecutor = () => {
     }
   }, [selectedStatusVariable]);
 
-  /**
-   * Trigger - Run whenever authType is updated
-   * Use - Update data in localStorage
-   */
-  useEffect(() => {
-    storeItem('auth_type', JSON.stringify(authType));
-  }, [authType]);
-
   const updateCurlRequest = (request) => {
     let ss = request
       .replace(/\s*\\\s*/g, ' ')
       .replace(/\n/g, '')
       .replace(/--data-raw|--data-urlencode/g, '-d');
-    setCurlCommand(request);
     try {
       const fetchRequest = parse_curl(ss);
       const requestFields = JSON.parse(fetchRequest?.data?.ascii || '{}');
-      setCurlRequest(fetchRequest);
-      setRequestFields(requestFields);
-      setUpdateRequestData(addFieldsToNodes(mapFieldNames(requestFields)));
-      setRequestHeaderFields(
-        fetchRequest?.headers.reduce((result, item) => {
+      const requestHeaderFields = fetchRequest?.headers.reduce(
+        (result, item) => {
           let header = item.split(':');
-          result[header[0]] = header[1];
+          result[header[0]] = header[1].trim();
           return result;
-        }, {})
+        },
+        {}
       );
+      console.info(requestHeaderFields);
       saveFlowDetails(fetchRequest);
+      return {
+        updatedCurlCommand: request,
+        updatedCurlRequest: fetchRequest,
+        requestFields: {
+          value: requestFields,
+          mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
+        },
+        requestHeaderFields: {
+          value: requestHeaderFields,
+          mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
+        },
+      };
     } catch (e) {
       console.error(e);
+      return { updatedCurlCommand: request };
     }
   };
 
@@ -194,7 +188,7 @@ const CurlRequestExecutor = () => {
     let props = localStorage.props
       ? JSON.parse(localStorage.props)
       : defaultConnectorProps(localStorage.connector || 'DemoCon');
-    let flow = props.flows[selectedFlowOption];
+    let flow = props.flows[appContext.selectedFlow];
     if (flow) {
       flow.url_path = new URL(curl.url).pathname;
       flow.http_method = toPascalCase(curl.method);
@@ -211,7 +205,7 @@ const CurlRequestExecutor = () => {
           (item) => item !== 'get_request_body'
         );
       }
-      props.flows[selectedFlowOption] = flow;
+      props.flows[appContext.selectedFlow] = flow;
     }
     storeItem('props', JSON.stringify(props));
   };
@@ -227,6 +221,7 @@ const CurlRequestExecutor = () => {
     }, {});
   };
   const sendRequest = () => {
+    const curlRequest = deepCopy(appContext.curlRequest);
     saveFlowDetails(curlRequest);
     setLoading(true);
     // Transforming the fetchRequest object into a valid JavaScript fetch request
@@ -243,7 +238,11 @@ const CurlRequestExecutor = () => {
       headers: requestOptions.headers,
       data: requestOptions.body,
       success: (data) => {
-        setResponseFields(data);
+        const updatedFlows = deepCopy(appContext.flows);
+        updatedFlows[appContext.selectedFlow].responseFields.value = data;
+        updatedFlows[appContext.selectedFlow].responseFields.mapping =
+          addFieldsToNodes(mapFieldNames(data));
+        updateAppContext({ flows: updatedFlows });
       },
       error: (data) => {
         console.log(data);
@@ -262,16 +261,42 @@ const CurlRequestExecutor = () => {
     let flow = event.target.value;
     let curl =
       JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl ||
-      curlCommand;
-    storeItem('last_selected_flow', flow);
-    setCurlCommand(curl?.input || '');
-    setRequestFields(curl?.body || {});
-    setRequestHeaderFields(curl?.headers || {});
-    setResponseFields(curl?.response || {});
-    setSelectedFlowOption(flow);
-    if (curl?.input) {
-      updateCurlRequest(curl?.input);
+      appContext.curlRequest;
+    const {
+      updatedCurlCommand,
+      updatedCurlRequest,
+      requestFields,
+      requestHeaderFields,
+    } = updateCurlRequest(appContext.curlCommand);
+    const updatedFlows = deepCopy(appContext.flows);
+    if (!updatedFlows[flow].curlCommand) {
+      updatedFlows[flow].curlCommand = updatedCurlCommand;
     }
+    if (!updatedFlows[flow].curlRequest) {
+      updatedFlows[flow].curlRequest = updatedCurlRequest;
+    }
+    if (
+      !updatedFlows[flow].requestFields?.value ||
+      Object.keys(updatedFlows[flow].requestFields?.value).length === 0
+    ) {
+      updatedFlows[flow].requestFields = requestFields;
+    }
+    if (
+      !updatedFlows[flow].requestHeaderFields?.value ||
+      Object.keys(updatedFlows[flow].requestHeaderFields?.value).length === 0
+    ) {
+      updatedFlows[flow].requestHeaderFields = requestHeaderFields;
+    }
+    if (
+      !updatedFlows[flow].responseFields?.value ||
+      Object.keys(updatedFlows[flow].responseFields?.value).length === 0
+    ) {
+      updatedFlows[flow].responseFields.value = curl?.response || {};
+      updatedFlows[flow].responseFields.mapping = addFieldsToNodes(
+        mapFieldNames(curl?.response || {})
+      );
+    }
+    updateAppContext({ flows: updatedFlows, selectedFlow: flow });
   };
 
   const handlePaymentMethodOptionChange = (event) => {
@@ -308,9 +333,10 @@ const CurlRequestExecutor = () => {
       try {
         field =
           jsonpath.query(
-            responseMapping,
+            appContext.flows[appContext.selectedFlow].responseFields.mapping,
             '$.' +
               selectedStatusVariable
+                // @ts-ignore
                 .replaceAll('.', '.value.')
                 .replaceAll('-', '')
           )[0] || {};
@@ -329,19 +355,24 @@ const CurlRequestExecutor = () => {
       } else {
         statusFields[field.value] = null;
       }
-      setStatusMappingData(statusFields);
+      const updatedFlows = deepCopy(appContext.flows);
+      if (
+        typeof updatedFlows[appContext.selectedFlow].status.value === 'object'
+      ) {
+        updatedFlows[appContext.selectedFlow].status.value = {
+          ...updatedFlows[appContext.selectedFlow].status.value,
+          ...statusFields,
+        };
+      } else {
+        updatedFlows[appContext.selectedFlow].status.value = statusFields;
+      }
       setStatusMappingPopupOpen(true);
+      updateAppContext({ flows: updatedFlows });
     }
   };
 
   const handleCloseStatusMappingPopup = () => {
     setStatusMappingPopupOpen(false);
-  };
-
-  const handleStatusMappingData = (jsonData) => {
-    setStatusMappingData(jsonData);
-    // Do something with the submitted JSON data (jsonData)
-    console.log('Submitted JSON Data:', jsonData);
   };
 
   const updateInputJson = (inputJsonData) => {
@@ -363,10 +394,9 @@ const CurlRequestExecutor = () => {
   };
 
   const handleConnectorNameChange = (event) => {
-    let connector_name = event.target.value;
-    setConnectorName(connector_name);
-    storeItem('connector_name', connector_name);
-    storeItem('props', JSON.stringify(defaultConnectorProps(connector_name)));
+    let connectorName = event.target.value;
+    updateAppContext({ connectorName });
+    storeItem('props', JSON.stringify(defaultConnectorProps(connectorName)));
   };
   return (
     <div>
@@ -388,13 +418,13 @@ const CurlRequestExecutor = () => {
             type="text"
             placeholder="Connector Name"
             onChange={handleConnectorNameChange}
-            defaultValue={connectorName}
+            defaultValue={appContext.connectorName}
           />
         </div>
         <Dropdown
           options={flowOptions}
           handleSelectChange={handleFlowOptionChange}
-          selectedOption={selectedFlowOption}
+          selectedOption={appContext.selectedFlow}
           type="Flow Type"
         />
         <Dropdown
@@ -403,7 +433,7 @@ const CurlRequestExecutor = () => {
           selectedOption={selectedPaymentMethodOption}
           type="Payment Method"
         />
-        {selectedFlowOption === 'AuthType' ? (
+        {appContext.selectedFlow === 'AuthType' ? (
           <React.Fragment>
             <Dropdown
               options={CurrencyUnit}
@@ -430,8 +460,8 @@ const CurlRequestExecutor = () => {
           </a>
         </button>
       </div>
-      {selectedFlowOption === 'AuthType' ? (
-        <AuthType saveAuthType={setAuthType}></AuthType>
+      {appContext.selectedFlow === 'AuthType' ? (
+        <AuthType updateAppContext={updateAppContext}></AuthType>
       ) : (
         <div>
           <div className="container">
@@ -460,7 +490,7 @@ const CurlRequestExecutor = () => {
                 <textarea
                   ref={curlTextareaRef} // Add the ref to the text area
                   style={{ height: '100%' }}
-                  value={curlCommand}
+                  value={appContext.curlCommand}
                   onChange={(e) => updateCurlRequest(e.target.value)}
                   placeholder="Enter your cURL request here..."
                 />
@@ -478,9 +508,8 @@ const CurlRequestExecutor = () => {
               >
                 <h3>Request Header Fields:</h3>
                 <IRequestHeadersTable
-                  requestHeaders={{ ...requestHeaderFields }}
                   suggestions={authTypesMapping}
-                  setRequestHeaders={setRequestHeaderFields}
+                  updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>
                 <h3>Request Body Fields:</h3>
                 <div
@@ -490,10 +519,8 @@ const CurlRequestExecutor = () => {
                   }}
                 >
                   <IRequestFieldsTable
-                    updateRequestData={updateRequestData}
-                    requestFields={{ ...requestFields }}
-                    suggestions={synonymMapping[selectedFlowOption]}
-                    setUpdateRequestData={setUpdateRequestData}
+                    suggestions={synonymMapping[appContext.selectedFlow]}
+                    updateAppContext={updateAppContext}
                   ></IRequestFieldsTable>
                 </div>
               </Paper>
@@ -506,8 +533,7 @@ const CurlRequestExecutor = () => {
             >
               <h3>Response</h3>
               <IConnectorResponseTable
-                setResponseMapping={setResponseMapping}
-                connectorResponse={responseFields}
+                updateAppContext={updateAppContext}
               ></IConnectorResponseTable>
               {/* <JsonEditor content={{ ...responseFields }} options={{ ...options, onChange: setResponseFields }}></JsonEditor> */}
             </Paper>
@@ -545,21 +571,20 @@ const CurlRequestExecutor = () => {
                 }}
               >
                 <IResponseFieldsTable
-                  hsResponse={hsResponse}
-                  suggestions={responseFields}
-                  setHsMapping={setHsMapping}
-                  setHsResponse={setHsResponse}
+                  suggestions={
+                    appContext.flows[appContext.selectedFlow]?.responseFields
+                      ?.value
+                  }
                   setSelectedStatusVariable={setSelectedStatusVariable}
+                  updateAppContext={updateAppContext}
                 ></IResponseFieldsTable>
               </div>
 
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (
                 <StatusMappingPopup
-                  selectedFlowOption={selectedFlowOption}
-                  initialValues={statusMappingData}
                   onClose={handleCloseStatusMappingPopup}
-                  onSubmit={handleStatusMappingData}
+                  updateAppContext={updateAppContext}
                 />
               )}
             </Paper>
@@ -567,43 +592,54 @@ const CurlRequestExecutor = () => {
           <div>
             <button
               id="generate-code"
-              className={`${!authType ? 'disabled' : ''}`}
+              className={`${!appContext.authType.value ? 'disabled' : ''}`}
               onClick={(e) => {
-                if (!authType) {
-                  setSelectedFlowOption('AuthType');
+                updateAppContextInLocalStorage();
+                if (!appContext.authType.value) {
+                  updateAppContext({ selectedFlow: 'AuthType' });
                   return;
                 }
                 let connector = localStorage.connector || 'DemoCon';
                 let props = localStorage.props
                   ? JSON.parse(localStorage.props)
                   : defaultConnectorProps(connector);
-                let y = localStorage?.auth_type
-                  ? JSON.parse(localStorage?.auth_type)
-                  : {};
+                let authType = appContext.authType.value || {};
                 let existingFlows = JSON.parse(inputJson || '{}')?.[
-                  connector_name
+                  appContext.connectorName
                 ]?.flows;
-                let modifiedUpdatedRequestData =
-                  deepJsonSwap(updateRequestData);
-                let modifiedUpdatedResponseData = deepJsonSwap(responseMapping);
+                let modifiedUpdatedRequestData = deepJsonSwap(
+                  deepCopy(
+                    appContext.flows[appContext.selectedFlow].requestFields
+                      .mapping || {}
+                  )
+                );
+                let modifiedUpdatedResponseData = deepJsonSwap(
+                  deepCopy(
+                    appContext.flows[appContext.selectedFlow].responseFields
+                      .mapping || {}
+                  )
+                );
                 let x = JSON.stringify({
-                  [connector_name]: {
-                    authType: y.type,
-                    authKeys:
-                      JSON.parse(localStorage.auth_type || '{}').content || {},
+                  [appContext.connectorName]: {
+                    authType: authType.type,
+                    authKeys: authType.content || {},
                     amount: {
                       unit: selectedCurrencyUnitOption,
                       unitType: selectedCurrencyUnitTypeOption,
                     },
                     flows: {
                       ...existingFlows,
-                      [selectedFlowOption || 'Authorize']: {
+                      [appContext.selectedFlow || 'Authorize']: {
                         paymentsRequest: modifiedUpdatedRequestData,
                         paymentsResponse: modifiedUpdatedResponseData,
-                        hsResponse: hsResponse,
+                        hsResponse:
+                          appContext.flows[appContext.selectedFlow]
+                            .hsResponseFields.value || {},
                       },
                     },
-                    attemptStatus: statusMappingData,
+                    attemptStatus:
+                      appContext.flows[appContext.selectedFlow].status.value ||
+                      {},
                   },
                 });
                 updateInputJson(x);
@@ -617,7 +653,7 @@ const CurlRequestExecutor = () => {
                 });
               }}
             >
-              {!authType
+              {!appContext.authType.value
                 ? 'Configure AuthType before generating code'
                 : 'Generate Code'}
             </button>
@@ -640,13 +676,20 @@ const CurlRequestExecutor = () => {
                 <ConnectorTemplates
                   curl={{
                     ...{
-                      connector: connectorName,
-                      flow: selectedFlowOption,
-                      input: curlCommand,
-                      body: requestFields,
-                      headers: requestHeaderFields,
-                      response: responseFields,
-                      hsResponse: hsResponse,
+                      connector: appContext.connectorName,
+                      flow: appContext.selectedFlow,
+                      input: appContext.curlCommand,
+                      body: appContext.flows[appContext.selectedFlow]
+                        .requestFields?.value,
+                      headers:
+                        appContext.flows[appContext.selectedFlow]
+                          .requestHeaderFields?.value,
+                      response:
+                        appContext.flows[appContext.selectedFlow]
+                          ?.responseFields?.value,
+                      hsResponse:
+                        appContext.flows[appContext.selectedFlow]
+                          .hsResponseFields.value,
                     },
                   }}
                   // @ts-ignore

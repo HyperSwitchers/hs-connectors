@@ -3,24 +3,27 @@
 import React, { useState } from 'react';
 
 import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
-import { storeItem } from 'utils/state';
+import { APP_CONTEXT, storeItem } from 'utils/state';
+import { useRecoilValue } from 'recoil';
+import { deepCopy } from 'utils/search_utils';
 
-const StatusMappingPopup = ({
-  initialValues,
-  onClose,
-  onSubmit,
-  selectedFlowOption,
-}) => {
+const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
+  const appContext = useRecoilValue(APP_CONTEXT);
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
-    JSON.stringify(initialValues, null, 2)
+    JSON.stringify(
+      appContext.flows[appContext.selectedFlow].status.value || {},
+      null,
+      2
+    )
   );
 
   const handleSubmit = () => {
     // Parse the edited JSON and submit it
     const editedJson = JSON.parse(jsonInput);
-    storeItem('status', JSON.stringify(editedJson));
-    onSubmit(editedJson);
+    const updatedFlows = deepCopy(appContext.flows);
+    updatedFlows[appContext.selectedFlow].status.value = editedJson;
+    updateAppContext({ flows: updatedFlows });
     onClose();
   };
 
@@ -38,7 +41,7 @@ const StatusMappingPopup = ({
     const value = event.target.value;
     updateJsonInput(field, value);
     const filteredSuggestions = HYPERSWITCH_STATUS_LIST[
-      selectedFlowOption
+      appContext.selectedFlow
     ]?.filter((status) => status.toLowerCase().startsWith(value.toLowerCase()));
     renderSuggestions(field, filteredSuggestions);
   };
@@ -74,7 +77,9 @@ const StatusMappingPopup = ({
       <div className="popup">
         <h2>Enter Connector Satus</h2>
         <div className="status-mapping">
-          {Object.keys(initialValues).length === 0 ? (
+          {Object.keys(
+            appContext.flows[appContext.selectedFlow].status.value || {}
+          ).length === 0 ? (
             <div className="none">
               <div className="info">Status not found in response fields.</div>
               <div className="hint">
@@ -82,7 +87,9 @@ const StatusMappingPopup = ({
               </div>
             </div>
           ) : (
-            Object.keys(initialValues).map((f) => {
+            Object.keys(
+              appContext.flows[appContext.selectedFlow].status.value || {}
+            ).map((f) => {
               return (
                 <React.Fragment key={f}>
                   <div className="status">{f}</div>
@@ -101,7 +108,7 @@ const StatusMappingPopup = ({
                           renderSuggestions(
                             f,
                             !showSuggestions
-                              ? HYPERSWITCH_STATUS_LIST[selectedFlowOption]
+                              ? HYPERSWITCH_STATUS_LIST[appContext.selectedFlow]
                               : []
                           );
                         }}

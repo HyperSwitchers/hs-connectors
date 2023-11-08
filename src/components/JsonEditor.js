@@ -110,7 +110,7 @@ function JsonEditor({
       // Perform save action here
       console.log('Data is valid, performing save action...');
     } else {
-      storeItem('auth_type', requestData);
+      storeItem('json-editor', requestData);
     }
     onSave(requestData);
   };
