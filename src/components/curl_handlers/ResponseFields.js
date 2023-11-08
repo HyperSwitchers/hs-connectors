@@ -78,7 +78,7 @@ function IResponseFieldsTable({
                       <Autocomplete
                         defaultValue={field.value}
                         {...defaultProps}
-                        key={appContext.selectedFlow + row + 'type'}
+                        key={`${row}-type-${appContext.selectedFlow}`}
                         sx={{ width: 300 }}
                         onChange={(event, newValue) => {
                           let updatedMapping = {

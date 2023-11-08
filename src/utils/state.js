@@ -22,7 +22,7 @@ export const APP_CONTEXT = atom({
     },
     flows: {
       AuthType: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         requestFields: {
           value: null,
@@ -107,7 +107,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Capture: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -142,7 +142,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Void: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -177,7 +177,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Refund: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -212,7 +212,7 @@ export const APP_CONTEXT = atom({
         },
       },
       PSync: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -247,7 +247,7 @@ export const APP_CONTEXT = atom({
         },
       },
       RSync: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,

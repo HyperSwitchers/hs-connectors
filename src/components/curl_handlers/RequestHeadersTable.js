@@ -63,7 +63,7 @@ function IRequestHeadersTable({
                 )[0];
               } catch (e) {}
               return field?.value ? (
-                <TableRow key={row}>
+                <TableRow key={row + appContext.selectedFlow}>
                   <TableCell>{row}</TableCell>
                   <TableCell>
                     <Tooltip title={''} placement="right">
@@ -71,7 +71,7 @@ function IRequestHeadersTable({
                         freeSolo
                         defaultValue={field?.value}
                         {...defaultProps}
-                        key={appContext.selectedFlow + row + 'field'}
+                        key={`${row}-field-${appContext.selectedFlow}`}
                         sx={{ maxWidth: 500 }}
                         onInputChange={(event, newValue) => {
                           let updatedValue = deepCopy(
@@ -111,9 +111,7 @@ function IRequestHeadersTable({
                     </Tooltip>
                   </TableCell>
                 </TableRow>
-              ) : (
-                <></>
-              );
+              ) : null;
             })}
           </TableBody>
         </Table>

@@ -200,8 +200,8 @@ const CurlRequestExecutor = () => {
         'get_url',
         'build_request',
         'handle_response',
-        'get_error_response',
-      )
+        'get_error_response'
+      );
       if (Object.keys(JSON.parse(curl.data.ascii)).length > 0) {
         flow.enabled.push('get_request_body');
       }
@@ -233,7 +233,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = "/cors/" + curlRequest.url;
+    let url = '/cors/' + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -300,10 +300,10 @@ const CurlRequestExecutor = () => {
           jsonpath.query(
             appContext.flows[appContext.selectedFlow].responseFields.mapping,
             '$.' +
-            selectedStatusVariable
-              // @ts-ignore
-              .replaceAll('.', '.value.')
-              .replaceAll('-', '')
+              selectedStatusVariable
+                // @ts-ignore
+                .replaceAll('.', '.value.')
+                .replaceAll('-', '')
           )[0] || {};
       } catch (error) {
         console.error('jsonpath query failed', error);
@@ -481,7 +481,11 @@ const CurlRequestExecutor = () => {
                       obj[val] = [];
                       return obj;
                     }, {}),
-                    ...generateAuthTypeEncryption(Object.values(appContext.authType.value?.content).slice(0, 2)),
+                    ...generateAuthTypeEncryption(
+                      Object.values(
+                        appContext.authType.value?.content || {}
+                      ).slice(0, 2)
+                    ),
                   }}
                   updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>
@@ -521,13 +525,14 @@ const CurlRequestExecutor = () => {
                 <h3>Response Fields Mapping</h3>
                 <button
                   id="responseStatusMapping"
-                  className={`${!(
-                    typeof selectedStatusVariable === 'string' &&
-                    selectedStatusVariable.length > 0
-                  )
-                    ? 'disabled'
-                    : ''
-                    }`}
+                  className={`${
+                    !(
+                      typeof selectedStatusVariable === 'string' &&
+                      selectedStatusVariable.length > 0
+                    )
+                      ? 'disabled'
+                      : ''
+                  }`}
                   onClick={handleStatusMappingButtonClick}
                 >
                   {!(

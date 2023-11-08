@@ -201,7 +201,6 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {' '}
             {fields?.map((row) => {
               let field = {};
               try {
@@ -235,7 +234,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                       <Autocomplete
                         defaultValue={field.type}
                         options={typesList}
-                        key={appContext.selectedFlow + row + 'type'}
+                        key={`${row}-type-${appContext.selectedFlow}`}
                         sx={{ width: 120 }}
                         freeSolo={false}
                         onChange={(event, newValue) => {
@@ -259,7 +258,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                           <React.Fragment>
                             {field.value.map((variant) => (
                               <div
-                                key={`${row}-${variant}`}
+                                key={`${row}-type-${variant}-${appContext.selectedFlow}`}
                                 className="variant-wrap"
                               >
                                 <div className="variant-name">{variant}</div>

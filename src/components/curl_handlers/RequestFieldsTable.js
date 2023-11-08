@@ -190,6 +190,7 @@ function IRequestFieldsTable({
                   <TableCell>
                     <Checkbox
                       checked={field.optional}
+                      key={`${row}-optional-${appContext.selectedFlow}`}
                       onChange={() =>
                         updateRequestFields(row, {
                           ...field,
@@ -201,6 +202,7 @@ function IRequestFieldsTable({
                   <TableCell>
                     <Checkbox
                       checked={field.secret}
+                      key={`${row}-secret-${appContext.selectedFlow}`}
                       onChange={() =>
                         updateRequestFields(row, {
                           ...field,
@@ -213,7 +215,7 @@ function IRequestFieldsTable({
                     <Autocomplete
                       defaultValue={field.type}
                       options={typesList}
-                      key={appContext.selectedFlow + row + 'type'}
+                      key={`${row}-type-${appContext.selectedFlow}`}
                       sx={{ width: 120 }}
                       freeSolo={false}
                       onChange={(event, newValue) => {
@@ -237,7 +239,7 @@ function IRequestFieldsTable({
                         <React.Fragment>
                           {field.value.map((variant) => (
                             <div
-                              key={`${row}-${variant}`}
+                              key={`${row}-type-${variant}-${appContext.selectedFlow}`}
                               className="variant-wrap"
                             >
                               <div className="variant-name">{variant}</div>
@@ -284,7 +286,7 @@ function IRequestFieldsTable({
                       <Autocomplete
                         defaultValue={field.value}
                         {...defaultProps}
-                        key={appContext.selectedFlow + row + 'value'}
+                        key={`${row}-value-${appContext.selectedFlow}`}
                         sx={{ width: 280 }}
                         freeSolo={true}
                         onChange={(event, newValue) =>
