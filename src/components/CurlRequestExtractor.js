@@ -96,7 +96,14 @@ const CurlRequestExecutor = () => {
   useEffect(() => {
     const storedAppContext = fetchItem('app_context');
     const updatedAppContext = { ...(storedAppContext || deepCopy(appContext)) };
-    updateCurlRequest(updatedAppContext.curlCommand);
+    if (
+      typeof updatedAppContext.flows[updatedAppContext.selectedFlow]
+        .curlCommand === 'string'
+    ) {
+      updateCurlRequest(
+        updatedAppContext.flows[updatedAppContext.selectedFlow].curlCommand
+      );
+    }
     updateAppContext(updatedAppContext);
   }, []);
 
@@ -120,7 +127,7 @@ const CurlRequestExecutor = () => {
       .replace(/--data-raw|--data-urlencode/g, '-d');
     const updatedFlow = flow || appContext.selectedFlow;
     const updatedAppContext = deepCopy(appContext);
-    updatedAppContext.curlCommand = request;
+    updatedAppContext.flows[updatedFlow].curlCommand = request;
     try {
       const fetchRequest = parse_curl(ss);
       const requestFields = JSON.parse(fetchRequest?.data?.ascii || '{}');
@@ -132,17 +139,38 @@ const CurlRequestExecutor = () => {
         },
         {}
       );
-      console.info(requestHeaderFields);
-      saveFlowDetails(fetchRequest);
-      updatedAppContext.curlRequest = fetchRequest;
-      updatedAppContext.flows[updatedFlow].requestFields = {
-        value: requestFields,
-        mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
-      };
-      updatedAppContext.flows[updatedFlow].requestHeaderFields = {
-        value: requestHeaderFields,
-        mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
-      };
+      updatedAppContext.flows[updatedFlow].curlRequest = fetchRequest;
+      if (!flow || !updatedAppContext.flows[updatedFlow]?.requestFields.value) {
+        updatedAppContext.flows[updatedFlow].requestFields = {
+          value: requestFields,
+          mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
+        };
+      }
+      if (
+        !flow ||
+        !updatedAppContext.flows[updatedFlow]?.requestHeaderFields.value
+      ) {
+        updatedAppContext.flows[updatedFlow].requestHeaderFields = {
+          value: requestHeaderFields,
+          mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
+        };
+      }
+      if (
+        updatedAppContext.flows[updatedFlow]?.hsResponseFields.value &&
+        !updatedAppContext.flows[updatedFlow]?.hsResponseFields.mapping
+      ) {
+        updatedAppContext.flows[updatedFlow].hsResponseFields = {
+          ...updatedAppContext.flows[updatedFlow]?.hsResponseFields,
+          mapping: addFieldsToNodes(
+            mapFieldNames({
+              ...updatedAppContext.flows[updatedFlow]?.hsResponseFields.value,
+            })
+          ),
+        };
+      }
+      if (fetchRequest) {
+        saveFlowDetails(fetchRequest);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -193,7 +221,9 @@ const CurlRequestExecutor = () => {
     }, {});
   };
   const sendRequest = () => {
-    const curlRequest = deepCopy(appContext.curlRequest);
+    const curlRequest = deepCopy(
+      appContext.flows[appContext.selectedFlow].curlRequest
+    );
     saveFlowDetails(curlRequest);
     setLoading(true);
     // Transforming the fetchRequest object into a valid JavaScript fetch request
@@ -231,10 +261,7 @@ const CurlRequestExecutor = () => {
 
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
-    let curl =
-      JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl ||
-      appContext.curlRequest;
-    updateCurlRequest(appContext.curlCommand, flow);
+    updateCurlRequest(appContext.flows[flow].curlCommand || '', flow);
   };
 
   const handlePaymentMethodOptionChange = (event) => {
@@ -428,7 +455,7 @@ const CurlRequestExecutor = () => {
                 <textarea
                   ref={curlTextareaRef} // Add the ref to the text area
                   style={{ height: '100%' }}
-                  value={appContext.curlCommand}
+                  value={appContext.flows[appContext.selectedFlow].curlCommand}
                   onChange={(e) => updateCurlRequest(e.target.value)}
                   placeholder="Enter your cURL request here..."
                 />
@@ -624,7 +651,8 @@ const CurlRequestExecutor = () => {
                     ...{
                       connector: appContext.connectorName,
                       flow: appContext.selectedFlow,
-                      input: appContext.curlCommand,
+                      input:
+                        appContext.flows[appContext.selectedFlow].curlCommand,
                       body: appContext.flows[appContext.selectedFlow]
                         .requestFields?.value,
                       headers:
@@ -635,7 +663,7 @@ const CurlRequestExecutor = () => {
                           ?.responseFields?.value,
                       hsResponse:
                         appContext.flows[appContext.selectedFlow]
-                          .hsResponseFields.value,
+                          .hsResponseFields?.value,
                     },
                   }}
                   // @ts-ignore

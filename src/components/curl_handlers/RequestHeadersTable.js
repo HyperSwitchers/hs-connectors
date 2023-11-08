@@ -26,17 +26,12 @@ function IRequestHeadersTable({
     options: Object.keys(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
   };
-  const [mapping, setMapping] = useState({});
   const [fields, setFields] = useState([]);
   useEffect(() => {
     const requestHeaders =
-      appContext.flows[appContext.selectedFlow]?.requestHeaderFields?.value;
-    const f = flattenObject(requestHeaders);
-    const m = mapFieldNames(requestHeaders);
-    console.log(requestHeaders, m, f);
-    setMapping(m);
-    setFields(f);
-    // console.log(requestHeaders?.mapping, f, requestHeaders);
+      appContext.flows[appContext.selectedFlow]?.requestHeaderFields?.value ||
+      {};
+    setFields(flattenObject(requestHeaders));
   }, [appContext]);
   return (
     <div className="editor">
@@ -57,24 +52,33 @@ function IRequestHeadersTable({
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
-              let field = mapping[row];
+              let field =
+                appContext.flows[appContext.selectedFlow]?.requestHeaderFields
+                  ?.mapping[row] || {};
               try {
-                field = jsonpath.query(mapping, `$.` + row)[0];
+                field = jsonpath.query(
+                  appContext.flows[appContext.selectedFlow]?.requestHeaderFields
+                    ?.mapping,
+                  `$.` + row
+                )[0];
               } catch (e) {}
-              return field ? (
+              return field?.value ? (
                 <TableRow key={row}>
                   <TableCell>{row}</TableCell>
                   <TableCell>
                     <Tooltip title={''} placement="right">
                       <Autocomplete
                         freeSolo
-                        defaultValue={field}
+                        defaultValue={field?.value}
                         {...defaultProps}
-                        id={row}
+                        key={appContext.selectedFlow + row + 'field'}
                         sx={{ maxWidth: 500 }}
                         onInputChange={(event, newValue) => {
-                          let updated = { ...mapping, [row]: newValue };
-                          setMapping(updated);
+                          let updatedValue = deepCopy(
+                            appContext.flows[appContext.selectedFlow]
+                              ?.requestHeaderFields?.value
+                          );
+                          updatedValue[row] = newValue;
                           const updatedFlows = deepCopy(appContext.flows);
                           if (
                             !(
@@ -82,11 +86,11 @@ function IRequestHeadersTable({
                               newValue.length > 0
                             )
                           ) {
-                            delete updated[row];
+                            delete updatedValue[row];
                           }
                           updatedFlows[
                             appContext.selectedFlow
-                          ].requestHeaderFields.value = updated;
+                          ].requestHeaderFields.value = updatedValue;
                           updateAppContext({ flows: updatedFlows });
                         }}
                         renderInput={(params) => (
@@ -94,7 +98,7 @@ function IRequestHeadersTable({
                             {...params}
                             sx={{
                               input: {
-                                color: field?.includes('$')
+                                color: field?.value?.includes('$')
                                   ? '#42A5F5'
                                   : '#000',
                               },
