@@ -26,6 +26,7 @@ function IResponseFieldsTable({
   suggestions = {},
   setHsMapping = (value) => {},
   setHsResponse = (value) => {},
+  setSelectedStatusVariable = (v) => {},
 }) {
   const defaultProps = {
     options: flattenObject(suggestions).map((s) => '$' + s),
@@ -85,6 +86,10 @@ function IResponseFieldsTable({
                           setHsResponse(updatedResponse);
                           setMapping(updated);
                           setHsMapping(updated);
+                          if (newValue === '$status') {
+                            debugger
+                            setSelectedStatusVariable(row);
+                          }
                         }}
                         renderInput={(params) => (
                           <TextField

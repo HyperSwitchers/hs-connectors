@@ -206,6 +206,9 @@ pre
 
 #responseStatusMapping
   margin-bottom: 10px
+  &.disabled
+    background-color: $blue-light
+    cursor: not-allowed
 
 // Atomic components
 @import ./atom/info
@@ -214,4 +217,5 @@ pre
 @import ./composed/AuthType
 @import ./composed/ConnectorResponseTable
 @import ./composed/ConnectorRequestBodyTable
+@import ./composed/CurlRequestExtractor
 @import ./composed/StatusMappingPopup

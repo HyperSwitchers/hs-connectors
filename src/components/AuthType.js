@@ -7,7 +7,7 @@ import JsonEditor from './JsonEditor';
 import { storeItem } from 'utils/state';
 import { codeSnippets } from 'utils/constants';
 
-function AuthType() {
+function AuthType({ saveAuthType = (v) => {} }) {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
   const types = {
     HeaderKey: { api_key: '' },
@@ -50,14 +50,11 @@ function AuthType() {
   }, [content]);
 
   const onSaveClick = (requestData) => {
-    storeItem(
-      'auth_type',
-      JSON.stringify({
-        ...JSON.parse(localStorage.auth_type || '{}'),
-        type: authType,
-        content: requestData,
-      })
-    );
+    saveAuthType({
+      ...JSON.parse(localStorage.auth_type || '{}'),
+      type: authType,
+      content: requestData,
+    });
     setIsSaved(true);
   };
   const onAuthTypeChange = (e, jsonEditor) => {
@@ -85,7 +82,6 @@ function AuthType() {
           type="text"
           value={content[key]}
           onChange={(e) => {
-            // debugger
             const target = e.target;
             let updatedContent = { ...content };
             if (target instanceof HTMLInputElement) {

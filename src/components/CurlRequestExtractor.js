@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { parse_curl } from 'curl-parser';
 import $ from 'jquery';
+import jsonpath from 'jsonpath';
 import '../styles.css';
 import '../styles/styles.sass';
 import {
@@ -34,23 +35,9 @@ import IConnectorResponseTable from './curl_handlers/ConnectorResponseTable';
 import { fetchItem, storeItem } from 'utils/state';
 
 const CurlRequestExecutor = () => {
-  const [curlCommand, setCurlCommand] =
-    useState(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
-      "source": {
-        "type": "card",
-        "number": "4242424242424242",
-        "expiry_month": 1,
-        "expiry_year": 30,
-        "name": "John Smith",
-        "cvv": "100"
-      },
-      "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
-      "amount": 1040,
-      "currency": "GBP",
-      "reference": "123lala",
-      "capture": false
-    }'
-    `);
+  const connector_name = localStorage?.props
+    ? JSON.parse(localStorage?.props)?.connector
+    : 'Test';
   const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
@@ -73,8 +60,55 @@ const CurlRequestExecutor = () => {
 
     // In a real scenario, you might generate the code dynamically based on some logic
   };
-  const [curlRequest, setCurlRequest] = useState({});
+
+  const [curlRequest, setCurlRequest] = useState({
+    url: '',
+    method: '',
+    headers: [],
+    data: {},
+  });
+  const [authType, setAuthType] = useState(null);
   const [responseFields, setResponseFields] = useState({});
+  const [hsMapping, setHsMapping] = useState({});
+  const [requestFields, setRequestFields] = useState({});
+  const [requestHeaderFields, setRequestHeaderFields] = useState({});
+  const [responseMapping, setResponseMapping] = useState({});
+  const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
+  const [connectorContext, setConnectorContext] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [inputJson, setInputJson] = useState('');
+  const [isCopied, setIsCopied] = useState(false);
+  const [connectorName, setConnectorName] = useState(connector_name);
+  const [updateRequestData, setUpdateRequestData] = useState({});
+  const [statusMappingData, setStatusMappingData] = useState({});
+  const [selectedFlowOption, setSelectedFlowOption] = useState(
+    localStorage?.last_selected_flow || 'AuthType'
+  );
+  const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
+    useState('');
+  const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] =
+    useState('');
+  const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] =
+    useState('');
+  const [selectedStatusVariable, setSelectedStatusVariable] = useState(null);
+
+  const [curlCommand, setCurlCommand] =
+    useState(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+      "source": {
+        "type": "card",
+        "number": "4242424242424242",
+        "expiry_month": 1,
+        "expiry_year": 30,
+        "name": "John Smith",
+        "cvv": "100"
+      },
+      "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+      "amount": 1040,
+      "currency": "GBP",
+      "reference": "123lala",
+      "capture": false
+    }'
+    `);
   const [hsResponse, setHsResponse] = useState({
     status: '',
     response: {
@@ -83,22 +117,53 @@ const CurlRequestExecutor = () => {
       connector_response_reference_id: '',
     },
   });
-  const [hsMapping, setHsMapping] = useState({});
-  const [requestFields, setRequestFields] = useState({});
-  const [requestHeaderFields, setRequestHeaderFields] = useState({});
-  const [responseMapping, setResponseMapping] = useState({});
-  const [codeSnippet, setCodeSnippet] = useState(generateCodeSnippet());
-  const [connectorContext, setConnectorContext] = useState({});
 
-  const [loading, setLoading] = useState(false);
   let isLoaded = false;
 
+  /// Effects
+  /**
+   * Trigger - Run on every mount
+   * Uses
+   *  - Update curlRequest's state
+   *  - Fetch and update authType's state in app from localStorage
+   */
   useEffect(() => {
     if (!isLoaded) {
       isLoaded = true;
       updateCurlRequest(curlCommand);
     }
+
+    let authType = null;
+    try {
+      if (typeof localStorage.auth_type === 'string') {
+        authType = JSON.parse(localStorage.auth_type);
+        setAuthType(authType);
+      }
+    } catch (error) {
+      console.error('Failed while parsing auth_type from localStorage', error);
+    }
   }, []);
+
+  /**
+   * Trigger - Run whenever status field in response is mapped to HS variable
+   * Use - Open popup for mapping status fields to HS AttemptStatus
+   */
+  useEffect(() => {
+    if (
+      typeof selectedStatusVariable === 'string' &&
+      selectedStatusVariable.length > 0
+    ) {
+      handleStatusMappingButtonClick();
+    }
+  }, [selectedStatusVariable]);
+
+  /**
+   * Trigger - Run whenever authType is updated
+   * Use - Update data in localStorage
+   */
+  useEffect(() => {
+    storeItem('auth_type', JSON.stringify(authType));
+  }, [authType]);
 
   const updateCurlRequest = (request) => {
     let ss = request
@@ -193,16 +258,6 @@ const CurlRequestExecutor = () => {
     });
   };
 
-  const [selectedFlowOption, setSelectedFlowOption] = useState(
-    localStorage?.last_selected_flow || 'AuthType'
-  );
-  const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
-    useState('');
-  const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] =
-    useState('');
-  const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] =
-    useState('');
-
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
     let curl =
@@ -247,43 +302,48 @@ const CurlRequestExecutor = () => {
 
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
-    const statusKeys = Object.keys(responseMapping).filter((f) =>
-      f.match(/status/gi)
-    );
     let statusFields = {};
-    statusKeys.map((f) => {
-      if (typeof responseMapping[f].value === 'object') {
-        if (Array.isArray(responseMapping[f].value)) {
-          responseMapping[f].value.map((s) => {
+    if (typeof selectedStatusVariable === 'string') {
+      let field = null;
+      try {
+        field =
+          jsonpath.query(
+            responseMapping,
+            '$.' +
+              selectedStatusVariable
+                .replaceAll('.', '.value.')
+                .replaceAll('-', '')
+          )[0] || {};
+      } catch (error) {
+        console.error('jsonpath query failed', error);
+        return;
+      }
+      if (typeof field.value === 'object') {
+        if (Array.isArray(field.value)) {
+          field.value.map((s) => {
             statusFields[s] = null;
           });
         } else {
-          statusFields = { ...statusFields, ...responseMapping[f].value };
+          statusFields = { ...statusFields, ...field.value };
         }
       } else {
-        statusFields[responseMapping[f].value] = null;
+        statusFields[field.value] = null;
       }
-    });
-    setStatusMappingData(statusFields);
-    setStatusMappingPopupOpen(true);
+      setStatusMappingData(statusFields);
+      setStatusMappingPopupOpen(true);
+    }
   };
 
   const handleCloseStatusMappingPopup = () => {
     setStatusMappingPopupOpen(false);
   };
 
-  const [statusMappingData, setStatusMappingData] = useState({});
   const handleStatusMappingData = (jsonData) => {
     setStatusMappingData(jsonData);
     // Do something with the submitted JSON data (jsonData)
     console.log('Submitted JSON Data:', jsonData);
   };
 
-  const connector_name = localStorage?.props
-    ? JSON.parse(localStorage?.props)?.connector
-    : 'Test';
-
-  const [inputJson, setInputJson] = useState('');
   const updateInputJson = (inputJsonData) => {
     let props = { ...fetchItem('props'), ...JSON.parse(inputJsonData) };
     storeItem('props', JSON.stringify(props));
@@ -291,7 +351,6 @@ const CurlRequestExecutor = () => {
   };
   const curlTextareaRef = useRef(null);
 
-  const [isCopied, setIsCopied] = useState(false);
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(codeSnippet);
@@ -303,16 +362,12 @@ const CurlRequestExecutor = () => {
     }, 500);
   };
 
-  const [connectorName, setConnectorName] = useState(
-    localStorage.connector_name || 'Shift4'
-  );
   const handleConnectorNameChange = (event) => {
     let connector_name = event.target.value;
     setConnectorName(connector_name);
     storeItem('connector_name', connector_name);
     storeItem('props', JSON.stringify(defaultConnectorProps(connector_name)));
   };
-  const [updateRequestData, setUpdateRequestData] = useState({});
   return (
     <div>
       <div className="dropdown-wrapper hs-headers">
@@ -348,18 +403,22 @@ const CurlRequestExecutor = () => {
           selectedOption={selectedPaymentMethodOption}
           type="Payment Method"
         />
-        <Dropdown
-          options={CurrencyUnit}
-          handleSelectChange={handleCurrencyUnitOptionChange}
-          selectedOption={selectedCurrencyUnitOption}
-          type="Currency Unit"
-        />
-        <Dropdown
-          options={CurrencyUnitType}
-          handleSelectChange={handleCurrencyUnitTypeOptionChange}
-          selectedOption={selectedCurrencyUnitTypeOption}
-          type="Currency Unit Type"
-        />
+        {selectedFlowOption === 'AuthType' ? (
+          <React.Fragment>
+            <Dropdown
+              options={CurrencyUnit}
+              handleSelectChange={handleCurrencyUnitOptionChange}
+              selectedOption={selectedCurrencyUnitOption}
+              type="Currency Unit"
+            />
+            <Dropdown
+              options={CurrencyUnitType}
+              handleSelectChange={handleCurrencyUnitTypeOptionChange}
+              selectedOption={selectedCurrencyUnitTypeOption}
+              type="Currency Unit Type"
+            />
+          </React.Fragment>
+        ) : null}
         <button>
           <a
             style={{ textDecoration: 'none', color: '#fff' }}
@@ -372,7 +431,7 @@ const CurlRequestExecutor = () => {
         </button>
       </div>
       {selectedFlowOption === 'AuthType' ? (
-        <AuthType></AuthType>
+        <AuthType saveAuthType={setAuthType}></AuthType>
       ) : (
         <div>
           <div className="container">
@@ -462,9 +521,22 @@ const CurlRequestExecutor = () => {
                 <h3>Response Fields Mapping</h3>
                 <button
                   id="responseStatusMapping"
+                  className={`${
+                    !(
+                      typeof selectedStatusVariable === 'string' &&
+                      selectedStatusVariable.length > 0
+                    )
+                      ? 'disabled'
+                      : ''
+                  }`}
                   onClick={handleStatusMappingButtonClick}
                 >
-                  Status Mapping
+                  {!(
+                    typeof selectedStatusVariable === 'string' &&
+                    selectedStatusVariable.length > 0
+                  )
+                    ? 'Map Status to HyperSwitch field'
+                    : 'Status Mapping'}
                 </button>
               </div>
               <div
@@ -473,16 +545,18 @@ const CurlRequestExecutor = () => {
                 }}
               >
                 <IResponseFieldsTable
-                  setHsMapping={setHsMapping}
-                  setHsResponse={setHsResponse}
                   hsResponse={hsResponse}
                   suggestions={responseFields}
+                  setHsMapping={setHsMapping}
+                  setHsResponse={setHsResponse}
+                  setSelectedStatusVariable={setSelectedStatusVariable}
                 ></IResponseFieldsTable>
               </div>
 
               {/* Render the StatusMappingPopup when isStatusMappingPopupOpen is true */}
               {isStatusMappingPopupOpen && (
                 <StatusMappingPopup
+                  selectedFlowOption={selectedFlowOption}
                   initialValues={statusMappingData}
                   onClose={handleCloseStatusMappingPopup}
                   onSubmit={handleStatusMappingData}
@@ -493,7 +567,12 @@ const CurlRequestExecutor = () => {
           <div>
             <button
               id="generate-code"
+              className={`${!authType ? 'disabled' : ''}`}
               onClick={(e) => {
+                if (!authType) {
+                  setSelectedFlowOption('AuthType');
+                  return;
+                }
                 let connector = localStorage.connector || 'DemoCon';
                 let props = localStorage.props
                   ? JSON.parse(localStorage.props)
@@ -538,7 +617,9 @@ const CurlRequestExecutor = () => {
                 });
               }}
             >
-              Generate Code
+              {!authType
+                ? 'Configure AuthType before generating code'
+                : 'Generate Code'}
             </button>
           </div>
           <div style={{ display: 'flex', overflow: 'hidden' }}>

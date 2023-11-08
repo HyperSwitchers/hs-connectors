@@ -5,7 +5,12 @@ import React, { useState } from 'react';
 import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
 import { storeItem } from 'utils/state';
 
-const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
+const StatusMappingPopup = ({
+  initialValues,
+  onClose,
+  onSubmit,
+  selectedFlowOption,
+}) => {
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
     JSON.stringify(initialValues, null, 2)
@@ -32,16 +37,19 @@ const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
   const handleKeyPress = (field, event) => {
     const value = event.target.value;
     updateJsonInput(field, value);
-    const filteredSuggestions = HYPERSWITCH_STATUS_LIST.filter((status) =>
-      status.toLowerCase().startsWith(value.toLowerCase())
-    );
+    const filteredSuggestions = HYPERSWITCH_STATUS_LIST[
+      selectedFlowOption
+    ]?.filter((status) => status.toLowerCase().startsWith(value.toLowerCase()));
     renderSuggestions(field, filteredSuggestions);
   };
 
   const renderSuggestions = (field, suggestions) => {
     const suggestionContainer = document.getElementById(`suggestions-${field}`);
     const inputField = document.getElementById(`input-${field}`);
-    if (suggestionContainer && inputField) {
+    if (
+      suggestionContainer instanceof HTMLDivElement &&
+      inputField instanceof HTMLInputElement
+    ) {
       suggestionContainer.innerHTML = '';
       setShowSuggestions(field);
       if (suggestions.length === 0) {
@@ -92,7 +100,9 @@ const StatusMappingPopup = ({ initialValues, onClose, onSubmit }) => {
                           setShowSuggestions(f);
                           renderSuggestions(
                             f,
-                            !showSuggestions ? HYPERSWITCH_STATUS_LIST : []
+                            !showSuggestions
+                              ? HYPERSWITCH_STATUS_LIST[selectedFlowOption]
+                              : []
                           );
                         }}
                       >
