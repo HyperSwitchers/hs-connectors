@@ -77,16 +77,15 @@ const CurlRequestExecutor = () => {
   const updateAppContextInLocalStorage = () => {
     const storedAppContext = fetchItem('app_context');
     const updatedAppContext = {
-      ...(storedAppContext || deepCopy(appContext)),
+      ...(storedAppContext || appContext),
     };
     // Update in localStorage
     storeItem('app_context', JSON.stringify(updatedAppContext));
   };
 
   const updateAppContext = (updates) => {
-    const storedAppContext = fetchItem('app_context');
     const updatedAppContext = {
-      ...(storedAppContext || deepCopy(appContext)),
+      ...appContext,
       ...updates,
     };
     setAppContext(updatedAppContext);
@@ -99,40 +98,9 @@ const CurlRequestExecutor = () => {
    */
   useEffect(() => {
     const storedAppContext = fetchItem('app_context');
-    const updatedAppContext = storedAppContext || deepCopy(appContext);
-    const selectedFlow = updatedAppContext.selectedFlow;
+    const updatedAppContext = { ...(storedAppContext || deepCopy(appContext)) };
 
-    const {
-      updatedCurlCommand,
-      updatedCurlRequest,
-      requestFields,
-      requestHeaderFields,
-    } = updateCurlRequest(appContext.curlCommand);
-    updatedAppContext.curlCommand = updatedCurlCommand;
-    updatedAppContext.curlRequest = updatedCurlRequest;
-    if (!updatedAppContext.flows[selectedFlow].curlCommand) {
-      updatedAppContext.flows[selectedFlow].curlCommand = updatedCurlCommand;
-    }
-    if (!updatedAppContext.flows[selectedFlow].curlRequest) {
-      updatedAppContext.flows[selectedFlow].curlRequest = updatedCurlRequest;
-    }
-    if (
-      !updatedAppContext.flows[selectedFlow].requestFields?.value ||
-      Object.keys(updatedAppContext.flows[selectedFlow].requestFields?.value)
-        .length === 0
-    ) {
-      updatedAppContext.flows[selectedFlow].requestFields = requestFields;
-    }
-    if (
-      !updatedAppContext.flows[selectedFlow].requestHeaderFields?.value ||
-      Object.keys(
-        updatedAppContext.flows[selectedFlow].requestHeaderFields?.value
-      ).length === 0
-    ) {
-      updatedAppContext.flows[selectedFlow].requestHeaderFields =
-        requestHeaderFields;
-    }
-    updateAppContext(updatedAppContext);
+    updateCurlRequest(appContext.curlCommand);
   }, []);
 
   /**
@@ -148,11 +116,14 @@ const CurlRequestExecutor = () => {
     }
   }, [selectedStatusVariable]);
 
-  const updateCurlRequest = (request) => {
+  const updateCurlRequest = (request, flow = null) => {
     let ss = request
       .replace(/\s*\\\s*/g, ' ')
       .replace(/\n/g, '')
       .replace(/--data-raw|--data-urlencode/g, '-d');
+    const updatedFlow = flow || appContext.selectedFlow;
+    const updatedAppContext = deepCopy(appContext);
+    updatedAppContext.curlCommand = request;
     try {
       const fetchRequest = parse_curl(ss);
       const requestFields = JSON.parse(fetchRequest?.data?.ascii || '{}');
@@ -166,22 +137,22 @@ const CurlRequestExecutor = () => {
       );
       console.info(requestHeaderFields);
       saveFlowDetails(fetchRequest);
-      return {
-        updatedCurlCommand: request,
-        updatedCurlRequest: fetchRequest,
-        requestFields: {
-          value: requestFields,
-          mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
-        },
-        requestHeaderFields: {
-          value: requestHeaderFields,
-          mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
-        },
+      updatedAppContext.curlRequest = fetchRequest;
+      updatedAppContext.flows[updatedFlow].requestFields = {
+        value: requestFields,
+        mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
+      };
+      updatedAppContext.flows[updatedFlow].requestHeaderFields = {
+        value: requestHeaderFields,
+        mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
       };
     } catch (e) {
       console.error(e);
-      return { updatedCurlCommand: request };
     }
+    if (flow) {
+      updatedAppContext.selectedFlow = flow;
+    }
+    updateAppContext(updatedAppContext);
   };
 
   const saveFlowDetails = (curl) => {
@@ -262,41 +233,7 @@ const CurlRequestExecutor = () => {
     let curl =
       JSON.parse(localStorage?.props || '{}')?.flows?.[flow]?.curl ||
       appContext.curlRequest;
-    const {
-      updatedCurlCommand,
-      updatedCurlRequest,
-      requestFields,
-      requestHeaderFields,
-    } = updateCurlRequest(appContext.curlCommand);
-    const updatedFlows = deepCopy(appContext.flows);
-    if (!updatedFlows[flow].curlCommand) {
-      updatedFlows[flow].curlCommand = updatedCurlCommand;
-    }
-    if (!updatedFlows[flow].curlRequest) {
-      updatedFlows[flow].curlRequest = updatedCurlRequest;
-    }
-    if (
-      !updatedFlows[flow].requestFields?.value ||
-      Object.keys(updatedFlows[flow].requestFields?.value).length === 0
-    ) {
-      updatedFlows[flow].requestFields = requestFields;
-    }
-    if (
-      !updatedFlows[flow].requestHeaderFields?.value ||
-      Object.keys(updatedFlows[flow].requestHeaderFields?.value).length === 0
-    ) {
-      updatedFlows[flow].requestHeaderFields = requestHeaderFields;
-    }
-    if (
-      !updatedFlows[flow].responseFields?.value ||
-      Object.keys(updatedFlows[flow].responseFields?.value).length === 0
-    ) {
-      updatedFlows[flow].responseFields.value = curl?.response || {};
-      updatedFlows[flow].responseFields.mapping = addFieldsToNodes(
-        mapFieldNames(curl?.response || {})
-      );
-    }
-    updateAppContext({ flows: updatedFlows, selectedFlow: flow });
+    updateCurlRequest(appContext.curlCommand, flow);
   };
 
   const handlePaymentMethodOptionChange = (event) => {
@@ -643,7 +580,7 @@ const CurlRequestExecutor = () => {
                   },
                 });
                 updateInputJson(x);
-                setCodeSnippet(generateRustCode(props.connector, x));
+                setCodeSnippet(generateRustCode(appContext.connectorName, x));
                 setConnectorContext({ ...{} });
                 let targetElement = document.getElementById(
                   'generated-code-snippet'

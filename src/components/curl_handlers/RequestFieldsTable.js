@@ -55,7 +55,7 @@ function IRequestFieldsTable({
         : addFieldsToNodes(mapFieldNames(requestFields));
     setMapping(mapping);
     setFields(flattenObject(requestFields));
-  }, [appContext.flows[appContext.selectedFlow].requestFields]);
+  }, [appContext.flows]);
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
