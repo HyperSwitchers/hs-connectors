@@ -14,6 +14,7 @@ import {
   addFieldsToNodes,
   mapFieldNames,
   deepCopy,
+  generateAuthTypeEncryption,
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
@@ -446,7 +447,6 @@ const CurlRequestExecutor = () => {
                 <h3>Request Header Fields:</h3>
                 <IRequestHeadersTable
                   suggestions={{
-                    ...authTypesMapping,
                     ...Object.keys(
                       appContext.authType.value?.content || {}
                     ).reduce((obj, key) => {
@@ -454,6 +454,7 @@ const CurlRequestExecutor = () => {
                       obj[val] = [];
                       return obj;
                     }, {}),
+                    ...generateAuthTypeEncryption(Object.values(appContext.authType.value?.content).slice(0, 2)),
                   }}
                   updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>

@@ -190,20 +190,13 @@ const ConnectorTemplate = ({
     return maxHeaders;
   };
   const build_auth_header_key = (data) => {
-    if (data.includes('$api_key')) {
-      return 'auth.api_key.expose()';
-    } else if (data.includes('$key1')) {
-      return 'auth.key1.expose()';
-    } else if (data.includes('$secret_key')) {
-      return 'auth.secret_key.expose()';
-    } else if (data.includes('$key2')) {
-      return 'auth.key2.expose()';
-    } else if (data.includes('$base_64_encode_api_key_colon_key1')) {
-      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.api_key.peek(), auth.key1.peek()))';
-    } else if (data.includes('$base_64_encode_key1_colon_api_key')) {
-      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.key1.peek(), auth.api_key.peek()))';
+    if (data.includes('$base_64_encode')) {
+      let fields = data.split('_colon_');
+      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.'+fields[0].substr('$base_64_encode_'.length)+'.peek(), auth.'+fields[1]+'.peek()))';
     }
-    return '';
+    else {
+      return 'auth.'+data.substr(1)+'.expose()';
+    }
   };
   const get_auth_header_key = (data) => {
     if (data === 'Authorization') return 'headers::AUTHORIZATION.to_string()';

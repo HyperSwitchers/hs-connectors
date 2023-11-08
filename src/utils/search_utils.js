@@ -121,6 +121,17 @@ export const authTypesMapping = {
   base_64_encode_key1_colon_api_key: [],
 };
 
+export function generateAuthTypeEncryption(keys) {
+  let obj = {};
+  for (let i = 0; i < keys.length; i++) {
+      for (let j = 0; j < keys.length; j++) {
+          if (i !== j) {
+              obj[`base_64_encode_${keys[i]}_colon_${keys[j]}`] = [];
+          }
+      }
+  }
+  return obj;
+}
 export function mapFieldNames(input) {
   if (_.isObject(input)) {
     if (_.isArray(input)) {
