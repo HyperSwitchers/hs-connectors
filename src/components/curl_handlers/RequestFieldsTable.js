@@ -30,12 +30,11 @@ function IRequestFieldsTable({
   suggestions = {},
   updateAppContext = (v) => {},
 }) {
+  const appContext = useRecoilValue(APP_CONTEXT);
   const defaultProps = {
     options: Object.keys(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
   };
-
-  const appContext = useRecoilValue(APP_CONTEXT);
 
   const [fields, setFields] = useState([]);
   const [mapping, setMapping] = useState({});
