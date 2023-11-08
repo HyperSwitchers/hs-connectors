@@ -75,12 +75,8 @@ const CurlRequestExecutor = () => {
   const [selectedStatusVariable, setSelectedStatusVariable] = useState(null);
 
   const updateAppContextInLocalStorage = () => {
-    const storedAppContext = fetchItem('app_context');
-    const updatedAppContext = {
-      ...(storedAppContext || appContext),
-    };
     // Update in localStorage
-    storeItem('app_context', JSON.stringify(updatedAppContext));
+    storeItem('app_context', JSON.stringify(appContext));
   };
 
   const updateAppContext = (updates) => {
@@ -99,8 +95,8 @@ const CurlRequestExecutor = () => {
   useEffect(() => {
     const storedAppContext = fetchItem('app_context');
     const updatedAppContext = { ...(storedAppContext || deepCopy(appContext)) };
-
-    updateCurlRequest(appContext.curlCommand);
+    updateCurlRequest(updatedAppContext.curlCommand);
+    updateAppContext(updatedAppContext);
   }, []);
 
   /**
@@ -449,7 +445,16 @@ const CurlRequestExecutor = () => {
               >
                 <h3>Request Header Fields:</h3>
                 <IRequestHeadersTable
-                  suggestions={authTypesMapping}
+                  suggestions={{
+                    ...authTypesMapping,
+                    ...Object.keys(
+                      appContext.authType.value?.content || {}
+                    ).reduce((obj, key) => {
+                      const val = appContext.authType.value?.content[key];
+                      obj[val] = [];
+                      return obj;
+                    }, {}),
+                  }}
                   updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>
                 <h3>Request Body Fields:</h3>
