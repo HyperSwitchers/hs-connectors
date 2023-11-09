@@ -435,11 +435,11 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
             status: enums::AttemptStatus::${hsResponse.status.startsWith('$') ? "from(item.response." + hsResponse.status.substring(1) + ")" : "Pending"},
             response: Ok(types::PaymentsResponseData::TransactionResponse {
                 resource_id: types::ResponseId::ConnectorTransactionId(item.response.${hsResponse.response.resource_id.substring(1)}),
-                redirection_data:  ${hsResponse.response.redirection_data.startsWith('$') ? "item.response" + hsResponse.response.redirection_data.substring(1) : "None"},
+                redirection_data:  None,
                 mandate_reference: None,
                 connector_metadata: None,
                 network_txn_id: None,
-                connector_response_reference_id: ${hsResponse.response.redirection_data.startsWith('$') ? "item.response" + hsResponse.response.connector_response_reference_id.substring(1) : "None"},
+                connector_response_reference_id: None,
             }),
             ..item.data
         })

@@ -14,7 +14,7 @@ import { atom, selector } from 'recoil';
 export const APP_CONTEXT = atom({
   key: 'context',
   default: {
-    connectorName: 'DemoCon',
+    connectorName: '',
     selectedFlow: 'AuthType',
     authType: {
       value: null,
@@ -53,21 +53,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Authorize: {
-        curlCommand: `curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
-          "source": {
-            "type": "card",
-            "number": "4242424242424242",
-            "expiry_month": 1,
-            "expiry_year": 30,
-            "name": "John Smith",
-            "cvv": "100"
-          },
-          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
-          "amount": 1040,
-          "currency": "GBP",
-          "reference": "123lala",
-          "capture": false
-        }'`,
+        curlCommand: ``,
         curlRequest: {
           url: '',
           method: '',
