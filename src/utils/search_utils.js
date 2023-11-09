@@ -1,6 +1,17 @@
 // @ts-check
 
+import jsonpath from 'jsonpath';
 import _ from 'lodash';
+
+export const defaultSecretsInSynonyms = [
+  '$card_expiry_year_month',
+  '$card_exp_month',
+  '$card_exp_year',
+  '$card_number',
+  '$card_cvc',
+  '$card_holder_name',
+  '$email',
+];
 
 export const synonymMapping = {
   Authorize: {
@@ -11,6 +22,7 @@ export const synonymMapping = {
       'firstname',
       'firstName',
       'username',
+      'phone_number',
     ],
     billing_address_lastname: ['last_name', 'lastname', 'lastName'],
     billing_address_line1: ['line1', 'address_line_1'],
@@ -89,7 +101,7 @@ export const synonymMapping = {
     currency: ['currency', 'currency_code'],
   },
   Refund: {
-    refund_amount: ['refund_amount', 'authorization_amount', "amount"],
+    refund_amount: ['refund_amount', 'authorization_amount', 'amount'],
     currency: ['currency', 'currency_code'],
   },
   PSync: {},
@@ -237,7 +249,7 @@ export function addFieldsToNodes(jsonObj) {
       obj[key] = {
         value: obj[key],
         optional: false, // Set this to true or false based on your requirement
-        secret: false, // Set this to true or false based on your requirement
+        secret: defaultSecretsInSynonyms.includes(obj[key]), // Set this to true or false based on your requirement
         type: getRustType(obj[key]),
       };
     }

@@ -15,6 +15,7 @@ import {
 import 'jsoneditor/dist/jsoneditor.css';
 import {
   deepCopy,
+  defaultSecretsInSynonyms,
   flattenObject,
   is_mapped_field,
   typesList,
@@ -289,12 +290,16 @@ function IRequestFieldsTable({
                         key={`${row}-value-${appContext.selectedFlow}`}
                         sx={{ width: 280 }}
                         freeSolo={true}
-                        onChange={(event, newValue) =>
-                          updateRequestFields(row, {
+                        onChange={(event, newValue) => {
+                          const updates = {
                             ...field,
                             value: newValue,
-                          })
-                        }
+                          };
+                          if (defaultSecretsInSynonyms.includes(newValue)) {
+                            updates.secret = true;
+                          }
+                          updateRequestFields(row, updates);
+                        }}
                         renderInput={(params) => (
                           <TextField
                             {...params}
