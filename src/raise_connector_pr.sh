@@ -20,13 +20,14 @@ repo_to_fork="juspay/hyperswitch"
 # Fork the repository
 gh repo fork $repo_to_fork --clone=true --remote=true
 payment_gateway=$1;
-if [ -z "$payment_gateway" ] ; then
-    echo "$RED Connector name not present: try $GREEN\"sh raise_pr.sh adyen\""
+base_url=$1;
+if [ -z "$payment_gateway" || -z "$base_url"] ; then
+    echo "$RED Connector name or base url not present: try $GREEN\"sh raise_pr.sh adyen\""
     exit 1
 fi
 # git clone 
 cd hyperswitch
-sh scripts/add_connector.sh $1
+sh scripts/add_connector.sh $1 $2
 cp ~/Downloads/"$(ls -Art ~/Downloads | grep 'connector' | tail -n 1)" crates/router/src/connector/$1.rs
 cp ~/Downloads/"$(ls -Art ~/Downloads | grep 'transformer' | tail -n 1)" crates/router/src/connector/$1/transformers.rs
 echo "Showing all changed files"

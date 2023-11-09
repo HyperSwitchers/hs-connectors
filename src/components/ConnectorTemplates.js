@@ -279,7 +279,6 @@ const ConnectorTemplate = ({
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(generatedCode);
-    download(generatedCode, 'connector.rs', 'text');
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
     setTimeout(() => {
@@ -297,7 +296,7 @@ const ConnectorTemplate = ({
             Copied to clipboard!
           </span>
         )}
-        <SyntaxHighlighter language="rust" style={githubGist}>
+        <SyntaxHighlighter id="connectors"  language="rust" style={githubGist}>
           {generatedCode}
         </SyntaxHighlighter>
       </div>
