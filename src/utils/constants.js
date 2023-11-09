@@ -77,11 +77,11 @@ export const HYPERSWITCH_STATUS_LIST = {
     'DeviceDataCollectionPending',
   ],
   Refund: [
-    "Failure",
-    "ManualReview",
-    "Pending",
-    "Success",
-    "TransactionFailure"
+    'Failure',
+    'ManualReview',
+    'Pending',
+    'Success',
+    'TransactionFailure',
   ],
   PSync: [
     'Started',
@@ -109,19 +109,12 @@ export const HYPERSWITCH_STATUS_LIST = {
     'DeviceDataCollectionPending',
   ],
   RSync: [
-    "Failure",
-    "ManualReview",
-    "Pending",
-    "Success",
-    "TransactionFailure"
+    'Failure',
+    'ManualReview',
+    'Pending',
+    'Success',
+    'TransactionFailure',
   ],
 };
 
-export const codeSnippets = [
-  'cURL',
-  'Python',
-  'JavaScript',
-  'PHP',
-  'Go',
-  'Java',
-];
+export const codeSnippets = ['cURL'];
