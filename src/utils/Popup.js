@@ -3,13 +3,16 @@ import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import { download } from './search_utils';
 
-export default function BasicPopover({ curl = 'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh' }) {
+export default function BasicPopover({ isCodeUpdated = true, setIsCodeUpdated = (state) => {}, curl = 'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh' }) {
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleClick = (event) => {
+        setIsCodeUpdated(false);
         setAnchorEl(event.currentTarget);
-        download(document.querySelector("#transformers")?.innerText, 'transformer.rs', 'text');
-        download(document.querySelector("#connectors")?.innerText, 'connector.rs', 'text');
+        if(isCodeUpdated) {
+            download(document.querySelector("#transformers")?.innerText, 'transformer.rs', 'text');
+            download(document.querySelector("#connectors")?.innerText, 'connector.rs', 'text');
+        }
     };
 
     const handleClose = () => {

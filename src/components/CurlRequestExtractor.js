@@ -78,6 +78,7 @@ const CurlRequestExecutor = () => {
     useState('Minor');
   const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] =
     useState('i64');
+  const [isCodeUpdated, setIsCodeUpdated] = useState(false);
 
   const updateAppContextInLocalStorage = () => {
     // Update in localStorage
@@ -624,6 +625,7 @@ const CurlRequestExecutor = () => {
               id="generate-code"
               className={`${!appContext.authType.value ? 'disabled' : ''}`}
               onClick={(e) => {
+                setIsCodeUpdated(true);
                 updateAppContextInLocalStorage();
                 if (!appContext.authType.value) {
                   updateAppContext({ selectedFlow: 'AuthType' });
@@ -692,7 +694,7 @@ const CurlRequestExecutor = () => {
                 : 'Generate Code'}
             </button>
             <div>
-              <BasicPopover curl={'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- '+ appContext.connectorName + ' ' +appContext.baseUrl}></BasicPopover>
+              <BasicPopover isCodeUpdated={isCodeUpdated} setIsCodeUpdated={setIsCodeUpdated} curl={'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- '+ appContext.connectorName + ' ' +appContext.baseUrl}></BasicPopover>
             </div>
           </div>
           <div style={{ display: 'flex', overflow: 'hidden' }}>
