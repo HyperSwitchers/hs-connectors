@@ -43,7 +43,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,
@@ -95,7 +95,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,
@@ -131,7 +131,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,
@@ -167,7 +167,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,
@@ -203,7 +203,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,
@@ -239,7 +239,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,
@@ -275,7 +275,7 @@ export const APP_CONTEXT = atom({
             response: {
               resource_id: '',
               redirection_data: 'None',
-              connector_response_reference_id: '',
+              connector_response_reference_id: 'None',
             },
           },
           mapping: null,

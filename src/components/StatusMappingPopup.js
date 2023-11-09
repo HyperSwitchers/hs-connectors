@@ -3,11 +3,14 @@
 import React, { useEffect, useState } from 'react';
 
 import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
-import { APP_CONTEXT, storeItem } from 'utils/state';
+import { APP_CONTEXT } from 'utils/state';
 import { useRecoilValue } from 'recoil';
 import { deepCopy } from 'utils/search_utils';
 
-const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
+const StatusMappingPopup = ({
+  onClose,
+  updateAppContextUsingPath = (f, v) => {},
+}) => {
   const appContext = useRecoilValue(APP_CONTEXT);
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
@@ -33,21 +36,10 @@ const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
 
   const updateStatusMapping = (field, update) => {
     try {
-      updateAppContext({
-        flows: {
-          ...appContext.flows,
-          [appContext.selectedFlow]: {
-            ...appContext.flows[appContext.selectedFlow],
-            status: {
-              ...appContext.flows[appContext.selectedFlow].status,
-              value: {
-                ...appContext.flows[appContext.selectedFlow].status.value,
-                [field]: update,
-              },
-            },
-          },
-        },
-      });
+      updateAppContextUsingPath(
+        `flows.${appContext.selectedFlow}.status.value.${field}`,
+        update
+      );
     } catch (error) {
       console.error('Failed to update status mapping', error);
     }
@@ -56,9 +48,10 @@ const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
   const handleSubmit = () => {
     // Parse the edited JSON and submit it
     const editedJson = JSON.parse(jsonInput);
-    const updatedFlows = deepCopy(appContext.flows);
-    updatedFlows[appContext.selectedFlow].status.value = editedJson;
-    updateAppContext({ flows: updatedFlows });
+    updateAppContextUsingPath(
+      `flows.${appContext.selectedFlow}.status.value`,
+      editedJson
+    );
     onClose();
   };
 
