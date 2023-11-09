@@ -10,7 +10,7 @@ import { deepCopy } from 'utils/search_utils';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 
-function AuthType({ updateAppContext = (v) => {} }) {
+function AuthType({ updateAppContext = (v) => { } }) {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
   const types = {
     HeaderKey: { api_key: '' },
@@ -132,19 +132,20 @@ function AuthType({ updateAppContext = (v) => {} }) {
   return (
     <div className="auth-type">
       <div className="auth-type-header header">
-        Map Processor Authorization Header to Hyperswitch
+        Processor Authorization Mapping
       </div>
       <div className="auth-type-subheader">
-        Every processor requires certain number of identifiers to be passed in
-        their Authorisation Header. Select the number of identifiers below that
-        your selected processor accepts. Then map them to Hyperswitch. <br />
-        <br /> Eg. Noon processor accepts 3 identifier{' '}
-        <code>
-          (BusinessIdentifier, ApplicationIdentifier, ApplicationKey).
-        </code>{' '}
-        These three identifiers will now be mapped to{' '}
-        <code>(api_key, key1 and api_secret)</code> internally on Hyperswitch's
-        end.
+        When using Hyperswitch as your payment processor, it's important to understand the identifiers required for the Authorization Header. <br/> These identifiers are essential for secure and authenticated transactions. Each processor may have different requirements.
+        For example, the Noon processor requires three identifiers: BusinessIdentifier, ApplicationIdentifier, and ApplicationKey. <br/>These three identifiers will be internally mapped to (api_key, key1, and api_secret) on Hyperswitch's end.<br/>
+        Please make sure you have the correct identifiers ready for your chosen processor to ensure smooth and secure payment processing through Hyperswitch.
+        Hyperswitch authorization keys:
+        <ol>
+          <li><b>API Key:</b> This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.</li>
+          <li><b>API Key 1:</b> API Key 1 is an additional key or authorization that you need to provide to the processor. It's an extra layer of security or identification required for specific transactions.</li>
+          <li><b>API Key 2:</b> Similar to API Key 1, API Key 2 is another additional key or authorization that you need to provide to the processor. It may serve a unique purpose or role in the authorization process.</li>
+          <li><b>API Secret:</b> The API Secret is provided by the processor and is used to generate a signature for authentication and security purposes. It helps verify the integrity of your requests and data.</li>
+        </ol>
+
       </div>
       <div className="auth-type-flow-type">
         <div className="flow-type-header">Flow Type</div>
@@ -174,7 +175,7 @@ function AuthType({ updateAppContext = (v) => {} }) {
             <div
               className="clear button"
               onClick={() => {
-                Object.keys(types).map((type) => {});
+                Object.keys(types).map((type) => { });
                 setContent(types[selectedAuthType]);
                 const updatedAuthType = deepCopy(appContext.authType);
                 updatedAuthType.value = {

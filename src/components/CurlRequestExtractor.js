@@ -303,10 +303,10 @@ const CurlRequestExecutor = () => {
           jsonpath.query(
             appContext.flows[appContext.selectedFlow].responseFields.mapping,
             '$.' +
-              selectedStatusVariable
-                // @ts-ignore
-                .replaceAll('.', '.value.')
-                .replaceAll('-', '')
+            selectedStatusVariable
+              // @ts-ignore
+              .replaceAll('.', '.value.')
+              .replaceAll('-', '')
           )[0] || {};
       } catch (error) {
         console.error('jsonpath query failed', error);
@@ -457,6 +457,7 @@ const CurlRequestExecutor = () => {
                 <div className="loader"></div>
               </div>
             )}
+            <div dangerouslySetInnerHTML={{ __html: appContext.flows[appContext.selectedFlow]?.description || "" }}></div>
             <div
               style={{
                 display: 'flex',
@@ -494,11 +495,6 @@ const CurlRequestExecutor = () => {
                 }}
               >
                 <h3>Request Header Fields:</h3>
-                <p>
-                  Lorem Ipsum is simply dummy text of the printing and
-                  typesetting industry. Lorem Ipsum has been the industry's
-                  standard dummy text ever since the 1500s, when an unknown
-                </p>
                 <IRequestHeadersTable
                   suggestions={{
                     ...Object.keys(
@@ -517,11 +513,6 @@ const CurlRequestExecutor = () => {
                   updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>
                 <h3>Request Body Fields:</h3>
-                <p>
-                  Lorem Ipsum is simply dummy text of the printing and
-                  typesetting industry. Lorem Ipsum has been the industry's
-                  standard dummy text ever since the 1500s, when an unknown
-                </p>
                 <div
                   style={{
                     height: '100%',
@@ -557,14 +548,13 @@ const CurlRequestExecutor = () => {
                 <h3>Response Fields Mapping</h3>
                 <button
                   id="responseStatusMapping"
-                  className={`${
-                    !(
+                  className={`${!(
                       typeof selectedStatusVariable === 'string' &&
                       selectedStatusVariable.length > 0
                     )
                       ? 'disabled'
                       : ''
-                  }`}
+                    }`}
                   onClick={handleStatusMappingButtonClick}
                 >
                   {!(
@@ -681,7 +671,7 @@ const CurlRequestExecutor = () => {
               }}
               className={`${!appContext.authType.value ? 'disabled' : ''}`}
             >
-              Raise a github PR button
+              Raise Github PR
             </button>
             <Modal
               open={raiseAPRModalOpen}
@@ -712,42 +702,15 @@ const CurlRequestExecutor = () => {
                     {codeSnippets.map((l) => (
                       <div key={l}>{l}</div>
                     ))}
-                    <div
-                      className="copy-to-clipboard"
-                      id="copyText"
-                    >{`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
-          "source": {
-            "type": "card",
-            "number": "4242424242424242",
-            "expiry_month": 1,
-            "expiry_year": 30,
-            "name": "John Smith",
-            "cvv": "100"
-          },
-          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
-          "amount": 1040,
-          "currency": "GBP",
-          "reference": "123lala",
-          "capture": false
-        }'`}</div>
+                    <b>Please run below command in your terminal  </b>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <code>curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ | bash </code>
                   </div>
                   <button
                     onClick={() => {
-                      copy(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
-          "source": {
-            "type": "card",
-            "number": "4242424242424242",
-            "expiry_month": 1,
-            "expiry_year": 30,
-            "name": "John Smith",
-            "cvv": "100"
-          },
-          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
-          "amount": 1040,
-          "currency": "GBP",
-          "reference": "123lala",
-          "capture": false
-        }'`);
+                      copy(`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ | bash`);
                     }}
                   >
                     Copy to clipboard
