@@ -73,9 +73,9 @@ const CurlRequestExecutor = () => {
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
     useState('');
   const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] =
-    useState('');
+    useState('Minor');
   const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] =
-    useState('');
+    useState('i64');
 
   const updateAppContextInLocalStorage = () => {
     // Update in localStorage
@@ -557,13 +557,13 @@ const CurlRequestExecutor = () => {
                 <button
                   id="responseStatusMapping"
                   className={`${!(
-                      typeof appContext.flows[appContext.selectedFlow]
-                        .statusVariable === 'string' &&
-                      appContext.flows[appContext.selectedFlow].statusVariable
-                        .length > 0
-                    )
-                      ? 'disabled'
-                      : ''
+                    typeof appContext.flows[appContext.selectedFlow]
+                      .statusVariable === 'string' &&
+                    appContext.flows[appContext.selectedFlow].statusVariable
+                      .length > 0
+                  )
+                    ? 'disabled'
+                    : ''
                     }`}
                   onClick={handleStatusMappingButtonClick}
                 >
