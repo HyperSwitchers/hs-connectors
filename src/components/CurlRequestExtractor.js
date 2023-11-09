@@ -249,7 +249,7 @@ const CurlRequestExecutor = () => {
     };
 
     let url = "/cors/" + curlRequest.url;
-    updateAppContext({ baseUrl: new URL(url).origin })
+    updateAppContext({ baseUrl: new URL(curlRequest?.url)?.origin || "https://api.stripe.com/" })
     let req_content = {
       type: requestOptions.method,
       url: url,
