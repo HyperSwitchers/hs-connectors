@@ -412,7 +412,7 @@ const CurlRequestExecutor = () => {
           selectedOption={appContext.selectedFlow}
           type="Flow Type"
         />
-        {appContext.selectedFlow === 'Authorize' ? (
+        {appContext.selectedFlow !== 'AuthType' ? (
           <Dropdown
             options={paymentMethodOptions}
             handleSelectChange={handlePaymentMethodOptionChange}
