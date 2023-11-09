@@ -250,7 +250,7 @@ const CurlRequestExecutor = () => {
     };
 
     let url = "/cors/" + curlRequest.url;
-    updateAppContext({ baseUrl: new URL(curlRequest?.url)?.origin || "https://api.stripe.com/" })
+    updateAppContext({ baseUrl: new URL(curlRequest?.url)?.origin })
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -694,7 +694,12 @@ const CurlRequestExecutor = () => {
                 : 'Generate Code'}
             </button>
             <div>
-              <BasicPopover isCodeUpdated={isCodeUpdated} setIsCodeUpdated={setIsCodeUpdated} curl={'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- '+ appContext.connectorName + ' ' +appContext.baseUrl}></BasicPopover>
+              <BasicPopover 
+              isCodeUpdated={isCodeUpdated} 
+              setIsCodeUpdated={setIsCodeUpdated} 
+              curl={'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- '
+              + appContext.connectorName 
+              + ' ' +(appContext.baseUrl || ('https://api.'+appContext.connectorName+'.com'))}></BasicPopover>
             </div>
           </div>
           <div style={{ display: 'flex', overflow: 'hidden' }}>
