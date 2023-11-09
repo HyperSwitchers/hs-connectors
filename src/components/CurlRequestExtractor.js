@@ -17,6 +17,7 @@ import {
   mapFieldNames,
   deepCopy,
   generateAuthTypeEncryption,
+  updateNestedJson,
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
@@ -80,6 +81,15 @@ const CurlRequestExecutor = () => {
   const updateAppContextInLocalStorage = () => {
     // Update in localStorage
     storeItem('app_context', JSON.stringify(appContext));
+  };
+
+  const updateAppContextUsingPath = (path, update) => {
+    let updatedAppContext = updateNestedJson(
+      appContext,
+      path.split('.'),
+      update
+    );
+    setAppContext(updatedAppContext);
   };
 
   const updateAppContext = (updates) => {
@@ -595,7 +605,7 @@ const CurlRequestExecutor = () => {
               {isStatusMappingPopupOpen && (
                 <StatusMappingPopup
                   onClose={handleCloseStatusMappingPopup}
-                  updateAppContext={updateAppContext}
+                  updateAppContextUsingPath={updateAppContextUsingPath}
                 />
               )}
             </Paper>
@@ -618,10 +628,6 @@ const CurlRequestExecutor = () => {
                   updateAppContext({ selectedFlow: 'AuthType' });
                   return;
                 }
-                let connector = localStorage.connector || 'DemoCon';
-                let props = localStorage.props
-                  ? JSON.parse(localStorage.props)
-                  : defaultConnectorProps(connector);
                 let authType = appContext.authType.value || {};
                 let existingFlows = JSON.parse(inputJson || '{}')?.[
                   appContext.connectorName
@@ -638,7 +644,7 @@ const CurlRequestExecutor = () => {
                       .mapping || {}
                   )
                 );
-                let x = JSON.stringify({
+                const _x = {
                   [appContext.connectorName]: {
                     authType: authType.type,
                     authKeys: authType.content || {},
@@ -660,7 +666,15 @@ const CurlRequestExecutor = () => {
                       appContext.flows[appContext.selectedFlow].status.value ||
                       {},
                   },
-                });
+                };
+
+                if (appContext.selectedFlow.toLowerCase() === 'refund') {
+                  _x[appContext.connectorName].refundStatus =
+                    appContext.flows[appContext.selectedFlow].status.value ||
+                    {};
+                }
+
+                let x = JSON.stringify(_x);
                 updateInputJson(x);
                 setCodeSnippet(generateRustCode(appContext.connectorName, x));
                 setConnectorContext({ ...{} });
