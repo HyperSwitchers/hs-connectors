@@ -339,7 +339,6 @@ pub struct ${connectorName}RouterData<T> {
     pub amount: ${connectorAmount.unitType},
     pub router_data: T,
 }
-
 impl<T>
     TryFrom<(
         &types::api::CurrencyUnit,
@@ -474,28 +473,18 @@ function generateStatusMapping(statusType, inputJson) {
     let tryFromArray = [];
     Object.entries(inputJson).forEach(([ConnectorStatus, AttemptStatus]) => {
         statusArray.push(`${toPascalCase(ConnectorStatus)}`);
-        statusType == "AttemptStatus" ?
-            tryFromArray.push(`${toPascalCase(connectorName)}AuthorizeResponseStatus::${toPascalCase(ConnectorStatus)} => Self::${AttemptStatus}`) :
-            tryFromArray.push(`${toPascalCase(connectorName)}RefundResponseStatus::${toPascalCase(ConnectorStatus)} => Self::${AttemptStatus}`)
+        tryFromArray.push(`${toPascalCase(connectorName)}${statusType}::${toPascalCase(ConnectorStatus)} => Self::${AttemptStatus}`);
     });
     const header = shouldAddCamelCaseHeader(Object.values(inputJson).map(([fieldName]) => fieldName))
         ? '#[serde(rename_all = "camelCase")]'
         : '';
-    //     return `#[derive(Debug, Serialize, Deserialize)]
-    // ${header}
-    // pub enum ${connectorName}${statusType} {
-    //     ${statusArray.join(',\n\t')}
-    // }`
-    return statusType == "AttemptStatus" ? `
-impl From<${toPascalCase(connectorName)}AuthorizeResponseStatus> for enums::${statusType} {
-    fn from(item: ${toPascalCase(connectorName)}AuthorizeResponseStatus) -> Self {
-        match item {
-            ${tryFromArray.join(',\n\t\t\t')}
-        }
-    }
-}` : `
-impl From<${toPascalCase(connectorName)}RefundResponseStatus> for enums::${statusType} {
-    fn from(item: ${toPascalCase(connectorName)}RefundResponseStatus) -> Self {
+    return `#[derive(Debug, Serialize, Deserialize)]
+${header}
+pub enum ${connectorName}${statusType} {
+    ${statusArray.join(',\n\t')}
+}
+impl From<${toPascalCase(connectorName)}${statusType}> for enums::${statusType} {
+    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
         match item {
             ${tryFromArray.join(',\n\t\t\t')}
         }
@@ -517,9 +506,13 @@ ${structFields.join(',\n')}
     return rustStruct;
 }
 //(toSnakeCase(amount),  {value:, optional:, ..}, $parentName)
-function generateRustStructField(fieldName, fieldValue, parentName) {
+function generateRustStructField(fieldName, fieldValue, parentName, flow_type) {
     let fieldType = typeReplacement(fieldValue.value, fieldValue.type);
-
+    if (fieldValue.value == "$status" && flow_type.toLowerCase() == "refund") {
+        return `    pub ${toSnakeCase(fieldName)}: ${connectorName}RefundStatus,`;
+    } else if (fieldValue.value == "$status") {
+        return `    pub ${toSnakeCase(fieldName)}: ${connectorName}AttemptStatus,`;
+    }
     if (Array.isArray(fieldValue.type)) {
         const structName = toPascalCase(`${parentName}_${fieldName}`);
         fieldType = structName;
@@ -618,9 +611,9 @@ function addCasingHeader(fields, isEnum) {
 
 //(Name of the Struct, Array of [key, values] of fields inside that struct)
 //($parentName_structName, [[amount, {value: , optional:, ...}], [card, {value: {}, optional:, ...}] ])
-function generateRustStruct(name, fields) {
+function generateRustStruct(name, fields, flow_type) {
     let structFields = fields.map(([fieldName, fieldValue]) =>  //[amount, {value:, optional:, ..}]
-        generateRustStructField(toSnakeCase(fieldName), fieldValue, name)
+        generateRustStructField(toSnakeCase(fieldName), fieldValue, name, flow_type)
     );
 
     const header = addCasingHeader(fields.map(([fieldName]) => fieldName), false);
@@ -636,7 +629,7 @@ ${structFields.join('\n')}
     return rustStruct;
 }
 
-function generateNestedStructs(inputObject, parentName) {
+function generateNestedStructs(inputObject, parentName, flow_type) {
     const structs = [];
 
     function processObject(inputObj, parentName) { //( { paymentsRequest: {}, paymentsResponse: {} }, ConnectorName)
@@ -654,7 +647,7 @@ function generateNestedStructs(inputObject, parentName) {
 
                 // Generate unique field names for nested structs
                 const fullName = parentName ? `${parentName}_${structName.substring(8)}` : structName;
-                const structDefinition = generateRustStruct(toPascalCase(fullName), fields);
+                const structDefinition = generateRustStruct(toPascalCase(fullName), fields, flow_type);
                 if (!nestedStructsMap.has(toPascalCase(fullName))) {
                     nestedStructsMap.set(toPascalCase(fullName), structDefinition);
                     structs.push(structDefinition);
@@ -793,6 +786,7 @@ function generateNestedInitStructs(inputObject, parentName) {
     // console.log(`$$$$ ${JSON.stringify(nestedFieldsStruct)}`);
     // const structString = JSON.stringify(nestedFieldsStruct);
     const structString = removeQuotes(JSON.stringify(nestedFieldsStruct));
+    // console.log(`$$$$ ${structString}`);
     structs.push(`let ${toSnakeCase(parentName)} = ${toPascalCase(parentName)}${structString};`)
     // console.log(structs.join('\n'))
     return structs;
@@ -882,7 +876,7 @@ export const generateRustCode = (connector, inputJson) => {
             return;
         }
         let parentObjectName = `${connectorName}${flowType}`
-        const nestedStructs = generateNestedStructs(inputObject[connectorName]?.flows[flowType], `${toPascalCase(parentObjectName)}`);
+        const nestedStructs = generateNestedStructs(inputObject[connectorName]?.flows[flowType], `${toPascalCase(parentObjectName)}`, flowType);
         if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsRequest).length !== 0)) {
 
             nestedStructs2 = inputObject[connectorName]?.flows[flowType].paymentsRequest && generateNestedInitStructs(inputObject[connectorName]?.flows[flowType].paymentsRequest, `${toPascalCase(connectorName)}${flowType}Request`);
