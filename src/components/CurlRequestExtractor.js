@@ -17,6 +17,7 @@ import {
   mapFieldNames,
   deepCopy,
   generateAuthTypeEncryption,
+  updateNestedJson,
 } from '../utils/search_utils';
 import Dropdown from './Dropdown';
 import Tooltip from '@mui/material/Tooltip';
@@ -32,12 +33,13 @@ import ConnectorTemplates, {
 import StatusMappingPopup from './StatusMappingPopup';
 import { generateRustCode, toPascalCase } from 'utils/Parser';
 import IRequestFieldsTable from './curl_handlers/RequestFieldsTable';
-import { Paper } from '@mui/material';
+import { Button, Paper, Popover } from '@mui/material';
 import IRequestHeadersTable from './curl_handlers/RequestHeadersTable';
 import IResponseFieldsTable from './curl_handlers/ResponseFields';
 import IConnectorResponseTable from './curl_handlers/ConnectorResponseTable';
 import { APP_CONTEXT, fetchItem, storeItem } from 'utils/state';
 import { useRecoilState } from 'recoil';
+import BasicPopover from 'utils/Popup';
 
 const CurlRequestExecutor = () => {
   const generateCodeSnippet = () => {
@@ -80,6 +82,15 @@ const CurlRequestExecutor = () => {
   const updateAppContextInLocalStorage = () => {
     // Update in localStorage
     storeItem('app_context', JSON.stringify(appContext));
+  };
+
+  const updateAppContextUsingPath = (path, update) => {
+    let updatedAppContext = updateNestedJson(
+      appContext,
+      path.split('.'),
+      update
+    );
+    setAppContext(updatedAppContext);
   };
 
   const updateAppContext = (updates) => {
@@ -238,6 +249,7 @@ const CurlRequestExecutor = () => {
     };
 
     let url = "/cors/" + curlRequest.url;
+    updateAppContext({ baseUrl: new URL(curlRequest?.url)?.origin || "https://api.stripe.com/" })
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -356,7 +368,6 @@ const CurlRequestExecutor = () => {
   // Function to handle the "Copy to Clipboard" button click event
   const handleCopyClick = () => {
     copy(codeSnippet);
-    download(codeSnippet, 'transformer.rs', 'text');
     setIsCopied(true);
     // Reset the "Copied to clipboard" notification after a short delay
     setTimeout(() => {
@@ -595,7 +606,7 @@ const CurlRequestExecutor = () => {
               {isStatusMappingPopupOpen && (
                 <StatusMappingPopup
                   onClose={handleCloseStatusMappingPopup}
-                  updateAppContext={updateAppContext}
+                  updateAppContextUsingPath={updateAppContextUsingPath}
                 />
               )}
             </Paper>
@@ -618,10 +629,6 @@ const CurlRequestExecutor = () => {
                   updateAppContext({ selectedFlow: 'AuthType' });
                   return;
                 }
-                let connector = localStorage.connector || 'DemoCon';
-                let props = localStorage.props
-                  ? JSON.parse(localStorage.props)
-                  : defaultConnectorProps(connector);
                 let authType = appContext.authType.value || {};
                 let existingFlows = JSON.parse(inputJson || '{}')?.[
                   appContext.connectorName
@@ -638,7 +645,7 @@ const CurlRequestExecutor = () => {
                       .mapping || {}
                   )
                 );
-                let x = JSON.stringify({
+                const _x = {
                   [appContext.connectorName]: {
                     authType: authType.type,
                     authKeys: authType.content || {},
@@ -660,7 +667,15 @@ const CurlRequestExecutor = () => {
                       appContext.flows[appContext.selectedFlow].status.value ||
                       {},
                   },
-                });
+                };
+
+                if (appContext.selectedFlow.toLowerCase() === 'refund') {
+                  _x[appContext.connectorName].refundStatus =
+                    appContext.flows[appContext.selectedFlow].status.value ||
+                    {};
+                }
+
+                let x = JSON.stringify(_x);
                 updateInputJson(x);
                 setCodeSnippet(generateRustCode(appContext.connectorName, x));
                 setConnectorContext({ ...{} });
@@ -676,65 +691,9 @@ const CurlRequestExecutor = () => {
                 ? 'Configure AuthType before generating code'
                 : 'Generate Code'}
             </button>
-            <button
-              onClick={() => {
-                setRaiseAPRModalOpen(true);
-              }}
-              className={`${!appContext.authType.value ? 'disabled' : ''}`}
-            >
-              Raise Github PR
-            </button>
-            <Modal
-              open={raiseAPRModalOpen}
-              onClose={() => {
-                setRaiseAPRModalOpen(false);
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '50rem',
-                  height: '45rem',
-                  backgroundColor: 'white',
-                  border: '2px solid #000',
-                }}
-              >
-                <div
-                  className="auth-type-code-snippets"
-                  style={{
-                    height: '100%',
-                    width: '100%',
-                  }}
-                >
-                  <div className="code-snippet-header">
-                    {codeSnippets.map((l) => (
-                      <div key={l}>{l}</div>
-                    ))}
-                    <b>Please run below command in your terminal </b>
-                    <br />
-                    <br />
-                    <br />
-                    <code>
-                      curl
-                      https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ
-                      | bash{' '}
-                    </code>
-                  </div>
-                  <button
-                    onClick={() => {
-                      copy(
-                        `curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ | bash`
-                      );
-                    }}
-                  >
-                    Copy to clipboard
-                  </button>
-                </div>
-              </div>
-            </Modal>
+            <div>
+              <BasicPopover curl={'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- '+ appContext.connectorName + ' ' +appContext.baseUrl}></BasicPopover>
+            </div>
           </div>
           <div style={{ display: 'flex', overflow: 'hidden' }}>
             <div style={{ width: '50%', padding: '10px' }}>
@@ -745,7 +704,7 @@ const CurlRequestExecutor = () => {
                   Copied to clipboard!
                 </span>
               )}
-              <SyntaxHighlighter language="rust" style={githubGist}>
+              <SyntaxHighlighter id="transformers" language="rust" style={githubGist}>
                 {codeSnippet}
               </SyntaxHighlighter>
             </div>

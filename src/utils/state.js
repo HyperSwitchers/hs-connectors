@@ -16,6 +16,7 @@ export const APP_CONTEXT = atom({
   default: {
     connectorName: '',
     selectedFlow: 'AuthType',
+    baseUrl: '',
     authType: {
       value: null,
       mapping: null,
@@ -54,7 +55,7 @@ export const APP_CONTEXT = atom({
       },
       Authorize: {
         curlCommand: ``,
-        description: () => `<div><p><b>Authorizing Payment with Hyperswitch</b></p>
+        description: `<div><p><b>Authorizing Payment with Hyperswitch</b></p>
 
         <p>Understanding how to authorize a payment to the processor through Hyperswitch is essential for smooth and secure transactions. In the case of card payments, you'll need to identify the specific object that the processor accepts for authorization, such as the "Charge" object. This "Charge" object represents a payment made with a credit or debit card.</p>
         

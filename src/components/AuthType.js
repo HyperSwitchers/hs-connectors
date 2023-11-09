@@ -44,6 +44,9 @@ function AuthType({ updateAppContext = (v) => { } }) {
   };
   const appContext = useRecoilValue(APP_CONTEXT);
   const auth = appContext.authType.value;
+  const [totalKeys, setTotalKeys] = useState(
+    authTypes.indexOf(auth?.type || 'HeaderKey') + 1
+  );
   const [selectedAuthType, setSelectedAuthType] = useState(
     auth?.type || 'HeaderKey'
   );
@@ -76,18 +79,24 @@ function AuthType({ updateAppContext = (v) => { } }) {
     updateAppContext({ authType: updatedAuthType });
   };
   const onAuthTypeChange = (e, jsonEditor) => {
-    const authType = e.target.value;
-    setSelectedAuthType(authType);
-    const updatedContent = { ...types[authType], ...content };
-    Object.keys(updatedContent).map((k) => {
-      if (!Object.keys(types[authType]).includes(k)) {
-        delete updatedContent[k];
+    try {
+      const totalKeys = parseInt(e.target.value) - 1;
+      if (totalKeys < authTypes.length) {
+        const authType = authTypes.at(totalKeys);
+        const updatedContent = { ...types[authType], ...content };
+        Object.keys(updatedContent).map((k) => {
+          if (!Object.keys(types[authType]).includes(k)) {
+            delete updatedContent[k];
+          }
+        });
+        setTotalKeys(totalKeys);
+        setSelectedAuthType(authType);
+        setContent(updatedContent);
+        const updatedAuthType = deepCopy(appContext.authType);
+        updatedAuthType.value = { type: authType, content: updatedContent };
+        updateAppContext({ authType: updatedAuthType });
       }
-    });
-    setContent(updatedContent);
-    const updatedAuthType = deepCopy(appContext.authType);
-    updatedAuthType.value = { type: authType, content: updatedContent };
-    updateAppContext({ authType: updatedAuthType });
+    } catch (error) { }
   };
 
   const renderAuthKeyFields = (content) => {
@@ -148,12 +157,12 @@ function AuthType({ updateAppContext = (v) => { } }) {
 
       </div>
       <div className="auth-type-flow-type">
-        <div className="flow-type-header">Flow Type</div>
+        <div className="flow-type-header">Select number of identifiers</div>
         <Dropdown
-          options={authTypes}
-          selectedOption={selectedAuthType}
+          options={[1, 2, 3, 4]}
+          selectedOption={totalKeys}
           handleSelectChange={onAuthTypeChange}
-          type="Flow Type"
+          type="number of identifiers"
         />
       </div>
       <div className="auth-type-content">
