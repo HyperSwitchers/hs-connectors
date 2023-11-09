@@ -45,10 +45,10 @@ function IResponseFieldsTable({
           <TableHead>
             <TableRow>
               <TableCell>
-                <b>Field Name</b>
+                <b>Connector Field Name</b>
               </TableCell>
               <TableCell>
-                <b>Hyperswitch Field</b>
+                <b>Hyperswitch Field Name</b>
               </TableCell>
             </TableRow>
           </TableHead>

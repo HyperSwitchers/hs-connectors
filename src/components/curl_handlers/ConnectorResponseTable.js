@@ -171,13 +171,13 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
           <TableHead>
             <TableRow>
               <TableCell>
-                <b>Field Name</b>
+                <b>Connector Field Name</b>
               </TableCell>
               <TableCell>
                 <b>Value</b>
               </TableCell>
               <TableCell>
-                <b>Type</b>
+                <b>DataType</b>
               </TableCell>
               {fields?.filter((row) => {
                 let field = {};

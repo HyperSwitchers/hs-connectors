@@ -513,7 +513,7 @@ const CurlRequestExecutor = () => {
                   width: '45vw',
                 }}
               >
-                <h3>Request Header Fields:</h3>
+                <h3>Connector Request Fields - Headers</h3>
                 <IRequestHeadersTable
                   suggestions={{
                     ...Object.keys(
@@ -531,7 +531,7 @@ const CurlRequestExecutor = () => {
                   }}
                   updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>
-                <h3>Request Body Fields:</h3>
+                <h3>Connector Request Fields - Body</h3>
                 <div
                   style={{
                     height: '100%',
@@ -551,7 +551,7 @@ const CurlRequestExecutor = () => {
               id="responseFieldsLeft"
               className="response-fields-left"
             >
-              <h3>Response</h3>
+              <h3>Connector Response Fields - Data Type</h3>
               <IConnectorResponseTable
                 updateAppContext={updateAppContext}
               ></IConnectorResponseTable>
@@ -564,7 +564,7 @@ const CurlRequestExecutor = () => {
               className="response-fields-right"
             >
               <div className="responseButtonStatus">
-                <h3>Response Fields Mapping</h3>
+              <h3>Connector Response Fields - Mapping to HS</h3>
                 <button
                   id="responseStatusMapping"
                   className={`${!(
