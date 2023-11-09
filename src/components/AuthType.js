@@ -157,7 +157,7 @@ function AuthType({ updateAppContext = (v) => { } }) {
 
       </div>
       <div className="auth-type-flow-type">
-        <div className="flow-type-header">Select number of identifiers</div>
+        <div className="flow-type-header">Identifiers in Auth Header</div>
         <Dropdown
           options={[1, 2, 3, 4]}
           selectedOption={totalKeys}
@@ -184,7 +184,6 @@ function AuthType({ updateAppContext = (v) => { } }) {
             <div
               className="clear button"
               onClick={() => {
-                Object.keys(types).map((type) => { });
                 setContent(types[selectedAuthType]);
                 const updatedAuthType = deepCopy(appContext.authType);
                 updatedAuthType.value = {
