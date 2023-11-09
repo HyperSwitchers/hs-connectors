@@ -7,6 +7,8 @@ import { APP_CONTEXT } from 'utils/state';
 import { codeSnippets } from 'utils/constants';
 import { useRecoilValue } from 'recoil';
 import { deepCopy } from 'utils/search_utils';
+import Tooltip from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/Info';
 
 function AuthType({ updateAppContext = (v) => {} }) {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
@@ -91,11 +93,23 @@ function AuthType({ updateAppContext = (v) => {} }) {
   const renderAuthKeyFields = (content) => {
     return Object.keys(content).map((key) => (
       <React.Fragment key={key}>
-        <div className="auth-key-field">
+        <div
+          className="auth-key-field"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
+        >
           <div className="auth-key-field-value">{key}</div>
-          <div className="auth-key-field-info">
-            {typesInfo[selectedAuthType][key]}
-          </div>
+          <Tooltip title={typesInfo[selectedAuthType][key]} placement="right">
+            <InfoIcon
+              style={{
+                height: '15px',
+                width: '15px',
+              }}
+            />
+          </Tooltip>
         </div>
         <input
           id={`${key}-input`}
@@ -142,7 +156,13 @@ function AuthType({ updateAppContext = (v) => {} }) {
         />
       </div>
       <div className="auth-type-content">
-        <div className="auth-type-header-map">
+        <div
+          className="auth-type-header-map"
+          style={{
+            width: '45%',
+            minWidth: 'max-content',
+          }}
+        >
           <div className="header">
             <div className="heading">Authorization Header Mapping</div>
             <div className="subheading">
@@ -174,7 +194,7 @@ function AuthType({ updateAppContext = (v) => {} }) {
             </div>
           </div>
         </div>
-        <div className="auth-type-code-snippets">
+        {/* <div className="auth-type-code-snippets">
           <div className="code-snippet-header">
             {codeSnippets.map((l) => (
               <div
@@ -190,7 +210,7 @@ function AuthType({ updateAppContext = (v) => {} }) {
             <div className="copy-to-clipboard">...</div>
           </div>
           <div className="viewer">{}</div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

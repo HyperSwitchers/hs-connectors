@@ -6,6 +6,8 @@ import $ from 'jquery';
 import jsonpath from 'jsonpath';
 import '../styles.css';
 import '../styles/styles.sass';
+import { codeSnippets } from 'utils/constants';
+import Modal from '@mui/material/Modal';
 import {
   authTypesMapping,
   download,
@@ -67,6 +69,7 @@ const CurlRequestExecutor = () => {
   const [loading, setLoading] = useState(false);
   const [inputJson, setInputJson] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [raiseAPRModalOpen, setRaiseAPRModalOpen] = useState(false);
   const [selectedPaymentMethodOption, setSelectedPaymentMethodOption] =
     useState('');
   const [selectedCurrencyUnitOption, setSelectedCurrencyUnitOption] =
@@ -365,9 +368,22 @@ const CurlRequestExecutor = () => {
   };
   return (
     <div>
-      <div className="dropdown-wrapper hs-headers">
+      <div
+        className="dropdown-wrapper hs-headers"
+        style={{
+          marginLeft: '50px',
+          marginBottom: '10px',
+        }}
+      >
         <div style={{ paddingRight: '10px' }}>
-          <label htmlFor="dropdown">Connector: </label>
+          <label
+            htmlFor="dropdown"
+            style={{
+              fontSize: '15px',
+            }}
+          >
+            Connector:{' '}
+          </label>
           <Tooltip title="Text to be added.......">
             <InfoIcon
               style={{
@@ -379,6 +395,10 @@ const CurlRequestExecutor = () => {
 
           {/* <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} /> */}
           <input
+            style={{
+              height: '30px',
+              width: '250px',
+            }}
             className="conector"
             type="text"
             placeholder="Connector Name"
@@ -392,13 +412,15 @@ const CurlRequestExecutor = () => {
           selectedOption={appContext.selectedFlow}
           type="Flow Type"
         />
-        <Dropdown
-          options={paymentMethodOptions}
-          handleSelectChange={handlePaymentMethodOptionChange}
-          selectedOption={selectedPaymentMethodOption}
-          type="Payment Method"
-        />
-        {appContext.selectedFlow === 'AuthType' ? (
+        {appContext.selectedFlow === 'Authorize' ? (
+          <Dropdown
+            options={paymentMethodOptions}
+            handleSelectChange={handlePaymentMethodOptionChange}
+            selectedOption={selectedPaymentMethodOption}
+            type="Payment Method"
+          />
+        ) : null}
+        {/*} {appContext.selectedFlow === 'AuthType' ? (
           <React.Fragment>
             <Dropdown
               options={CurrencyUnit}
@@ -423,7 +445,7 @@ const CurlRequestExecutor = () => {
           >
             Fork Hyperswitch
           </a>
-        </button>
+        </button> */}
       </div>
       {appContext.selectedFlow === 'AuthType' ? (
         <AuthType updateAppContext={updateAppContext}></AuthType>
@@ -472,6 +494,11 @@ const CurlRequestExecutor = () => {
                 }}
               >
                 <h3>Request Header Fields:</h3>
+                <p>
+                  Lorem Ipsum is simply dummy text of the printing and
+                  typesetting industry. Lorem Ipsum has been the industry's
+                  standard dummy text ever since the 1500s, when an unknown
+                </p>
                 <IRequestHeadersTable
                   suggestions={{
                     ...Object.keys(
@@ -490,6 +517,11 @@ const CurlRequestExecutor = () => {
                   updateAppContext={updateAppContext}
                 ></IRequestHeadersTable>
                 <h3>Request Body Fields:</h3>
+                <p>
+                  Lorem Ipsum is simply dummy text of the printing and
+                  typesetting industry. Lorem Ipsum has been the industry's
+                  standard dummy text ever since the 1500s, when an unknown
+                </p>
                 <div
                   style={{
                     height: '100%',
@@ -567,7 +599,15 @@ const CurlRequestExecutor = () => {
               )}
             </Paper>
           </div>
-          <div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              gap: '10px',
+            }}
+          >
             <button
               id="generate-code"
               className={`${!appContext.authType.value ? 'disabled' : ''}`}
@@ -635,6 +675,86 @@ const CurlRequestExecutor = () => {
                 ? 'Configure AuthType before generating code'
                 : 'Generate Code'}
             </button>
+            <button
+              onClick={() => {
+                setRaiseAPRModalOpen(true);
+              }}
+              className={`${!appContext.authType.value ? 'disabled' : ''}`}
+            >
+              Raise a github PR button
+            </button>
+            <Modal
+              open={raiseAPRModalOpen}
+              onClose={() => {
+                setRaiseAPRModalOpen(false);
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '50rem',
+                  height: '45rem',
+                  backgroundColor: 'white',
+                  border: '2px solid #000',
+                }}
+              >
+                <div
+                  className="auth-type-code-snippets"
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                  }}
+                >
+                  <div className="code-snippet-header">
+                    {codeSnippets.map((l) => (
+                      <div key={l}>{l}</div>
+                    ))}
+                    <div
+                      className="copy-to-clipboard"
+                      id="copyText"
+                    >{`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+          "source": {
+            "type": "card",
+            "number": "4242424242424242",
+            "expiry_month": 1,
+            "expiry_year": 30,
+            "name": "John Smith",
+            "cvv": "100"
+          },
+          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+          "amount": 1040,
+          "currency": "GBP",
+          "reference": "123lala",
+          "capture": false
+        }'`}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      copy(`curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+          "source": {
+            "type": "card",
+            "number": "4242424242424242",
+            "expiry_month": 1,
+            "expiry_year": 30,
+            "name": "John Smith",
+            "cvv": "100"
+          },
+          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+          "amount": 1040,
+          "currency": "GBP",
+          "reference": "123lala",
+          "capture": false
+        }'`);
+                    }}
+                  >
+                    Copy to clipboard
+                  </button>
+                </div>
+              </div>
+            </Modal>
           </div>
           <div style={{ display: 'flex', overflow: 'hidden' }}>
             <div style={{ width: '50%', padding: '10px' }}>
