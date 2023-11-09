@@ -398,14 +398,14 @@ const CurlRequestExecutor = () => {
           >
             Connector:{' '}
           </label>
-          <Tooltip title="Text to be added.......">
+          {/* <Tooltip title="Text to be added.......">
             <InfoIcon
               style={{
                 height: '15px',
                 width: '15px',
               }}
             />
-          </Tooltip>
+          </Tooltip> */}
 
           {/* <input className='conector' type="text" placeholder="Connector Name" style={{padding: '5px'}} onChange={(e) => { localStorage.props = JSON.stringify(defaultConnectorProps(e.target.value)); }} /> */}
           <input
@@ -415,7 +415,7 @@ const CurlRequestExecutor = () => {
             }}
             className="conector"
             type="text"
-            placeholder="Connector Name"
+            placeholder="Enter Connector Name"
             onChange={handleConnectorNameChange}
             defaultValue={appContext.connectorName}
           />
