@@ -19,6 +19,7 @@ import {
   deepCopy,
   flattenObject,
   typesList,
+  updateNestedJson,
 } from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 import { useRecoilValue } from 'recoil';
@@ -27,29 +28,29 @@ import { APP_CONTEXT } from 'utils/state';
 function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
   const appContext = useRecoilValue(APP_CONTEXT);
   const [fields, setFields] = useState([]);
-  const [mapping, setMapping] = useState({});
   const [contextMenu, setContextMenu] = React.useState(null);
   const [contextMenuRequestor, setContextMenuRequestor] = useState(null);
   const [selectedFields, setSelectedFields] = useState([]);
   const [variantRequestor, setVariantRequestor] = useState(null);
-  const [variants, setVariants] = useState({});
 
   useEffect(() => {
     const connectorResponse = deepCopy(
       appContext.flows[appContext.selectedFlow].responseFields.value || {}
     );
-    const mapping = deepCopy(
-      appContext.flows[appContext.selectedFlow].responseFields.mapping || {}
-    );
     setFields(flattenObject(connectorResponse));
-    setMapping(mapping);
   }, [appContext.flows[appContext.selectedFlow].responseFields]);
 
-  function updateConnectorResponse() {
-    let updated = { ...mapping };
-    setMapping(updated);
+  function updateConnectorResponse(row, update) {
+    let updatedMapping = deepCopy(
+      appContext.flows[appContext.selectedFlow].responseFields.mapping
+    );
+    const fields = row.split('.');
+    const keys = fields.flatMap((f) => [f, 'value']);
+    keys.pop();
+    updatedMapping = updateNestedJson(updatedMapping, keys, update);
     const updatedFlows = deepCopy(appContext.flows);
-    updatedFlows[appContext.selectedFlow].responseFields.mapping = updated;
+    updatedFlows[appContext.selectedFlow].responseFields.mapping =
+      updatedMapping;
     updateAppContext({ flows: updatedFlows });
   }
 
@@ -97,54 +98,66 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
     if (input instanceof HTMLInputElement) {
-      let updatedVariants = { ...variants };
-      let updatedMapping = { ...mapping };
-      const newVariants = [mapping[field].value].concat(
-        input?.value
-          ?.split(',')
-          ?.map((v) => v?.trim())
-          .filter((f) => f !== mapping[field].value)
-      );
-      if (!updatedVariants[field]) {
-        updatedVariants[field] = [];
+      let row = {};
+      try {
+        row =
+          jsonpath.query(
+            appContext.flows[appContext.selectedFlow].responseFields.mapping,
+            '$.' + field.replaceAll('.', '.value.').replaceAll('-', '')
+          )[0] || {};
+      } catch (error) {
+        console.error('jsonpath query failed', error);
+        return;
       }
-      const filteredVariants = newVariants.filter(
-        (v) => v?.length > 0 && !updatedVariants[field].includes(v)
-      );
-      updatedVariants[field] = updatedVariants[field].concat(filteredVariants);
-      updatedMapping[field].value = updatedVariants[field];
-      setMapping(updatedMapping);
-      setVariantRequestor(null);
-      setVariants(updatedVariants);
-      const updatedFlows = deepCopy(appContext.flows);
-      updatedFlows[appContext.selectedFlow].responseFields.mapping =
-        updatedMapping;
-      updateAppContext({ flows: updatedFlows });
+      if (Array.isArray(row.value)) {
+        let updatedMapping = {
+          ...appContext.flows[appContext.selectedFlow].responseFields.mapping,
+        };
+        const newVariants = row.value.concat(
+          input?.value
+            ?.split(',')
+            ?.map((v) => v?.trim())
+            .filter((f) => !row.value.includes(f))
+        );
+        const fields = field.split('.');
+        const keys = fields.flatMap((f) => [f, 'value']);
+        updatedMapping = updateNestedJson(updatedMapping, keys, newVariants);
+        setVariantRequestor(null);
+        const updatedFlows = deepCopy(appContext.flows);
+        updatedFlows[appContext.selectedFlow].responseFields.mapping =
+          updatedMapping;
+        updateAppContext({ flows: updatedFlows });
+      }
     }
   };
 
   const handleVariantDeletion = (field, variant) => {
-    let updatedVariants = deepCopy(variants);
-    let updatedMapping = { ...mapping };
-    const index = updatedVariants[field].indexOf(variant);
-    if (index > -1) {
-      updatedVariants[field].splice(index, 1);
-      if (updatedVariants[field].length === 0) {
-        delete updatedVariants[field];
-        updatedMapping[field] = addFieldsToNodes(
-          deepCopy(
-            appContext.flows[appContext.selectedFlow].responseFields.value || {}
-          )
-        )[field];
-      } else {
-        updatedMapping[field].value = updatedVariants[field];
+    let updatedMapping = deepCopy(
+      appContext.flows[appContext.selectedFlow].responseFields.mapping
+    );
+    let row = {};
+    try {
+      row =
+        jsonpath.query(
+          updatedMapping,
+          '$.' + field.replaceAll('.', '.value.').replaceAll('-', '')
+        )[0] || {};
+    } catch (error) {
+      console.error('jsonpath query failed', error);
+      return;
+    }
+    if (Array.isArray(row.value)) {
+      const index = row.value.indexOf(variant);
+      if (index > -1) {
+        row.value.splice(index, 1);
+        const fields = field.split('.');
+        const keys = fields.flatMap((f) => [f, 'value']);
+        updatedMapping = updateNestedJson(updatedMapping, keys, row.value);
+        const updatedFlows = deepCopy(appContext.flows);
+        updatedFlows[appContext.selectedFlow].responseFields.mapping =
+          updatedMapping;
+        updateAppContext({ flows: updatedFlows });
       }
-      setMapping(updatedMapping);
-      const updatedFlows = deepCopy(appContext.flows);
-      updatedFlows[appContext.selectedFlow].responseFields.mapping =
-        updatedMapping;
-      updateAppContext({ flows: updatedFlows });
-      setVariants(updatedVariants);
     }
   };
 
@@ -167,12 +180,18 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                 <b>Type</b>
               </TableCell>
               {fields?.filter((row) => {
-                const field =
-                  jsonpath.query(
-                    mapping,
-                    '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
-                  )[0] || {};
-
+                let field = {};
+                try {
+                  field =
+                    jsonpath.query(
+                      appContext.flows[appContext.selectedFlow].responseFields
+                        .mapping,
+                      '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
+                    )[0] || {};
+                } catch (error) {
+                  console.error('jsonpath query failed', error);
+                  return;
+                }
                 return field.type === 'enum';
               }).length > 0 ? (
                 <TableCell>
@@ -182,13 +201,19 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {' '}
             {fields?.map((row) => {
-              const field =
-                jsonpath.query(
-                  mapping,
-                  '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
-                )[0] || {};
+              let field = {};
+              try {
+                field =
+                  jsonpath.query(
+                    appContext.flows[appContext.selectedFlow].responseFields
+                      .mapping,
+                    '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
+                  )[0] || {};
+              } catch (error) {
+                console.error('jsonpath query failed', error);
+                return;
+              }
               return (
                 <React.Fragment key={row}>
                   <TableRow
@@ -209,52 +234,54 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                       <Autocomplete
                         defaultValue={field.type}
                         options={typesList}
-                        id={row + 'type'}
+                        key={`${row}-type-${appContext.selectedFlow}`}
                         sx={{ width: 120 }}
                         freeSolo={false}
                         onChange={(event, newValue) => {
-                          field.type = newValue;
-                          updateConnectorResponse();
+                          const updates = {
+                            ...field,
+                            type: newValue,
+                          };
+                          if (newValue === 'enum') {
+                            updates['value'] = [field.value].flat();
+                          }
+                          updateConnectorResponse(row, updates);
                         }}
                         renderInput={(params) => (
                           <TextField {...params} label="" variant="standard" />
                         )}
                       ></Autocomplete>
                     </TableCell>
-                    <TableCell>
-                      {field.type === 'enum' ? (
+                    {field.type === 'enum' && Array.isArray(field.value) ? (
+                      <TableCell>
                         <div className="response-enum-variants">
-                          {Object.keys(variants).includes(row) ? (
-                            <React.Fragment>
-                              {variants[row].map((variant) => (
+                          <React.Fragment>
+                            {field.value.map((variant) => (
+                              <div
+                                key={`${row}-type-${variant}-${appContext.selectedFlow}`}
+                                className="variant-wrap"
+                              >
+                                <div className="variant-name">{variant}</div>
                                 <div
-                                  key={`${row}-${variant}`}
-                                  className="variant-wrap"
+                                  className="variant-delete"
+                                  onClick={() =>
+                                    handleVariantDeletion(row, variant)
+                                  }
                                 >
-                                  <div className="variant-name">{variant}</div>
-                                  <div
-                                    className="variant-delete"
-                                    onClick={() =>
-                                      handleVariantDeletion(row, variant)
-                                    }
-                                  >
-                                    x
-                                  </div>
+                                  x
                                 </div>
-                              ))}
-                              {variantRequestor !== row && (
-                                <div
-                                  className="variant-add"
-                                  onClick={() => setVariantRequestor(row)}
-                                >
-                                  + Add more variants
-                                </div>
-                              )}
-                            </React.Fragment>
-                          ) : null}
-
-                          {!Object.keys(variants).includes(row) ||
-                          variantRequestor === row ? (
+                              </div>
+                            ))}
+                            {variantRequestor !== row && (
+                              <div
+                                className="variant-add"
+                                onClick={() => setVariantRequestor(row)}
+                              >
+                                + Add more variants
+                              </div>
+                            )}
+                          </React.Fragment>
+                          {variantRequestor === row ? (
                             <input
                               placeholder="Eg: INR,GBP,USD"
                               id={`variant-input-${row}`}
@@ -268,8 +295,8 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                             />
                           ) : null}
                         </div>
-                      ) : null}
-                    </TableCell>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                   <Menu
                     open={contextMenu !== null && contextMenuRequestor === row}

@@ -20,30 +20,9 @@ export const APP_CONTEXT = atom({
       value: null,
       mapping: null,
     },
-    curlCommand: `curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
-      "source": {
-        "type": "card",
-        "number": "4242424242424242",
-        "expiry_month": 1,
-        "expiry_year": 30,
-        "name": "John Smith",
-        "cvv": "100"
-      },
-      "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
-      "amount": 1040,
-      "currency": "GBP",
-      "reference": "123lala",
-      "capture": false
-    }'`,
-    curlRequest: {
-      url: '',
-      method: '',
-      headers: [],
-      data: {},
-    },
     flows: {
       AuthType: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         requestFields: {
           value: null,
@@ -74,8 +53,27 @@ export const APP_CONTEXT = atom({
         },
       },
       Authorize: {
-        curlCommand: null,
-        curlRequest: null,
+        curlCommand: `curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+          "source": {
+            "type": "card",
+            "number": "4242424242424242",
+            "expiry_month": 1,
+            "expiry_year": 30,
+            "name": "John Smith",
+            "cvv": "100"
+          },
+          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+          "amount": 1040,
+          "currency": "GBP",
+          "reference": "123lala",
+          "capture": false
+        }'`,
+        curlRequest: {
+          url: '',
+          method: '',
+          headers: [],
+          data: {},
+        },
         authType: {
           value: null,
           mapping: null,
@@ -109,7 +107,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Capture: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -144,7 +142,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Void: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -179,7 +177,7 @@ export const APP_CONTEXT = atom({
         },
       },
       Refund: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -214,7 +212,7 @@ export const APP_CONTEXT = atom({
         },
       },
       PSync: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
@@ -249,7 +247,7 @@ export const APP_CONTEXT = atom({
         },
       },
       RSync: {
-        curlCommand: null,
+        curlCommand: '',
         curlRequest: null,
         authType: {
           value: null,
