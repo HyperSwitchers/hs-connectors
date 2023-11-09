@@ -7,7 +7,7 @@ handlebars.registerHelper('contains', function (array, value, options) {
     }
 });
 export const ConnectorCommon = `
-mod transformers;
+pub mod transformers;
 
 use std::fmt::Debug;
 

@@ -28,18 +28,18 @@ function AuthType({ updateAppContext = (v) => { } }) {
     },
   };
   const typesInfo = {
-    HeaderKey: { api_key: 'API Key' },
-    BodyKey: { api_key: 'API Key', key1: 'Additional Key' },
+    HeaderKey: { api_key: 'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.' },
+    BodyKey: { api_key: 'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.', key1: 'API Key 1 is an additional key or authorization that you need to provide to the processor. It is an extra layer of security or identification required for specific transactions.' },
     SignatureKey: {
-      api_key: 'API Key',
-      key1: 'Additional Key',
-      api_secret: 'API secret for generating signatures',
+      api_key: 'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.',
+      key1: 'API Key 1 is an additional key or authorization that you need to provide to the processor. It is an extra layer of security or identification required for specific transactions.',
+      api_secret: 'The API Secret is provided by the processor and is used to generate a signature for authentication and security purposes. It helps verify the integrity of your requests and data.',
     },
     MultiAuthKey: {
-      api_key: 'API Key',
-      key1: 'Additional Key',
-      api_secret: 'API secret for generating signatures',
-      key2: 'Additional Key 2',
+      api_key: 'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.',
+      key1: 'API Key 1 is an additional key or authorization that you need to provide to the processor. It is an extra layer of security or identification required for specific transactions.',
+      api_secret: 'The API Secret is provided by the processor and is used to generate a signature for authentication and security purposes. It helps verify the integrity of your requests and data.',
+      key2: 'Similar to API Key 1, API Key 2 is another additional key or authorization that you need to provide to the processor. It may serve a unique purpose or role in the authorization process.',
     },
   };
   const appContext = useRecoilValue(APP_CONTEXT);
@@ -135,16 +135,16 @@ function AuthType({ updateAppContext = (v) => { } }) {
         Processor Authorization Mapping
       </div>
       <div className="auth-type-subheader">
-        When using Hyperswitch as your payment processor, it's important to understand the identifiers required for the Authorization Header. <br/> These identifiers are essential for secure and authenticated transactions. Each processor may have different requirements.
-        For example, the Noon processor requires three identifiers: BusinessIdentifier, ApplicationIdentifier, and ApplicationKey. <br/>These three identifiers will be internally mapped to (api_key, key1, and api_secret) on Hyperswitch's end.<br/>
+        When using Hyperswitch as your payment processor, it's important to understand the identifiers required for the Authorization Header. <br /> <br />These identifiers are essential for secure and authenticated transactions. Each processor may have different requirements.
+        For example, the Noon processor requires three identifiers: BusinessIdentifier, ApplicationIdentifier, and ApplicationKey. These three identifiers will be internally mapped to (api_key, key1, and api_secret) on Hyperswitch's end.<br /> <br />
         Please make sure you have the correct identifiers ready for your chosen processor to ensure smooth and secure payment processing through Hyperswitch.
-        Hyperswitch authorization keys:
+        {/* Hyperswitch authorization keys:
         <ol>
           <li><b>API Key:</b> This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.</li>
           <li><b>API Key 1:</b> API Key 1 is an additional key or authorization that you need to provide to the processor. It's an extra layer of security or identification required for specific transactions.</li>
           <li><b>API Key 2:</b> Similar to API Key 1, API Key 2 is another additional key or authorization that you need to provide to the processor. It may serve a unique purpose or role in the authorization process.</li>
           <li><b>API Secret:</b> The API Secret is provided by the processor and is used to generate a signature for authentication and security purposes. It helps verify the integrity of your requests and data.</li>
-        </ol>
+        </ol> */}
 
       </div>
       <div className="auth-type-flow-type">
