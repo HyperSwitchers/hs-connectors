@@ -76,7 +76,6 @@ const CurlRequestExecutor = () => {
     useState('');
   const [selectedCurrencyUnitTypeOption, setSelectedCurrencyUnitTypeOption] =
     useState('');
-  const [selectedStatusVariable, setSelectedStatusVariable] = useState(null);
 
   const updateAppContextInLocalStorage = () => {
     // Update in localStorage
@@ -116,12 +115,14 @@ const CurlRequestExecutor = () => {
    */
   useEffect(() => {
     if (
-      typeof selectedStatusVariable === 'string' &&
-      selectedStatusVariable.length > 0
+      typeof appContext.flows[appContext.selectedFlow].statusVariable ===
+        'string' &&
+      appContext.flows[appContext.selectedFlow].statusVariable.length > 0 &&
+      !appContext.flows[appContext.selectedFlow].status.value
     ) {
       handleStatusMappingButtonClick();
     }
-  }, [selectedStatusVariable]);
+  }, [appContext.flows[appContext.selectedFlow].statusVariable]);
 
   const updateCurlRequest = (request, flow = null) => {
     let ss = request
@@ -236,7 +237,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = '/cors/' + curlRequest.url;
+    let url = curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -296,17 +297,19 @@ const CurlRequestExecutor = () => {
   const [isStatusMappingPopupOpen, setStatusMappingPopupOpen] = useState(false);
   const handleStatusMappingButtonClick = () => {
     let statusFields = {};
-    if (typeof selectedStatusVariable === 'string') {
+    const statusVariable =
+      appContext.flows[appContext.selectedFlow].statusVariable;
+    if (typeof statusVariable === 'string') {
       let field = null;
       try {
         field =
           jsonpath.query(
             appContext.flows[appContext.selectedFlow].responseFields.mapping,
             '$.' +
-            selectedStatusVariable
-              // @ts-ignore
-              .replaceAll('.', '.value.')
-              .replaceAll('-', '')
+              statusVariable
+                // @ts-ignore
+                .replaceAll('.', '.value.')
+                .replaceAll('-', '')
           )[0] || {};
       } catch (error) {
         console.error('jsonpath query failed', error);
@@ -328,8 +331,8 @@ const CurlRequestExecutor = () => {
         typeof updatedFlows[appContext.selectedFlow].status.value === 'object'
       ) {
         updatedFlows[appContext.selectedFlow].status.value = {
-          ...updatedFlows[appContext.selectedFlow].status.value,
           ...statusFields,
+          ...updatedFlows[appContext.selectedFlow].status.value,
         };
       } else {
         updatedFlows[appContext.selectedFlow].status.value = statusFields;
@@ -457,7 +460,12 @@ const CurlRequestExecutor = () => {
                 <div className="loader"></div>
               </div>
             )}
-            <div dangerouslySetInnerHTML={{ __html: appContext.flows[appContext.selectedFlow]?.description || "" }}></div>
+            <div
+              dangerouslySetInnerHTML={{
+                __html:
+                  appContext.flows[appContext.selectedFlow]?.description || '',
+              }}
+            ></div>
             <div
               style={{
                 display: 'flex',
@@ -548,18 +556,23 @@ const CurlRequestExecutor = () => {
                 <h3>Response Fields Mapping</h3>
                 <button
                   id="responseStatusMapping"
-                  className={`${!(
-                      typeof selectedStatusVariable === 'string' &&
-                      selectedStatusVariable.length > 0
+                  className={`${
+                    !(
+                      typeof appContext.flows[appContext.selectedFlow]
+                        .statusVariable === 'string' &&
+                      appContext.flows[appContext.selectedFlow].statusVariable
+                        .length > 0
                     )
                       ? 'disabled'
                       : ''
-                    }`}
+                  }`}
                   onClick={handleStatusMappingButtonClick}
                 >
                   {!(
-                    typeof selectedStatusVariable === 'string' &&
-                    selectedStatusVariable.length > 0
+                    typeof appContext.flows[appContext.selectedFlow]
+                      .statusVariable === 'string' &&
+                    appContext.flows[appContext.selectedFlow].statusVariable
+                      .length > 0
                   )
                     ? 'Map Status to HyperSwitch field'
                     : 'Status Mapping'}
@@ -575,7 +588,6 @@ const CurlRequestExecutor = () => {
                     appContext.flows[appContext.selectedFlow]?.responseFields
                       ?.value
                   }
-                  setSelectedStatusVariable={setSelectedStatusVariable}
                   updateAppContext={updateAppContext}
                 ></IResponseFieldsTable>
               </div>
@@ -702,15 +714,21 @@ const CurlRequestExecutor = () => {
                     {codeSnippets.map((l) => (
                       <div key={l}>{l}</div>
                     ))}
-                    <b>Please run below command in your terminal  </b>
-                    <br/>
-                    <br/>
-                    <br/>
-                    <code>curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ | bash </code>
+                    <b>Please run below command in your terminal </b>
+                    <br />
+                    <br />
+                    <br />
+                    <code>
+                      curl
+                      https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ
+                      | bash{' '}
+                    </code>
                   </div>
                   <button
                     onClick={() => {
-                      copy(`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ | bash`);
+                      copy(
+                        `curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/raise_connector_pr.sh?token=GHSAT0AAAAAACHHDB3POVUZAGSXF2FNKAU6ZKMURMQ | bash`
+                      );
                     }}
                   >
                     Copy to clipboard

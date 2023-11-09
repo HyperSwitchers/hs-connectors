@@ -24,7 +24,6 @@ import { APP_CONTEXT } from 'utils/state';
 
 function IResponseFieldsTable({
   suggestions = {},
-  setSelectedStatusVariable = (v) => {},
   updateAppContext = (v) => {},
 }) {
   const defaultProps = {
@@ -110,10 +109,12 @@ function IResponseFieldsTable({
                           updatedFlows[
                             appContext.selectedFlow
                           ].hsResponseFields.mapping = updatedMapping;
-                          updateAppContext({ flows: updatedFlows });
                           if (newValue === '$status') {
-                            setSelectedStatusVariable(row);
+                            updatedFlows[
+                              appContext.selectedFlow
+                            ].statusVariable = row;
                           }
+                          updateAppContext({ flows: updatedFlows });
                         }}
                         renderInput={(params) => (
                           <TextField

@@ -90,7 +90,12 @@ export const synonymMapping = {
     phone_number: ['phone', 'contact_number', 'phone_number'],
     setup_future_usage: ['storePaymentMethod'],
     return_url: ['returnUrl', ''],
-    is_auto_capture: ['auto_capture', 'capture', 'submit_for_settlement', 'captured'],
+    is_auto_capture: [
+      'auto_capture',
+      'capture',
+      'submit_for_settlement',
+      'captured',
+    ],
   },
   Capture: {
     amount: ['amount', 'authorization_amount'],
@@ -193,6 +198,7 @@ export const deepJsonSwap = (json) => {
       const value = modifiedJson[m]?.value;
       if (shouldSwap && value) {
         modifiedJson[m].type = value;
+        modifiedJson[m].value = m.startsWith('$') ? m : '$' + m;
       }
       modifiedJson[m] = deepJsonSwap(modifiedJson[m]);
     });

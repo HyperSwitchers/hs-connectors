@@ -1,6 +1,6 @@
 // @ts-check
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
 import { APP_CONTEXT, storeItem } from 'utils/state';
@@ -17,6 +17,41 @@ const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
       2
     )
   );
+
+  /**
+   * Trigger - whenever selected flow or status mapping is updated
+   * Use - Update json input
+   */
+  useEffect(() => {
+    const updatedValue =
+      appContext.flows[appContext.selectedFlow].status.value || {};
+    setJsonInput(JSON.stringify(updatedValue, null, 2));
+  }, [
+    appContext.flows[appContext.selectedFlow].status,
+    appContext.selectedFlow,
+  ]);
+
+  const updateStatusMapping = (field, update) => {
+    try {
+      updateAppContext({
+        flows: {
+          ...appContext.flows,
+          [appContext.selectedFlow]: {
+            ...appContext.flows[appContext.selectedFlow],
+            status: {
+              ...appContext.flows[appContext.selectedFlow].status,
+              value: {
+                ...appContext.flows[appContext.selectedFlow].status.value,
+                [field]: update,
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Failed to update status mapping', error);
+    }
+  };
 
   const handleSubmit = () => {
     // Parse the edited JSON and submit it
@@ -44,6 +79,7 @@ const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
       appContext.selectedFlow
     ]?.filter((status) => status.toLowerCase().startsWith(value.toLowerCase()));
     renderSuggestions(field, filteredSuggestions);
+    updateStatusMapping(field, value);
   };
 
   const renderSuggestions = (field, suggestions) => {
@@ -66,6 +102,7 @@ const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
           suggestionContainer.innerHTML = '';
           updateJsonInput(field, suggestion);
           setShowSuggestions(null);
+          updateStatusMapping(field, suggestion);
         });
         suggestionContainer.appendChild(div);
       });
@@ -99,7 +136,11 @@ const StatusMappingPopup = ({ onClose, updateAppContext = (v) => {} }) => {
                         id={`input-${f}`}
                         className="material-input status-mapping-input"
                         type="text"
-                        onChangeCapture={(e) => handleKeyPress(f, e)}
+                        value={
+                          appContext.flows[appContext.selectedFlow].status
+                            .value[f]
+                        }
+                        onChange={(e) => handleKeyPress(f, e)}
                       />
                       <div
                         className="status-dropdown"

@@ -71,6 +71,7 @@ export const APP_CONTEXT = atom({
           headers: [],
           data: {},
         },
+        statusVariable: null,
         authType: {
           value: null,
           mapping: null,
@@ -106,6 +107,7 @@ export const APP_CONTEXT = atom({
       Capture: {
         curlCommand: '',
         curlRequest: null,
+        statusVariable: null,
         authType: {
           value: null,
           mapping: null,
@@ -141,6 +143,7 @@ export const APP_CONTEXT = atom({
       Void: {
         curlCommand: '',
         curlRequest: null,
+        statusVariable: null,
         authType: {
           value: null,
           mapping: null,
@@ -176,6 +179,7 @@ export const APP_CONTEXT = atom({
       Refund: {
         curlCommand: '',
         curlRequest: null,
+        statusVariable: null,
         authType: {
           value: null,
           mapping: null,
@@ -211,6 +215,7 @@ export const APP_CONTEXT = atom({
       PSync: {
         curlCommand: '',
         curlRequest: null,
+        statusVariable: null,
         authType: {
           value: null,
           mapping: null,
@@ -246,6 +251,7 @@ export const APP_CONTEXT = atom({
       RSync: {
         curlCommand: '',
         curlRequest: null,
+        statusVariable: null,
         authType: {
           value: null,
           mapping: null,
