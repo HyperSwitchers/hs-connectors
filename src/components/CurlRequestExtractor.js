@@ -116,7 +116,7 @@ const CurlRequestExecutor = () => {
   useEffect(() => {
     if (
       typeof appContext.flows[appContext.selectedFlow].statusVariable ===
-        'string' &&
+      'string' &&
       appContext.flows[appContext.selectedFlow].statusVariable.length > 0 &&
       !appContext.flows[appContext.selectedFlow].status.value
     ) {
@@ -237,7 +237,7 @@ const CurlRequestExecutor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = curlRequest.url;
+    let url = "/cors/" + curlRequest.url;
     let req_content = {
       type: requestOptions.method,
       url: url,
@@ -306,10 +306,10 @@ const CurlRequestExecutor = () => {
           jsonpath.query(
             appContext.flows[appContext.selectedFlow].responseFields.mapping,
             '$.' +
-              statusVariable
-                // @ts-ignore
-                .replaceAll('.', '.value.')
-                .replaceAll('-', '')
+            statusVariable
+              // @ts-ignore
+              .replaceAll('.', '.value.')
+              .replaceAll('-', '')
           )[0] || {};
       } catch (error) {
         console.error('jsonpath query failed', error);
@@ -556,8 +556,7 @@ const CurlRequestExecutor = () => {
                 <h3>Response Fields Mapping</h3>
                 <button
                   id="responseStatusMapping"
-                  className={`${
-                    !(
+                  className={`${!(
                       typeof appContext.flows[appContext.selectedFlow]
                         .statusVariable === 'string' &&
                       appContext.flows[appContext.selectedFlow].statusVariable
@@ -565,7 +564,7 @@ const CurlRequestExecutor = () => {
                     )
                       ? 'disabled'
                       : ''
-                  }`}
+                    }`}
                   onClick={handleStatusMappingButtonClick}
                 >
                   {!(
