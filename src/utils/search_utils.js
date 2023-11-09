@@ -78,7 +78,7 @@ export const synonymMapping = {
     phone_number: ['phone', 'contact_number', 'phone_number'],
     setup_future_usage: ['storePaymentMethod'],
     return_url: ['returnUrl', ''],
-    is_auto_capture: ['auto_capture', 'capture', 'submit_for_settlement'],
+    is_auto_capture: ['auto_capture', 'capture', 'submit_for_settlement', 'captured'],
   },
   Capture: {
     amount: ['amount', 'authorization_amount'],
@@ -91,7 +91,6 @@ export const synonymMapping = {
   Refund: {
     refund_amount: ['refund_amount', 'authorization_amount', "amount"],
     currency: ['currency', 'currency_code'],
-    refund_reason: ['reason']
   },
   PSync: {},
   RSync: {},

@@ -896,7 +896,7 @@ export const generateRustCode = (connector, inputJson) => {
         tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, inputObject[connectorName]?.flows[flowType].hsResponse));
 
         nestedStructs2 = [];
-        nestedStructs3 = [];
+        // nestedStructs3 = [];
 
         // printTemplateCode(nestedStructs2, nestedStructs3, connectorAuthCode, attemptStatusMapping);
     });
