@@ -15,12 +15,11 @@ import {
 import 'jsoneditor/dist/jsoneditor.css';
 import {
   deepCopy,
-  defaultSecretsInSynonyms,
   flattenObject,
   is_mapped_field,
-  typesList,
   updateNestedJson,
-} from 'utils/search_utils';
+} from 'utils/common';
+import { DEFAULT_SECRETS_IN_SYNONYMS, TYPES_LIST } from 'utils/constants';
 import jsonpath from 'jsonpath';
 import { useRecoilValue } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
@@ -38,6 +37,10 @@ function IRequestFieldsTable({
   const [fields, setFields] = useState([]);
   const [variantRequestor, setVariantRequestor] = useState(null);
 
+  /**
+   * Usecase - update the fields in connector response
+   * Trigger - whenever appContext is updated
+   */
   useEffect(() => {
     const requestFields = deepCopy(
       appContext.flows[appContext.selectedFlow].requestFields.value || {}
@@ -148,6 +151,12 @@ function IRequestFieldsTable({
                 <b>DateType</b>
               </TableCell>
               {fields?.filter((row) => {
+                if (
+                  !appContext.flows[appContext.selectedFlow]?.requestFields
+                    .mapping
+                ) {
+                  return false;
+                }
                 let field = {};
                 try {
                   field =
@@ -158,7 +167,7 @@ function IRequestFieldsTable({
                     )[0] || {};
                 } catch (error) {
                   console.error('jsonpath query failed', error);
-                  return;
+                  return false;
                 }
                 return field.type === 'enum';
               }).length > 0 ? (
@@ -173,6 +182,12 @@ function IRequestFieldsTable({
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
+              if (
+                !appContext.flows[appContext.selectedFlow]?.requestFields
+                  .mapping
+              ) {
+                return null;
+              }
               let field = {};
               try {
                 field =
@@ -183,7 +198,7 @@ function IRequestFieldsTable({
                   )[0] || {};
               } catch (error) {
                 console.error('jsonpath query failed', error);
-                return;
+                return null;
               }
               return (
                 <TableRow key={row}>
@@ -215,7 +230,7 @@ function IRequestFieldsTable({
                   <TableCell>
                     <Autocomplete
                       defaultValue={field.type}
-                      options={typesList}
+                      options={TYPES_LIST}
                       key={`${row}-type-${appContext.selectedFlow}`}
                       sx={{ width: 120 }}
                       freeSolo={false}
@@ -295,8 +310,8 @@ function IRequestFieldsTable({
                             ...field,
                             value: newValue,
                           };
-                          if (defaultSecretsInSynonyms.includes(newValue)) {
-                            updates.secret = true;
+                          if (DEFAULT_SECRETS_IN_SYNONYMS.includes(newValue)) {
+                            updates['secret'] = true;
                           }
                           updateRequestFields(row, updates);
                         }}

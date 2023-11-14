@@ -1,8 +1,9 @@
 // @ts-check
 
 import _ from 'lodash';
+import React from 'react';
 
-const synonymMapping = {
+const SYNONYM_MAPPING = {
   card_exp_month: ['expiry_month'],
   card_exp_year: ['expiry_year'],
   card_number: ['number'],
@@ -62,7 +63,7 @@ const FieldsAutocomplete = () => {
 
   const inputKey = 'expiry_year';
   const outputKey = JSON.stringify(
-    mapFieldNames(inputJson, synonymMapping),
+    mapFieldNames(inputJson, SYNONYM_MAPPING),
     null,
     4
   );

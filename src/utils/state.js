@@ -3,7 +3,10 @@
 import { atom, selector } from 'recoil';
 
 /// States required for code generation journey
+// - Connector name
+// - Loading status
 // - Selected flow
+// - Selected payment method option
 // - cURL Request
 // - AuthType mapping
 // - Request fields + mapping
@@ -14,9 +17,14 @@ import { atom, selector } from 'recoil';
 export const APP_CONTEXT = atom({
   key: 'context',
   default: {
-    connectorName: '',
-    selectedFlow: 'AuthType',
     baseUrl: '',
+    connectorName: 'DemoCon',
+    currencyUnit: 'Minor',
+    currencyUnitType: 'i64',
+    generatorInput: {},
+    loading: false,
+    selectedFlow: 'AuthType',
+    selectedPaymentMethodOption: '',
     authType: {
       value: null,
       mapping: null,
@@ -54,7 +62,21 @@ export const APP_CONTEXT = atom({
         },
       },
       Authorize: {
-        curlCommand: ``,
+        curlCommand: `curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+          "source": {
+            "type": "card",
+            "number": "4242424242424242",
+            "expiry_month": 1,
+            "expiry_year": 30,
+            "name": "John Smith",
+            "cvv": "100"
+          },
+          "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+          "amount": 1040,
+          "currency": "GBP",
+          "reference": "123lala",
+          "capture": false
+        }'`,
         description: `<div><p><b>Authorizing Payment with Hyperswitch</b></p>
 
         <p>Understanding how to authorize a payment to the processor through Hyperswitch is essential for smooth and secure transactions. In the case of card payments, you'll need to identify the specific object that the processor accepts for authorization, such as the "Charge" object. This "Charge" object represents a payment made with a credit or debit card.</p>
@@ -301,4 +323,14 @@ export const fetchItem = (key) => {
     console.error(`Failed to parse ${key} from localStorage`);
   }
   return value;
+};
+
+export const updateAppContextInLocalStorage = (appContext) => {
+  try {
+    const jsonStr = JSON.stringify(appContext);
+    storeItem('app_context', jsonStr);
+    console.info('Stored app_context in localStorage', jsonStr);
+  } catch (error) {
+    console.info('Failed to persist appContext in localStorage', error);
+  }
 };

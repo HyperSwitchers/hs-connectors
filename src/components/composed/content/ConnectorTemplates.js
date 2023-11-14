@@ -10,8 +10,9 @@ import {
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
-import { download } from 'utils/search_utils';
-import { storeItem } from 'utils/state';
+import { download } from 'utils/common';
+import { APP_CONTEXT, storeItem } from 'utils/state';
+import { useRecoilValue } from 'recoil';
 
 function toPascalCase(str) {
   return str
@@ -71,9 +72,7 @@ export const defaultConnectorProps = (connector) => {
         connector_name: connector,
         url_path: '',
         http_method: '',
-        enabled: [
-          'convert_router_amount',
-        ],
+        enabled: ['convert_router_amount'],
       },
       Void: {
         trait_name: 'api::Void',
@@ -134,10 +133,8 @@ export const defaultConnectorProps = (connector) => {
         flow_type: 'types::RefundExecuteType',
         struct_name: connectorPascalCase,
         connector_name: connector,
-        enabled: [
-          'convert_router_amount',
-        ],
-        refund_amount: true
+        enabled: ['convert_router_amount'],
+        refund_amount: true,
       },
       RSync: {
         trait_name: 'api::RSync',
@@ -151,8 +148,7 @@ export const defaultConnectorProps = (connector) => {
         flow_type: 'types::RefundSyncType',
         struct_name: connectorPascalCase,
         connector_name: connector,
-        enabled: [
-        ],
+        enabled: [],
       },
     },
   };
@@ -161,6 +157,10 @@ const ConnectorTemplate = ({
   context = {
     trait_name: 'api::PSync',
     data_type: 'types::PaymentsSyncData',
+    flow_type: 'types::PaymentsAuthorizeType',
+    request_type: 'PaymentRequest',
+    response_type: 'PaymentResponse',
+    router_data_type: 'RouterData',
     router_type: 'types::PaymentsSyncRouterData',
     response_data: 'types::PaymentsResponseData',
     struct_name: 'Shift4',
@@ -176,6 +176,7 @@ const ConnectorTemplate = ({
     hsResponse: undefined,
   },
 }) => {
+  const appContext = useRecoilValue(APP_CONTEXT);
   const [templateContent] = useState(ConnectorIntegration);
   const [generatedCode, setGeneratedCode] = useState('');
   const findCommonHeaders = (data) => {
@@ -193,9 +194,14 @@ const ConnectorTemplate = ({
   const build_auth_header_key = (data) => {
     if (data.includes('$base_64_encode')) {
       let fields = data.split('_colon_');
-      return 'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.' + fields[0].substr('$base_64_encode_'.length) + '.peek(), auth.' + fields[1] + '.peek()))';
-    }
-    else {
+      return (
+        'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.' +
+        fields[0].substr('$base_64_encode_'.length) +
+        '.peek(), auth.' +
+        fields[1] +
+        '.peek()))'
+      );
+    } else {
       return 'auth.' + data.substr(1) + '.expose()';
     }
   };
@@ -288,15 +294,11 @@ const ConnectorTemplate = ({
 
   return (
     <div>
-      <h3>Connectors.rs </h3>
+      <h3>{appContext.connectorName}.rs</h3>
       <div data-testid="generated-code">
         <button onClick={handleCopyClick}>Copy to Clipboard</button>
-        {isCopied && (
-          <span style={{ marginLeft: '10px', color: 'green' }}>
-            Copied to clipboard!
-          </span>
-        )}
-        <SyntaxHighlighter id="connectors"  language="rust" style={githubGist}>
+        {isCopied && <span>Copied to clipboard!</span>}
+        <SyntaxHighlighter id="connectors" language="rust" style={githubGist}>
           {generatedCode}
         </SyntaxHighlighter>
       </div>

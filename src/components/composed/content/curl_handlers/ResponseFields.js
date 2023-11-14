@@ -17,7 +17,7 @@ import {
   flattenObject,
   is_mapped_field,
   updateNestedJson,
-} from 'utils/search_utils';
+} from 'utils/common';
 import jsonpath from 'jsonpath';
 import { useRecoilValue } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
@@ -33,11 +33,17 @@ function IResponseFieldsTable({
 
   const appContext = useRecoilValue(APP_CONTEXT);
   const [fields, setFields] = useState([]);
+
+  /**
+   * Usecase - update the fields in connector response
+   * Trigger - whenever appContext is updated
+   */
   useEffect(() => {
     const hsResponse =
       appContext.flows[appContext.selectedFlow].hsResponseFields.value;
     setFields(flattenObject(hsResponse));
-  }, [appContext.flows[appContext.selectedFlow].hsResponseFields.value]);
+  }, [appContext.flows]);
+
   return (
     <div className="editor">
       <TableContainer component={Paper} sx={{ overflow: 'scroll' }}>
@@ -54,6 +60,12 @@ function IResponseFieldsTable({
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
+              if (
+                !appContext.flows[appContext.selectedFlow]?.hsResponseFields
+                  .mapping
+              ) {
+                return null;
+              }
               let field = {};
               try {
                 field =
@@ -64,7 +76,7 @@ function IResponseFieldsTable({
                   )[0] || {};
               } catch (error) {
                 console.error('jsonpath query failed', error);
-                return;
+                return null;
               }
               return (
                 <TableRow key={row}>

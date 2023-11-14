@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import 'jsoneditor/dist/jsoneditor.css';
-import { deepCopy, flattenObject, mapFieldNames } from 'utils/search_utils';
+import { deepCopy, flattenObject } from 'utils/common';
 import jsonpath from 'jsonpath';
 import { useRecoilValue } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
@@ -27,12 +27,18 @@ function IRequestHeadersTable({
     getOptionLabel: (option) => option,
   };
   const [fields, setFields] = useState([]);
+
+  /**
+   * Usecase - update the fields in connector response
+   * Trigger - whenever appContext is updated
+   */
   useEffect(() => {
     const requestHeaders =
       appContext.flows[appContext.selectedFlow]?.requestHeaderFields?.value ||
       {};
     setFields(flattenObject(requestHeaders));
-  }, [appContext]);
+  }, [appContext.flows]);
+
   return (
     <div className="editor">
       <TableContainer
@@ -52,13 +58,19 @@ function IRequestHeadersTable({
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
+              if (
+                !appContext.flows[appContext.selectedFlow]?.requestHeaderFields
+                  .mapping
+              ) {
+                return;
+              }
               let field =
-                appContext.flows[appContext.selectedFlow]?.requestHeaderFields
-                  ?.mapping[row] || {};
+                appContext.flows[appContext.selectedFlow].requestHeaderFields
+                  .mapping[row] || {};
               try {
                 field = jsonpath.query(
-                  appContext.flows[appContext.selectedFlow]?.requestHeaderFields
-                    ?.mapping,
+                  appContext.flows[appContext.selectedFlow].requestHeaderFields
+                    .mapping,
                   `$.` + row
                 )[0];
               } catch (e) {}

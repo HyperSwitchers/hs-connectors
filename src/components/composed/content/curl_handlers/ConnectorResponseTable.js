@@ -1,3 +1,5 @@
+// @ts-check
+
 import React, { useEffect, useState } from 'react';
 import {
   Menu,
@@ -12,17 +14,13 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
-
 import 'jsoneditor/dist/jsoneditor.css';
-import {
-  addFieldsToNodes,
-  deepCopy,
-  flattenObject,
-  typesList,
-  updateNestedJson,
-} from 'utils/search_utils';
 import jsonpath from 'jsonpath';
 import { useRecoilValue } from 'recoil';
+
+// userdef utils
+import { deepCopy, flattenObject, updateNestedJson } from 'utils/common';
+import { TYPES_LIST } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 
 function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
@@ -33,12 +31,16 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
   const [selectedFields, setSelectedFields] = useState([]);
   const [variantRequestor, setVariantRequestor] = useState(null);
 
+  /**
+   * Usecase - update the fields in connector response
+   * Trigger - whenever appContext is updated
+   */
   useEffect(() => {
     const connectorResponse = deepCopy(
       appContext.flows[appContext.selectedFlow].responseFields.value || {}
     );
     setFields(flattenObject(connectorResponse));
-  }, [appContext.flows[appContext.selectedFlow].responseFields]);
+  }, [appContext.flows]);
 
   function updateConnectorResponse(row, update) {
     let updatedMapping = deepCopy(
@@ -180,6 +182,12 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                 <b>DataType</b>
               </TableCell>
               {fields?.filter((row) => {
+                if (
+                  !appContext.flows[appContext.selectedFlow]?.responseFields
+                    .mapping
+                ) {
+                  return false;
+                }
                 let field = {};
                 try {
                   field =
@@ -190,7 +198,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                     )[0] || {};
                 } catch (error) {
                   console.error('jsonpath query failed', error);
-                  return;
+                  return false;
                 }
                 return field.type === 'enum';
               }).length > 0 ? (
@@ -212,7 +220,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                   )[0] || {};
               } catch (error) {
                 console.error('jsonpath query failed', error);
-                return;
+                return null;
               }
               return (
                 <React.Fragment key={row}>
@@ -233,7 +241,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                     <TableCell>
                       <Autocomplete
                         defaultValue={field.type}
-                        options={typesList}
+                        options={TYPES_LIST}
                         key={`${row}-type-${appContext.selectedFlow}`}
                         sx={{ width: 120 }}
                         freeSolo={false}

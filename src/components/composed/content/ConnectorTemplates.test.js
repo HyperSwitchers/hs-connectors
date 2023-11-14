@@ -34,6 +34,7 @@ test('should render connector integration trait for Authorize', () => {
 it('should render connector integration trait for Payment sync', () => {
   render(
     <ConnectorTemplates
+      // @ts-ignore
       context={{
         trait_name: 'api::PSync',
         data_type: 'types::PaymentsSyncData',

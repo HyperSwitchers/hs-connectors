@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { HYPERSWITCH_STATUS_LIST } from '../utils/constants';
+import { HYPERSWITCH_STATUS_LIST } from '../../../utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 import { useRecoilValue } from 'recoil';
-import { deepCopy } from 'utils/search_utils';
+import { deepCopy } from 'utils/common';
 
 const StatusMappingPopup = ({
   onClose,
