@@ -6,10 +6,12 @@ import { Paper } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 
 // userdef utils
-import { APP_CONTEXT } from 'utils/state';
+import { APP_CONTEXT, storeItem } from 'utils/state';
 import { addFieldsToNodes, deepCopy, mapFieldNames } from 'utils/common';
 import { parse_curl } from 'curl-parser';
 import { getHeaders } from 'utils/common';
+import { defaultConnectorProps } from './ConnectorTemplates';
+import { toPascalCase } from 'utils/Parser';
 
 const CurlRequestEditor = ({
   updateAppContext = (u) => {},
@@ -85,11 +87,48 @@ const CurlRequestEditor = ({
       if (flow) {
         updateAppContext({ selectedFlow: flow });
       }
+      if (fetchRequest) {
+        saveFlowDetails(fetchRequest);
+      }
       updateAppContextUsingPath(`flows.${updatedFlow}`, updatedFlows);
     } catch (e) {
       console.error('Failed while updating cURL request', e);
       updateAppContextUsingPath(`flows.${updatedFlow}.curlCommand`, request);
     }
+  };
+
+  function convertToValidVariableName(str) {
+    return str.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
+  }
+
+  const saveFlowDetails = (curl) => {
+    let props = localStorage.props
+      ? JSON.parse(localStorage.props)
+      : defaultConnectorProps(localStorage.connector || 'DemoCon');
+    let flow = props.flows[appContext.selectedFlow];
+    if (flow) {
+      flow.url_path = new URL(curl.url).pathname;
+      flow.http_method = toPascalCase(curl.method);
+      let headers = getHeaders(curl.headers);
+      props.content_type = headers['Content-Type'] || headers['content-type'];
+      flow.headers = Object.keys(headers).map((key) =>
+        convertToValidVariableName(key)
+      );
+      // if request body is present then build request body
+      flow.enabled.push(
+        'get_headers',
+        'get_content_type',
+        'get_url',
+        'build_request',
+        'handle_response',
+        'get_error_response'
+      );
+      if (Object.keys(JSON.parse(curl.data.ascii)).length > 0) {
+        flow.enabled.push('get_request_body');
+      }
+      props.flows[appContext.selectedFlow] = flow;
+    }
+    storeItem('props', JSON.stringify(props));
   };
 
   const sendRequest = async () => {

@@ -65,10 +65,8 @@ const CodeGenerator = ({
             (f) =>
               f.toLowerCase() !== 'authtype' && f.toLowerCase() !== 'refund'
           ).map((f) => {
-            if (appContext.flows[f].status.value) {
-              generatorInput[appContext.connectorName].attemptStatus =
-                appContext.flows[f].status.value || {};
-            }
+            generatorInput[appContext.connectorName].attemptStatus =
+              appContext.flows[f].status.value || {};
           });
           if (appContext.selectedFlow.toLowerCase() === 'refund') {
             generatorInput[appContext.connectorName].refundStatus =

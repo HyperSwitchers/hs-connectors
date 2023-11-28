@@ -212,12 +212,17 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
             {fields?.map((row) => {
               let field = {};
               try {
-                field =
-                  jsonpath.query(
-                    appContext.flows[appContext.selectedFlow].responseFields
-                      .mapping,
-                    '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
-                  )[0] || {};
+                if (
+                  appContext.flows[appContext.selectedFlow].responseFields
+                    .mapping
+                ) {
+                  field =
+                    jsonpath.query(
+                      appContext.flows[appContext.selectedFlow].responseFields
+                        .mapping,
+                      '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
+                    )[0] || {};
+                }
               } catch (error) {
                 console.error('jsonpath query failed', error);
                 return null;

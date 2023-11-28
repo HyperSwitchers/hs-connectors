@@ -1,6 +1,6 @@
 // @ts-check
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import jsonpath from 'jsonpath';
 
@@ -28,6 +28,23 @@ const Content = ({
   updateAppContextUsingPath = (p, u) => {},
 }) => {
   const appContext = useRecoilValue(APP_CONTEXT);
+  const prevRef = useRef(appContext);
+  useEffect(() => {
+    if (
+      Object.keys(appContext.flows).filter(
+        (f) =>
+          prevRef.current.flows[f]?.statusVariable !==
+            appContext.flows[f]?.statusVariable &&
+          !(
+            appContext.flows[f]?.status.value ||
+            appContext.flows[f]?.status.mapping
+          )
+      ).length > 0
+    ) {
+      handleStatusMappingButtonClick();
+    }
+    prevRef.current = appContext;
+  }, [appContext.flows]);
 
   // Component specifc states
   const [isStatusMappingPopupOpen, setIsStatusMappingPopupOpen] =
