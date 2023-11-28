@@ -4,7 +4,12 @@ import { useRecoilValue } from 'recoil';
 // userdef utils
 import {} from '../../utils/common';
 import { APP_CONTEXT } from '../../utils/state';
-import { FLOW_OPTIONS, PAYMENT_METHOD_OPTIONS } from '../../utils/constants';
+import {
+  CURRENCY_UNIT,
+  CURRENCY_UNIT_TYPE,
+  FLOW_OPTIONS,
+  PAYMENT_METHOD_OPTIONS,
+} from '../../utils/constants';
 
 // userdef UI components
 import Dropdown from '../atomic/Dropdown';
@@ -29,6 +34,14 @@ const Header = ({
 
   const handlePaymentMethodOptionChange = (event) => {
     updateAppContext({ selectedPaymentMethodOption: event.target.value });
+  };
+
+  const handleCurrencyUnitOptionChange = (event) => {
+    updateAppContext({ currencyUnit: event?.target?.value || '' });
+  };
+
+  const handleCurrencyUnitTypeOptionChange = (event) => {
+    updateAppContext({ currencyUnitType: event?.target?.value || '' });
   };
 
   return (
@@ -57,23 +70,22 @@ const Header = ({
             selectedOption={appContext.selectedPaymentMethodOption}
             type="Payment Method"
           />
-        ) : null}
-        {/*} {appContext.selectedFlow === 'AuthType' ? (
+        ) : (
           <React.Fragment>
             <Dropdown
-              options={CurrencyUnit}
+              options={CURRENCY_UNIT}
               handleSelectChange={handleCurrencyUnitOptionChange}
-              selectedOption={selectedCurrencyUnitOption}
+              selectedOption={appContext.currencyUnit}
               type="Currency Unit"
             />
             <Dropdown
-              options={CurrencyUnitType}
+              options={CURRENCY_UNIT_TYPE}
               handleSelectChange={handleCurrencyUnitTypeOptionChange}
-              selectedOption={selectedCurrencyUnitTypeOption}
+              selectedOption={appContext.currencyUnitType}
               type="Currency Unit Type"
             />
           </React.Fragment>
-        ) : null}
+        )}
         <button>
           <a
             style={{ textDecoration: 'none', color: '#fff' }}
@@ -83,7 +95,7 @@ const Header = ({
           >
             Fork Hyperswitch
           </a>
-        </button> */}
+        </button>
       </div>
     </div>
   );

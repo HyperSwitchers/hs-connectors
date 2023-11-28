@@ -276,3 +276,7 @@ export const TYPES_MAPPING = {
   Email: [],
   enum: [],
 };
+
+export const CURRENCY_UNIT = ['Minor', 'Base'];
+
+export const CURRENCY_UNIT_TYPE = ['String', 'i64', 'f64'];
