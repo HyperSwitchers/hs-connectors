@@ -1,7 +1,7 @@
 // @ts-check
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import jsonpath from 'jsonpath';
 
 // lib UI components
@@ -23,11 +23,8 @@ import StatusMappingPopup from './content/StatusMappingPopup';
 import CodeGenerator from './content/CodeGenerator';
 import CodePreview from './content/CodePreview';
 
-const Content = ({
-  updateAppContext = (u) => {},
-  updateAppContextUsingPath = (p, u) => {},
-}) => {
-  const appContext = useRecoilValue(APP_CONTEXT);
+const Content = () => {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const prevRef = useRef(appContext);
   useEffect(() => {
     if (
@@ -82,19 +79,32 @@ const Content = ({
       } else {
         statusFields[field.value] = null;
       }
-      const updatedFlows = deepCopy(appContext.flows);
-      if (
-        typeof updatedFlows[appContext.selectedFlow].status.value === 'object'
-      ) {
-        updatedFlows[appContext.selectedFlow].status.value = {
-          ...statusFields,
-          ...updatedFlows[appContext.selectedFlow].status.value,
-        };
-      } else {
-        updatedFlows[appContext.selectedFlow].status.value = statusFields;
-      }
       setIsStatusMappingPopupOpen(true);
-      updateAppContext({ flows: updatedFlows });
+      setTimeout(
+        () =>
+          setAppContext({
+            ...appContext,
+            flows: {
+              ...appContext.flows,
+              [appContext.selectedFlow]: {
+                ...appContext.flows[appContext.selectedFlow],
+                status: {
+                  ...appContext.flows[appContext.selectedFlow].status,
+                  value:
+                    typeof appContext.flows[appContext.selectedFlow].status
+                      .value === 'object'
+                      ? {
+                          ...statusFields,
+                          ...appContext.flows[appContext.selectedFlow].status
+                            .value,
+                        }
+                      : statusFields,
+                },
+              },
+            },
+          }),
+        0
+      );
     }
   };
 
@@ -110,10 +120,7 @@ const Content = ({
           ></div>
         ) : null}
         {/* cURL editor */}
-        <CurlRequestEditor
-          updateAppContext={updateAppContext}
-          updateAppContextUsingPath={updateAppContextUsingPath}
-        />
+        <CurlRequestEditor />
         {/* Request fields */}
         <Paper elevation={0} className="request-body-section">
           {/* Request headers */}
@@ -136,15 +143,13 @@ const Content = ({
                   )
                 ),
               }}
-              updateAppContext={updateAppContext}
-            ></IRequestHeadersTable>
+            />
           </div>
           {/* Request Body */}
           <div className="request-body-mapping">
             <h3>Connector Request Fields - Body</h3>
             <IRequestFieldsTable
               suggestions={SYNONYM_MAPPING[appContext.selectedFlow]}
-              updateAppContext={updateAppContext}
             ></IRequestFieldsTable>
           </div>
         </Paper>
@@ -153,9 +158,7 @@ const Content = ({
           {/* Response type mapping */}
           <div className="response-body-type-mapping">
             <h3>Connector Response Fields - Data Type</h3>
-            <IConnectorResponseTable
-              updateAppContext={updateAppContext}
-            ></IConnectorResponseTable>
+            <IConnectorResponseTable></IConnectorResponseTable>
           </div>
           {/* Response fields mapping */}
           <div className="response-body-fields-mapping">
@@ -187,7 +190,6 @@ const Content = ({
               suggestions={
                 appContext.flows[appContext.selectedFlow]?.responseFields?.value
               }
-              updateAppContext={updateAppContext}
             ></IResponseFieldsTable>
           </div>
         </Paper>
@@ -195,19 +197,12 @@ const Content = ({
         {isStatusMappingPopupOpen && (
           <StatusMappingPopup
             onClose={() => setIsStatusMappingPopupOpen(false)}
-            updateAppContextUsingPath={updateAppContextUsingPath}
           />
         )}
         {/* Code generation */}
-        <CodeGenerator
-          updateAppContext={updateAppContext}
-          updateAppContextUsingPath={updateAppContextUsingPath}
-        />
+        <CodeGenerator />
         {/* Generated code preview */}
-        <CodePreview
-          updateAppContext={updateAppContext}
-          updateAppContextUsingPath={updateAppContextUsingPath}
-        />
+        <CodePreview />
       </div>
     );
   };
@@ -215,10 +210,7 @@ const Content = ({
   return (
     <div className="app-content">
       {appContext.selectedFlow === 'AuthType' ? (
-        <AuthType
-          updateAppContext={updateAppContext}
-          updateAppContextUsingPath={updateAppContextUsingPath}
-        />
+        <AuthType />
       ) : (
         renderMainContent(appContext)
       )}

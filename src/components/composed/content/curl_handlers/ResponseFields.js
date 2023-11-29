@@ -19,19 +19,16 @@ import {
   updateNestedJson,
 } from 'utils/common';
 import jsonpath from 'jsonpath';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
 
-function IResponseFieldsTable({
-  suggestions = {},
-  updateAppContext = (v) => {},
-}) {
+function IResponseFieldsTable({ suggestions = {} }) {
   const defaultProps = {
     options: flattenObject(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
   };
 
-  const appContext = useRecoilValue(APP_CONTEXT);
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [fields, setFields] = useState([]);
 
   /**
@@ -126,7 +123,7 @@ function IResponseFieldsTable({
                               appContext.selectedFlow
                             ].statusVariable = row;
                           }
-                          updateAppContext({ flows: updatedFlows });
+                          setAppContext({ ...appContext, flows: updatedFlows });
                         }}
                         renderInput={(params) => (
                           <TextField

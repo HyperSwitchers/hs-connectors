@@ -4,14 +4,14 @@ import React, { useEffect, useState } from 'react';
 import copy from 'copy-to-clipboard';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 
 // userdef utils
 import { APP_CONTEXT } from 'utils/state';
 import { generateRustCode } from 'utils/Parser';
 import ConnectorTemplates from './ConnectorTemplates';
 
-const CodePreview = ({ updateAppContext = (u) => {} }) => {
+const CodePreview = () => {
   const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
@@ -35,7 +35,7 @@ const CodePreview = ({ updateAppContext = (u) => {} }) => {
     // In a real scenario, you might generate the code dynamically based on some logic
   };
 
-  const appContext = useRecoilValue(APP_CONTEXT);
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   // Component specific states
   const [isCopied, setIsCopied] = useState(false);
@@ -57,7 +57,7 @@ const CodePreview = ({ updateAppContext = (u) => {} }) => {
         );
         if (codeSnippet !== rustCode) {
           setCodeSnippet(rustCode);
-          updateAppContext({ wasCodeUpdatedBeforeDownload: true });
+          setAppContext({ ...appContext, wasCodeUpdatedBeforeDownload: true });
         }
       }
     } catch (error) {
@@ -80,7 +80,7 @@ const CodePreview = ({ updateAppContext = (u) => {} }) => {
       <h3 id="generated-code-snippet">Generated Code Snippet</h3>
       <div className="connector-code">
         <div>
-          <ConnectorTemplates updateAppContext={updateAppContext} />
+          <ConnectorTemplates />
         </div>
       </div>
       <div className="transformers-code">

@@ -3,7 +3,7 @@
 import $ from 'jquery';
 import React, { useEffect, useRef } from 'react';
 import { Paper } from '@mui/material';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 
 // userdef utils
 import { APP_CONTEXT, storeItem } from 'utils/state';
@@ -13,11 +13,8 @@ import { getHeaders } from 'utils/common';
 import { defaultConnectorProps } from './ConnectorTemplates';
 import { toPascalCase } from 'utils/Parser';
 
-const CurlRequestEditor = ({
-  updateAppContext = (u) => {},
-  updateAppContextUsingPath = (p, u) => {},
-}) => {
-  const appContext = useRecoilValue(APP_CONTEXT);
+const CurlRequestEditor = () => {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const curlTextareaRef = useRef(null);
 
   // Component specific effects
@@ -40,7 +37,7 @@ const CurlRequestEditor = ({
       .replace(/\s*\\\s*/g, ' ')
       .replace(/\n/g, '')
       .replace(/--data-raw|--data-urlencode/g, '-d');
-    const updatedFlow = flow || appContext.selectedFlow;
+    const newFlow = flow || appContext.selectedFlow;
     try {
       const fetchRequest = parse_curl(ss);
       const requestFields = JSON.parse(fetchRequest?.data?.ascii || '{}');
@@ -54,46 +51,44 @@ const CurlRequestEditor = ({
       );
 
       // Update state
-      const updatedFlows = deepCopy(appContext.flows[appContext.selectedFlow]);
-      updatedFlows.curlCommand = request;
-      updatedFlows.curlRequest = fetchRequest;
-      if (!flow || !updatedFlows?.requestFields.value) {
-        updatedFlows.requestFields = {
-          value: requestFields,
-          mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
-        };
-      }
-      if (!flow || !updatedFlows?.requestHeaderFields.value) {
-        updatedFlows.requestHeaderFields = {
-          value: requestHeaderFields,
-          mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
-        };
-      }
+      const updatedFlow = deepCopy(appContext.flows[appContext.selectedFlow]);
+      updatedFlow.curlCommand = request;
+      updatedFlow.curlRequest = fetchRequest;
+      updatedFlow.requestFields = {
+        value: requestFields,
+        mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
+      };
+
+      updatedFlow.requestHeaderFields = {
+        value: requestHeaderFields,
+        mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
+      };
       if (
-        updatedFlows?.hsResponseFields.value &&
-        !updatedFlows?.hsResponseFields.mapping
+        updatedFlow?.hsResponseFields.value &&
+        !updatedFlow?.hsResponseFields.mapping
       ) {
-        updatedFlows.hsResponseFields = {
-          ...updatedFlows?.hsResponseFields,
+        updatedFlow.hsResponseFields = {
+          ...updatedFlow?.hsResponseFields,
           mapping: addFieldsToNodes(
             mapFieldNames({
-              ...updatedFlows?.hsResponseFields.value,
+              ...updatedFlow?.hsResponseFields.value,
             })
           ),
         };
       }
 
       // Updates
-      if (flow) {
-        updateAppContext({ selectedFlow: flow });
-      }
       if (fetchRequest) {
         saveFlowDetails(fetchRequest);
       }
-      updateAppContextUsingPath(`flows.${updatedFlow}`, updatedFlows);
+      const updatedFlows = deepCopy(appContext.flows);
+      updatedFlows[newFlow] = updatedFlow;
+      setAppContext({ ...appContext, flows: { ...updatedFlows } });
     } catch (e) {
       console.error('Failed while updating cURL request', e);
-      updateAppContextUsingPath(`flows.${updatedFlow}.curlCommand`, request);
+      const updatedFlows = deepCopy(appContext.flows);
+      updatedFlows[newFlow].curlCommand = request;
+      setAppContext({ ...appContext, flows: { ...updatedFlows } });
     }
   };
 
@@ -167,7 +162,7 @@ const CurlRequestEditor = ({
 
     $.ajax(url, req_content).always(() => {
       updates.loading = false;
-      updateAppContext(updates);
+      setAppContext({ ...appContext, ...updates });
     });
     let targetElement = document.getElementById('generate-code');
     targetElement.scrollIntoView({

@@ -3,14 +3,13 @@ import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import { download } from '../../utils/common';
 import { APP_CONTEXT } from 'utils/state';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 
 export default function BasicPopover({
-  curl = '',
-  updateAppContext = (u) => {},
+  curl = 'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh',
 }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const appContext = useRecoilValue(APP_CONTEXT);
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -25,7 +24,7 @@ export default function BasicPopover({
         `${appContext.connectorName.toLowerCase()}.rs`,
         'text'
       );
-      updateAppContext({ wasCodeUpdatedBeforeDownload: false });
+      setAppContext({ ...appContext, wasCodeUpdatedBeforeDownload: false });
     }
   };
 

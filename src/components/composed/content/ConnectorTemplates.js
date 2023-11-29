@@ -11,7 +11,7 @@ import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
 import { APP_CONTEXT, storeItem } from 'utils/state';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 
 function toPascalCase(str) {
   return str
@@ -152,8 +152,8 @@ export const defaultConnectorProps = (connector) => {
     },
   };
 };
-const ConnectorTemplate = ({ updateAppContext = (u) => {} }) => {
-  const appContext = useRecoilValue(APP_CONTEXT);
+const ConnectorTemplate = () => {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [generatedCode, setGeneratedCode] = useState('');
   const findCommonHeaders = (data) => {
     let maxHeaders = [];
@@ -267,7 +267,7 @@ const ConnectorTemplate = ({ updateAppContext = (u) => {} }) => {
         });
       if (renderedTemplate !== generatedCode) {
         setGeneratedCode(renderedTemplate);
-        updateAppContext({ wasCodeUpdatedBeforeDownload: true });
+        setAppContext({ ...appContext, wasCodeUpdatedBeforeDownload: true });
       }
     }
   }, [appContext.flows]);

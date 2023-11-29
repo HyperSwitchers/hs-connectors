@@ -14,14 +14,11 @@ import {
 import 'jsoneditor/dist/jsoneditor.css';
 import { deepCopy, flattenObject } from 'utils/common';
 import jsonpath from 'jsonpath';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
 
-function IRequestHeadersTable({
-  suggestions = {},
-  updateAppContext = (v) => {},
-}) {
-  const appContext = useRecoilValue(APP_CONTEXT);
+function IRequestHeadersTable({ suggestions = {} }) {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const defaultProps = {
     options: Object.keys(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
@@ -103,7 +100,7 @@ function IRequestHeadersTable({
                           updatedFlows[
                             appContext.selectedFlow
                           ].requestHeaderFields.value = updatedValue;
-                          updateAppContext({ flows: updatedFlows });
+                          setAppContext({ ...appContext, flows: updatedFlows });
                         }}
                         renderInput={(params) => (
                           <TextField

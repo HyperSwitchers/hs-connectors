@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 
 // userdef utils
 import {} from '../../utils/common';
@@ -14,34 +14,40 @@ import {
 // userdef UI components
 import Dropdown from '../atomic/Dropdown';
 
-const Header = ({
-  updateAppContext = (u) => {},
-  updateAppContextUsingPath = (p, u) => {},
-}) => {
-  const appContext = useRecoilValue(APP_CONTEXT);
+const Header = () => {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   const handleConnectorNameChange = (event) => {
     let connectorName = event.target.value;
-    updateAppContext({ connectorName });
+    setAppContext({ ...appContext, connectorName });
   };
 
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
     if (FLOW_OPTIONS.includes(flow)) {
-      updateAppContext({ selectedFlow: flow });
+      setAppContext({ ...appContext, selectedFlow: flow });
     }
   };
 
   const handlePaymentMethodOptionChange = (event) => {
-    updateAppContext({ selectedPaymentMethodOption: event.target.value });
+    setAppContext({
+      ...appContext,
+      selectedPaymentMethodOption: event.target.value,
+    });
   };
 
   const handleCurrencyUnitOptionChange = (event) => {
-    updateAppContext({ currencyUnit: event?.target?.value || '' });
+    setAppContext({
+      ...appContext,
+      currencyUnit: event?.target?.value || '',
+    });
   };
 
   const handleCurrencyUnitTypeOptionChange = (event) => {
-    updateAppContext({ currencyUnitType: event?.target?.value || '' });
+    setAppContext({
+      ...appContext,
+      currencyUnitType: event?.target?.value || '',
+    });
   };
 
   return (

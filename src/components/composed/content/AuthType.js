@@ -5,15 +5,12 @@ import Dropdown from '../../atomic/Dropdown';
 import 'jsoneditor/dist/jsoneditor.css';
 import { APP_CONTEXT } from 'utils/state';
 import { CODE_SNIPPETS } from 'utils/constants';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { deepCopy } from 'utils/common';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 
-function AuthType({
-  updateAppContext = (v) => {},
-  updateAppContextUsingPath = (p, u) => {},
-}) {
+function AuthType() {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
   const types = {
     HeaderKey: { api_key: '' },
@@ -56,7 +53,7 @@ function AuthType({
       key2: 'Similar to API Key 1, API Key 2 is another additional key or authorization that you need to provide to the processor. It may serve a unique purpose or role in the authorization process.',
     },
   };
-  const appContext = useRecoilValue(APP_CONTEXT);
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const auth = appContext.authType.value;
   const [totalKeys, setTotalKeys] = useState(
     authTypes.indexOf(auth?.type || 'HeaderKey') + 1
@@ -98,7 +95,7 @@ function AuthType({
     setIsSaved(true);
     const updatedAuthType = deepCopy(appContext.authType);
     updatedAuthType.value = updatedAuthTypeContent;
-    updateAppContext({ authType: updatedAuthType });
+    setAppContext({ ...appContext, authType: updatedAuthType });
   };
   const onAuthTypeChange = (e, jsonEditor) => {
     try {
@@ -116,7 +113,7 @@ function AuthType({
         setContent(updatedContent);
         const updatedAuthType = deepCopy(appContext.authType);
         updatedAuthType.value = { type: authType, content: updatedContent };
-        updateAppContext({ authType: updatedAuthType });
+        setAppContext({ ...appContext, authType: updatedAuthType });
       }
     } catch (error) {}
   };
@@ -208,7 +205,7 @@ function AuthType({
                   type: selectedAuthType,
                   content: types[selectedAuthType],
                 };
-                updateAppContext({ authType: updatedAuthType });
+                setAppContext({ ...appContext, authType: updatedAuthType });
               }}
             >
               Clear

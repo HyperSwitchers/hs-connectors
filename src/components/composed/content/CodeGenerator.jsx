@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { deepCopy, deepJsonSwap } from 'utils/common';
 import { FLOW_OPTIONS } from 'utils/constants';
-import {
-  APP_CONTEXT,
-  updateAppContextInLocalStorage,
-} from 'utils/state';
+import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
 import BasicPopover from '../../atomic/Popup';
 
-const CodeGenerator = ({
-  updateAppContext = (u) => {},
-}) => {
-  const appContext = useRecoilValue(APP_CONTEXT);
+const CodeGenerator = () => {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   return (
     <div className="code-generator">
@@ -20,7 +15,7 @@ const CodeGenerator = ({
         onClick={(e) => {
           updateAppContextInLocalStorage(appContext);
           if (!appContext.authType.value) {
-            updateAppContext({ selectedFlow: 'AuthType' });
+            setAppContext({ ...appContext, selectedFlow: 'AuthType' });
             return;
           }
           let authType = appContext.authType.value || {};
@@ -66,7 +61,7 @@ const CodeGenerator = ({
             generatorInput[appContext.connectorName].refundStatus =
               appContext.flows[appContext.selectedFlow].status.value || {};
           }
-          updateAppContext({ generatorInput });
+          setAppContext({ ...appContext, generatorInput });
           let targetElement = document.getElementById('generated-code-snippet');
           targetElement.scrollIntoView({
             behavior: 'smooth',
@@ -79,8 +74,11 @@ const CodeGenerator = ({
       </button>
       <div>
         <BasicPopover
-          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${appContext.connectorName} ${appContext.baseUrl || `https://api.${appContext.connectorName}.com`}`}
-          updateAppContext={updateAppContext}
+          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${
+            appContext.connectorName
+          } ${
+            appContext.baseUrl || `https://api.${appContext.connectorName}.com`
+          }`}
         />
       </div>
     </div>

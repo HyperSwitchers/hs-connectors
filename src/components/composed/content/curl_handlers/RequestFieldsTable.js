@@ -21,14 +21,11 @@ import {
 } from 'utils/common';
 import { DEFAULT_SECRETS_IN_SYNONYMS, TYPES_LIST } from 'utils/constants';
 import jsonpath from 'jsonpath';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
 
-function IRequestFieldsTable({
-  suggestions = {},
-  updateAppContext = (v) => {},
-}) {
-  const appContext = useRecoilValue(APP_CONTEXT);
+function IRequestFieldsTable({ suggestions = {} }) {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const defaultProps = {
     options: Object.keys(suggestions).map((s) => '$' + s),
     getOptionLabel: (option) => option,
@@ -79,7 +76,7 @@ function IRequestFieldsTable({
         const updatedFlows = deepCopy(appContext.flows);
         updatedFlows[appContext.selectedFlow].requestFields.mapping =
           updatedMapping;
-        updateAppContext({ flows: updatedFlows });
+        setAppContext({ ...appContext, flows: updatedFlows });
       }
     }
   };
@@ -109,7 +106,7 @@ function IRequestFieldsTable({
         const updatedFlows = deepCopy(appContext.flows);
         updatedFlows[appContext.selectedFlow].requestFields.mapping =
           updatedMapping;
-        updateAppContext({ flows: updatedFlows });
+        setAppContext({ ...appContext, flows: updatedFlows });
       }
     }
   };
@@ -125,7 +122,7 @@ function IRequestFieldsTable({
     const updatedFlows = deepCopy(appContext.flows);
     updatedFlows[appContext.selectedFlow].requestFields.mapping =
       updatedMapping;
-    updateAppContext({ flows: updatedFlows });
+    setAppContext({ ...appContext, flows: updatedFlows });
   }
 
   return (

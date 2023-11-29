@@ -45,20 +45,9 @@ function App() {
 
   return (
     <Router>
-      <Header
-        updateAppContext={updateAppContext}
-        updateAppContextUsingPath={updateAppContextUsingPath}
-      />
+      <Header />
       <Routes>
-        <Route
-          path="*"
-          element={
-            <Content
-              updateAppContext={updateAppContext}
-              updateAppContextUsingPath={updateAppContextUsingPath}
-            />
-          }
-        />
+        <Route path="*" element={<Content />} />
       </Routes>
     </Router>
   );

@@ -16,15 +16,15 @@ import {
 } from '@mui/material';
 import 'jsoneditor/dist/jsoneditor.css';
 import jsonpath from 'jsonpath';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 
 // userdef utils
 import { deepCopy, flattenObject, updateNestedJson } from 'utils/common';
 import { TYPES_LIST } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 
-function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
-  const appContext = useRecoilValue(APP_CONTEXT);
+function IConnectorResponseTable() {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [fields, setFields] = useState([]);
   const [contextMenu, setContextMenu] = React.useState(null);
   const [contextMenuRequestor, setContextMenuRequestor] = useState(null);
@@ -53,7 +53,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
     const updatedFlows = deepCopy(appContext.flows);
     updatedFlows[appContext.selectedFlow].responseFields.mapping =
       updatedMapping;
-    updateAppContext({ flows: updatedFlows });
+    setAppContext({ ...appContext, flows: updatedFlows });
   }
 
   const handleFieldClick = (row) => {
@@ -128,7 +128,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
         const updatedFlows = deepCopy(appContext.flows);
         updatedFlows[appContext.selectedFlow].responseFields.mapping =
           updatedMapping;
-        updateAppContext({ flows: updatedFlows });
+        setAppContext({ ...appContext, flows: updatedFlows });
       }
     }
   };
@@ -158,7 +158,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
         const updatedFlows = deepCopy(appContext.flows);
         updatedFlows[appContext.selectedFlow].responseFields.mapping =
           updatedMapping;
-        updateAppContext({ flows: updatedFlows });
+        setAppContext({ ...appContext, flows: updatedFlows });
       }
     }
   };

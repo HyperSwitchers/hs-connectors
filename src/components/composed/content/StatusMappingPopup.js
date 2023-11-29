@@ -4,14 +4,11 @@ import React, { useEffect, useState } from 'react';
 
 import { HYPERSWITCH_STATUS_LIST } from '../../../utils/constants';
 import { APP_CONTEXT } from 'utils/state';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { deepCopy } from 'utils/common';
 
-const StatusMappingPopup = ({
-  onClose,
-  updateAppContextUsingPath = (f, v) => {},
-}) => {
-  const appContext = useRecoilValue(APP_CONTEXT);
+const StatusMappingPopup = ({ onClose }) => {
+  const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
     JSON.stringify(
@@ -36,9 +33,25 @@ const StatusMappingPopup = ({
 
   const updateStatusMapping = (field, update) => {
     try {
-      updateAppContextUsingPath(
-        `flows.${appContext.selectedFlow}.status.value.${field}`,
-        update
+      setTimeout(
+        () =>
+          setAppContext({
+            ...appContext,
+            flows: {
+              ...appContext.flows,
+              [appContext.selectedFlow]: {
+                ...appContext.flows[appContext.selectedFlow],
+                status: {
+                  ...appContext.flows[appContext.selectedFlow].status,
+                  value: {
+                    ...appContext.flows[appContext.selectedFlow].status.value,
+                    [field]: update,
+                  },
+                },
+              },
+            },
+          }),
+        0
       );
     } catch (error) {
       console.error('Failed to update status mapping', error);
@@ -48,9 +61,22 @@ const StatusMappingPopup = ({
   const handleSubmit = () => {
     // Parse the edited JSON and submit it
     const editedJson = JSON.parse(jsonInput);
-    updateAppContextUsingPath(
-      `flows.${appContext.selectedFlow}.status.value`,
-      editedJson
+    setTimeout(
+      () =>
+        setAppContext({
+          ...appContext,
+          flows: {
+            ...appContext.flows,
+            [appContext.selectedFlow]: {
+              ...appContext.flows[appContext.selectedFlow],
+              status: {
+                ...appContext.flows[appContext.selectedFlow].status,
+                value: editedJson,
+              },
+            },
+          },
+        }),
+      0
     );
     onClose();
   };
