@@ -88,6 +88,13 @@ impl ConnectorCommon for {{struct_name}} {
         "{{content_type}}"
     }
 
+    fn get_currency_unit(&self) -> api::CurrencyUnit {
+        todo!()
+        //    TODO! Check connector documentation, on which unit they are processing the currency.
+        //    If the connector accepts amount in lower unit ( i.e cents for USD) then return api::CurrencyUnit::Minor,
+        //    if connector accepts amount in base unit (i.e dollars for USD) then return api::CurrencyUnit::Base
+    }
+
     fn base_url<'a>(&self, connectors: &'a settings::Connectors) -> &'a str {
         connectors.{{connector_name}}.base_url.as_ref()
     }
@@ -102,6 +109,25 @@ impl ConnectorCommon for {{struct_name}} {
             {{{header_auth_key}}},
             {{{header_auth_value}}},
         )])
+    }
+
+    fn build_error_response(
+        &self,
+        res: Response,
+    ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
+        let response: {{connector_name}}::ErrorResponse =
+            res.response
+                .parse_struct("ErrorResponse")
+                .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
+
+        Ok(ErrorResponse {
+            status_code: res.status_code,
+            code: response.code,
+            message: response.message,
+            reason: response.reason,
+            attempt_status: None,
+            connector_transaction_id: None,
+        })
     }
 }
 
@@ -149,7 +175,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
     }
     {{/contains}}
     {{#contains enabled "get_request_body"}}
-    fn get_request_body(&self, req: &{{{router_type}}}) -> CustomResult<Option<types::RequestBody>, errors::ConnectorError> {
+        fn get_request_body(&self, req: &{{{router_type}}}, _connectors: &settings::Connectors,) -> CustomResult<Option<types::RequestBody>, errors::ConnectorError> {
         {{#contains enabled "convert_router_amount"}} 
         let connector_router_data = {{connector_name}}::{{struct_name}}RouterData::try_from((
             &self.get_currency_unit(),
@@ -187,7 +213,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
                     self, req, connectors,
                 )?)
                 {{#contains enabled "get_request_body"}}
-                .body({{flow_type}}::get_request_body(self, req)?)
+                .body({{flow_type}}::get_request_body(self, req, connectors)?)
                 {{/contains}}
                 .build(),
         ))
@@ -236,7 +262,7 @@ impl api::IncomingWebhook for {{struct_name}} {
     fn get_webhook_resource_object(
         &self,
         _request: &api::IncomingWebhookRequestDetails<'_>,
-    ) -> CustomResult<serde_json::Value, errors::ConnectorError> {
+    ) -> CustomResult<Box<dyn masking::ErasedMaskSerialize>, errors::ConnectorError> {
         Err(errors::ConnectorError::WebhooksNotImplemented).into_report()
     }
 }`;
