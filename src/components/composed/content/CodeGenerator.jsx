@@ -50,13 +50,10 @@ const CodeGenerator = () => {
               },
             },
           };
-          FLOW_OPTIONS.filter(
-            (f) =>
-              f.toLowerCase() !== 'authtype' && f.toLowerCase() !== 'refund'
-          ).map((f) => {
+          if (appContext.selectedFlow.toLowerCase() === 'authorize') {
             generatorInput[appContext.connectorName].attemptStatus =
-              appContext.flows[f].status.value || {};
-          });
+              appContext.flows[appContext.selectedFlow].status.value || {};
+          }
           if (appContext.selectedFlow.toLowerCase() === 'refund') {
             generatorInput[appContext.connectorName].refundStatus =
               appContext.flows[appContext.selectedFlow].status.value || {};
