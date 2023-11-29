@@ -63,19 +63,14 @@ const CurlRequestEditor = () => {
         value: requestHeaderFields,
         mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
       };
-      if (
-        updatedFlow?.hsResponseFields.value &&
-        !updatedFlow?.hsResponseFields.mapping
-      ) {
-        updatedFlow.hsResponseFields = {
-          ...updatedFlow?.hsResponseFields,
-          mapping: addFieldsToNodes(
-            mapFieldNames({
-              ...updatedFlow?.hsResponseFields.value,
-            })
-          ),
-        };
-      }
+      updatedFlow.hsResponseFields = {
+        ...updatedFlow?.hsResponseFields,
+        mapping: addFieldsToNodes(
+          mapFieldNames({
+            ...updatedFlow?.hsResponseFields.value,
+          })
+        ),
+      };
 
       // Updates
       if (fetchRequest) {

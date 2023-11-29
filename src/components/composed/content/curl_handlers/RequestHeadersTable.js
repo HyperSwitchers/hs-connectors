@@ -34,7 +34,7 @@ function IRequestHeadersTable({ suggestions = {} }) {
       appContext.flows[appContext.selectedFlow]?.requestHeaderFields?.value ||
       {};
     setFields(flattenObject(requestHeaders));
-  }, [appContext.flows]);
+  }, [appContext.flows, appContext.selectedFlow]);
 
   return (
     <div className="editor">

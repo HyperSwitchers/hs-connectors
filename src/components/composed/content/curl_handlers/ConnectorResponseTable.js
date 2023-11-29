@@ -40,7 +40,7 @@ function IConnectorResponseTable() {
       appContext.flows[appContext.selectedFlow].responseFields.value || {}
     );
     setFields(flattenObject(connectorResponse));
-  }, [appContext.flows]);
+  }, [appContext.flows, appContext.selectedFlow]);
 
   function updateConnectorResponse(row, update) {
     let updatedMapping = deepCopy(

@@ -51,6 +51,7 @@ function App() {
           {}
         );
         const requestFields = JSON.parse(curlRequest?.data?.ascii || '{}');
+        const hsResponseFields = updatedFlows[flow].hsResponseFields.value;
         updatedFlows[flow].curlRequest = curlRequest;
         updatedFlows[flow].requestFields = {
           value: requestFields,
@@ -59,6 +60,10 @@ function App() {
         updatedFlows[flow].requestHeaderFields = {
           value: requestHeaderFields,
           mapping: addFieldsToNodes(mapFieldNames(requestHeaderFields)),
+        };
+        updatedFlows[flow].hsResponseFields = {
+          value: hsResponseFields,
+          mapping: addFieldsToNodes(mapFieldNames(hsResponseFields)),
         };
       }
     });

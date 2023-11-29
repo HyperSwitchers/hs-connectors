@@ -8,7 +8,7 @@ import jsonpath from 'jsonpath';
 import { Paper } from '@mui/material';
 
 // userdef utils
-import { deepCopy, generateAuthTypeEncryption } from 'utils/common';
+import { generateAuthTypeEncryption } from 'utils/common';
 import { APP_CONTEXT } from 'utils/state';
 import { SYNONYM_MAPPING } from 'utils/constants';
 
@@ -158,7 +158,7 @@ const Content = () => {
           {/* Response type mapping */}
           <div className="response-body-type-mapping">
             <h3>Connector Response Fields - Data Type</h3>
-            <IConnectorResponseTable></IConnectorResponseTable>
+            <IConnectorResponseTable />
           </div>
           {/* Response fields mapping */}
           <div className="response-body-fields-mapping">

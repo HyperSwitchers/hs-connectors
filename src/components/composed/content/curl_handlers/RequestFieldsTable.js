@@ -43,7 +43,7 @@ function IRequestFieldsTable({ suggestions = {} }) {
       appContext.flows[appContext.selectedFlow].requestFields.value || {}
     );
     setFields(flattenObject(requestFields));
-  }, [appContext.flows]);
+  }, [appContext.flows, appContext.selectedFlow]);
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);

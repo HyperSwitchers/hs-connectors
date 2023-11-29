@@ -39,7 +39,7 @@ function IResponseFieldsTable({ suggestions = {} }) {
     const hsResponse =
       appContext.flows[appContext.selectedFlow].hsResponseFields.value;
     setFields(flattenObject(hsResponse));
-  }, [appContext.flows]);
+  }, [appContext.flows, appContext.selectedFlow]);
 
   return (
     <div className="editor">
