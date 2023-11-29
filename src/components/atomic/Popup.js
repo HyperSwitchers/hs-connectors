@@ -2,18 +2,19 @@ import * as React from 'react';
 import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import { download } from '../../utils/common';
+import { APP_CONTEXT } from 'utils/state';
+import { useRecoilValue } from 'recoil';
 
 export default function BasicPopover({
-  isCodeUpdated = true,
-  setIsCodeUpdated = (state) => {},
-  curl = 'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh',
+  curl = '',
+  updateAppContext = (u) => {},
 }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const appContext = useRecoilValue(APP_CONTEXT);
 
   const handleClick = (event) => {
-    setIsCodeUpdated(false);
     setAnchorEl(event.currentTarget);
-    if (isCodeUpdated) {
+    if (appContext.wasCodeUpdatedBeforeDownload) {
       download(
         document.querySelector('#transformers')?.innerText,
         'transformer.rs',
@@ -21,9 +22,10 @@ export default function BasicPopover({
       );
       download(
         document.querySelector('#connectors')?.innerText,
-        'connector.rs',
+        `${appContext.connectorName.toLowerCase()}.rs`,
         'text'
       );
+      updateAppContext({ wasCodeUpdatedBeforeDownload: false });
     }
   };
 

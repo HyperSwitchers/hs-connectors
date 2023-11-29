@@ -10,7 +10,6 @@ import {
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
-import { download } from 'utils/common';
 import { APP_CONTEXT, storeItem } from 'utils/state';
 import { useRecoilValue } from 'recoil';
 
@@ -153,31 +152,8 @@ export const defaultConnectorProps = (connector) => {
     },
   };
 };
-const ConnectorTemplate = ({
-  context = {
-    trait_name: 'api::PSync',
-    data_type: 'types::PaymentsSyncData',
-    flow_type: 'types::PaymentsAuthorizeType',
-    request_type: 'PaymentRequest',
-    response_type: 'PaymentResponse',
-    router_data_type: 'RouterData',
-    router_type: 'types::PaymentsSyncRouterData',
-    response_data: 'types::PaymentsResponseData',
-    struct_name: 'Shift4',
-    connector_name: 'shift4',
-  },
-  curl = {
-    connector: '',
-    flow: '',
-    input: '',
-    body: undefined,
-    headers: undefined,
-    response: undefined,
-    hsResponse: undefined,
-  },
-}) => {
+const ConnectorTemplate = ({ updateAppContext = (u) => {} }) => {
   const appContext = useRecoilValue(APP_CONTEXT);
-  const [templateContent] = useState(ConnectorIntegration);
   const [generatedCode, setGeneratedCode] = useState('');
   const findCommonHeaders = (data) => {
     let maxHeaders = [];
@@ -235,6 +211,18 @@ const ConnectorTemplate = ({
     return {};
   };
   useEffect(() => {
+    const curl = {
+      connector: appContext.connectorName,
+      flow: appContext.selectedFlow,
+      input: appContext.flows[appContext.selectedFlow].curlCommand,
+      body: appContext.flows[appContext.selectedFlow].requestFields?.value,
+      headers:
+        appContext.flows[appContext.selectedFlow].requestHeaderFields?.value,
+      response:
+        appContext.flows[appContext.selectedFlow]?.responseFields?.value,
+      hsResponse:
+        appContext.flows[appContext.selectedFlow].hsResponseFields?.value,
+    };
     if (curl?.connector && curl?.flow) {
       let props = localStorage.props
         ? JSON.parse(localStorage.props)
@@ -249,7 +237,7 @@ const ConnectorTemplate = ({
       };
       storeItem('props', JSON.stringify(props));
     }
-    if (templateContent) {
+    if (ConnectorIntegration) {
       const template = handlebars.compile(ConnectorIntegration);
       const connector_common_template = handlebars.compile(ConnectorCommon);
       const connector_webhook_template = handlebars.compile(ConnectorWebhook);
@@ -277,9 +265,12 @@ const ConnectorTemplate = ({
         connector_webhook_template({
           struct_name: toPascalCase(props.connector),
         });
-      setGeneratedCode(renderedTemplate);
+      if (renderedTemplate !== generatedCode) {
+        setGeneratedCode(renderedTemplate);
+        updateAppContext({ wasCodeUpdatedBeforeDownload: true });
+      }
     }
-  }, [templateContent, context]);
+  }, [appContext.flows]);
 
   const [isCopied, setIsCopied] = useState(false);
   // Function to handle the "Copy to Clipboard" button click event
@@ -294,7 +285,7 @@ const ConnectorTemplate = ({
 
   return (
     <div>
-      <h3>{appContext.connectorName}.rs</h3>
+      <h3>{appContext.connectorName.toLowerCase()}.rs</h3>
       <div data-testid="generated-code">
         <button onClick={handleCopyClick}>Copy to Clipboard</button>
         {isCopied && <span>Copied to clipboard!</span>}

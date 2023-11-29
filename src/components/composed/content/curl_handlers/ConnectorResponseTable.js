@@ -211,6 +211,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
           <TableBody>
             {fields?.map((row) => {
               let field = {};
+              let value = '';
               try {
                 if (
                   appContext.flows[appContext.selectedFlow].responseFields
@@ -222,6 +223,18 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                         .mapping,
                       '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                     )[0] || {};
+                  value =
+                    typeof field.value === 'string'
+                      ? field.value.startsWith('$')
+                        ? appContext.flows[appContext.selectedFlow]
+                            .responseFields.value[row]
+                        : field.value
+                      : field.value;
+                  value = Array.isArray(value)
+                    ? `[ ${value.join(', ')} ]`
+                    : typeof value === 'object'
+                    ? JSON.stringify(value)
+                    : value;
                 }
               } catch (error) {
                 console.error('jsonpath query failed', error);
@@ -241,7 +254,7 @@ function IConnectorResponseTable({ updateAppContext = (v) => {} }) {
                     <TableCell
                       sx={{ maxWidth: '100px', wordBreak: 'break-word' }}
                     >
-                      {field.value}
+                      {value}
                     </TableCell>
                     <TableCell>
                       <Autocomplete

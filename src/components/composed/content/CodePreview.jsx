@@ -11,10 +11,7 @@ import { APP_CONTEXT } from 'utils/state';
 import { generateRustCode } from 'utils/Parser';
 import ConnectorTemplates from './ConnectorTemplates';
 
-const CodePreview = ({
-  updateAppContext = (u) => {},
-  updateAppContextUsingPath = (p, u) => {},
-}) => {
+const CodePreview = ({ updateAppContext = (u) => {} }) => {
   const generateCodeSnippet = () => {
     return `fn main() {
     let name: &str = "John";
@@ -58,7 +55,10 @@ const CodePreview = ({
           appContext.connectorName,
           JSON.stringify(appContext.generatorInput)
         );
-        setCodeSnippet(rustCode);
+        if (codeSnippet !== rustCode) {
+          setCodeSnippet(rustCode);
+          updateAppContext({ wasCodeUpdatedBeforeDownload: true });
+        }
       }
     } catch (error) {
       console.error('Failed to generate Rust code from input', error);
@@ -80,28 +80,7 @@ const CodePreview = ({
       <h3 id="generated-code-snippet">Generated Code Snippet</h3>
       <div className="connector-code">
         <div>
-          <ConnectorTemplates
-            curl={{
-              ...{
-                connector: appContext.connectorName,
-                flow: appContext.selectedFlow,
-                input: appContext.flows[appContext.selectedFlow].curlCommand,
-                body: appContext.flows[appContext.selectedFlow].requestFields
-                  ?.value,
-                headers:
-                  appContext.flows[appContext.selectedFlow].requestHeaderFields
-                    ?.value,
-                response:
-                  appContext.flows[appContext.selectedFlow]?.responseFields
-                    ?.value,
-                hsResponse:
-                  appContext.flows[appContext.selectedFlow].hsResponseFields
-                    ?.value,
-              },
-            }}
-            // @ts-ignore
-            context={{}}
-          ></ConnectorTemplates>
+          <ConnectorTemplates updateAppContext={updateAppContext} />
         </div>
       </div>
       <div className="transformers-code">

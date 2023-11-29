@@ -142,6 +142,9 @@ function IRequestFieldsTable({
                 <b>Connector Field Name</b>
               </TableCell>
               <TableCell>
+                <b>Value</b>
+              </TableCell>
+              <TableCell>
                 <b>Optional</b>
               </TableCell>
               <TableCell>
@@ -189,6 +192,7 @@ function IRequestFieldsTable({
                 return null;
               }
               let field = {};
+              let value = '';
               try {
                 field =
                   jsonpath.query(
@@ -196,6 +200,18 @@ function IRequestFieldsTable({
                       .mapping,
                     '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                   )[0] || {};
+                value =
+                  typeof field.value === 'string'
+                    ? field.value.startsWith('$')
+                      ? appContext.flows[appContext.selectedFlow].requestFields
+                          .value[row]
+                      : field.value
+                    : field.value;
+                value = Array.isArray(value)
+                  ? `[ ${value.join(', ')} ]`
+                  : typeof value === 'object'
+                  ? JSON.stringify(value)
+                  : value;
               } catch (error) {
                 console.error('jsonpath query failed', error);
                 return null;
@@ -203,6 +219,7 @@ function IRequestFieldsTable({
               return (
                 <TableRow key={row}>
                   <TableCell>{row}</TableCell>
+                  <TableCell>{value}</TableCell>
                   <TableCell>
                     <Checkbox
                       checked={field.optional}

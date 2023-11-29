@@ -28,7 +28,7 @@ fi
 # git clone 
 cd hyperswitch
 sh scripts/add_connector.sh $1 $2
-cp ~/Downloads/"$(ls -Art ~/Downloads | grep 'connector' | tail -n 1)" crates/router/src/connector/$1.rs
+cp ~/Downloads/"$(ls -Art ~/Downloads | grep $1 | tail -n 1)" crates/router/src/connector/$1.rs
 cp ~/Downloads/"$(ls -Art ~/Downloads | grep 'transformer' | tail -n 1)" crates/router/src/connector/$1/transformers.rs
 echo "Showing all changed files"
 git add .

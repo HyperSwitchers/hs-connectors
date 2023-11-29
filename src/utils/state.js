@@ -22,6 +22,7 @@ export const APP_CONTEXT = atom({
     currencyUnit: 'Minor',
     currencyUnitType: 'i64',
     generatorInput: {},
+    wasCodeUpdatedBeforeDownload: false,
     loading: false,
     selectedFlow: 'AuthType',
     selectedPaymentMethodOption: '',

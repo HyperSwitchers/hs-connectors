@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { generateRustCode } from 'utils/Parser';
 import { deepCopy, deepJsonSwap } from 'utils/common';
 import { FLOW_OPTIONS } from 'utils/constants';
 import {
   APP_CONTEXT,
-  fetchItem,
-  storeItem,
   updateAppContextInLocalStorage,
 } from 'utils/state';
+import BasicPopover from '../../atomic/Popup';
 
 const CodeGenerator = ({
   updateAppContext = (u) => {},
-  updateAppContextUsingPath = (p, u) => {},
 }) => {
   const appContext = useRecoilValue(APP_CONTEXT);
-
-  // Component specific states
-  const [connectorContext, setConnectorContext] = useState({});
 
   return (
     <div className="code-generator">
@@ -73,7 +67,6 @@ const CodeGenerator = ({
               appContext.flows[appContext.selectedFlow].status.value || {};
           }
           updateAppContext({ generatorInput });
-          setConnectorContext({ ...{} });
           let targetElement = document.getElementById('generated-code-snippet');
           targetElement.scrollIntoView({
             behavior: 'smooth',
@@ -84,6 +77,12 @@ const CodeGenerator = ({
           ? 'Configure AuthType before generating code'
           : 'Generate Code'}
       </button>
+      <div>
+        <BasicPopover
+          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${appContext.connectorName} ${appContext.baseUrl || `https://api.${appContext.connectorName}.com`}`}
+          updateAppContext={updateAppContext}
+        />
+      </div>
     </div>
   );
 };
