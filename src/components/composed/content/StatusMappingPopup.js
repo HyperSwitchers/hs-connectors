@@ -5,7 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { HYPERSWITCH_STATUS_LIST } from '../../../utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 import { useRecoilState } from 'recoil';
-import { deepCopy } from 'utils/common';
+import { deepCopy, updateNestedJson } from 'utils/common';
+import jsonpath from 'jsonpath';
 
 const StatusMappingPopup = ({ onClose }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
@@ -58,7 +59,31 @@ const StatusMappingPopup = ({ onClose }) => {
     }
   };
 
+  function updateConnectorResponse(row, update) {
+    let updatedMapping = deepCopy(
+      appContext.flows[appContext.selectedFlow].responseFields.mapping
+    );
+    const fields = row.split('.');
+    const keys = fields.flatMap((f) => [f, 'value']);
+    keys.pop();
+    updatedMapping = updateNestedJson(updatedMapping, keys, update);
+    return updatedMapping;
+  }
+
   const handleSubmit = () => {
+    const statusVariable =
+      appContext.flows[appContext.selectedFlow].statusVariable;
+    const field =
+      jsonpath.query(
+        appContext.flows[appContext.selectedFlow].responseFields.mapping,
+        '$.' + statusVariable.replaceAll('.', '.value.').replaceAll('-', '')
+      )[0] || {};
+    let updatedResponseMapping =
+      appContext.flows[appContext.selectedFlow].responseFields.mapping;
+    if (field.type === 'string') {
+      const updates = { ...field, type: 'enum', value: [field.value].flat() };
+      updatedResponseMapping = updateConnectorResponse(statusVariable, updates);
+    }
     // Parse the edited JSON and submit it
     const editedJson = JSON.parse(jsonInput);
     setTimeout(
@@ -69,6 +94,10 @@ const StatusMappingPopup = ({ onClose }) => {
             ...appContext.flows,
             [appContext.selectedFlow]: {
               ...appContext.flows[appContext.selectedFlow],
+              responseFields: {
+                ...appContext.flows[appContext.selectedFlow].responseFields,
+                mapping: updatedResponseMapping,
+              },
               status: {
                 ...appContext.flows[appContext.selectedFlow].status,
                 value: editedJson,

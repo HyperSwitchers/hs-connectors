@@ -14,6 +14,58 @@ export function generateAuthTypeEncryption(keys) {
   }
   return obj;
 }
+
+export function isLeafNode(obj) {
+  if (typeof obj !== 'object' || Array.isArray(obj)) {
+    return false;
+  }
+  const keys = Object.keys(obj);
+  return (
+    keys.includes('value') &&
+    keys.includes('optional') &&
+    keys.includes('secret') &&
+    keys.includes('type')
+  );
+}
+
+export function mapFieldNodes(input) {
+  if (_.isObject(input)) {
+    if (_.isArray(input)) {
+      let res = _.map(input, (item) => mapFieldNodes(item));
+      return res;
+    } else {
+      let res = _.mapValues(input, (value, key) => {
+        if (_.isObject(value)) {
+          if (isLeafNode(value)) {
+            const value_ = value.value;
+            const synonymKey = Object.keys(SYNONYM_MAPPING).flatMap((flow) => {
+              return _.map(SYNONYM_MAPPING[flow], (value, kk) =>
+                _.find(value, (synonym) => synonym === key) ? kk : undefined
+              ).filter((a) => a);
+            });
+            return {
+              ...value,
+              value: synonymKey[0]
+                ? '$' + synonymKey[0]
+                : mapFieldNodes(value_),
+            };
+          }
+          return mapFieldNodes(value);
+        } else {
+          const synonymKey = Object.keys(SYNONYM_MAPPING).flatMap((flow) => {
+            return _.map(SYNONYM_MAPPING[flow], (value, kk) =>
+              _.find(value, (synonym) => synonym === key) ? kk : undefined
+            ).filter((a) => a);
+          });
+          return synonymKey[0] ? '$' + synonymKey[0] : mapFieldNodes(value);
+        }
+      });
+      return res;
+    }
+  }
+  return input;
+}
+
 export function mapFieldNames(input) {
   if (_.isObject(input)) {
     if (_.isArray(input)) {

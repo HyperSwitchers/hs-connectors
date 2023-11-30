@@ -7,7 +7,12 @@ import { useRecoilState } from 'recoil';
 
 // userdef utils
 import { APP_CONTEXT, storeItem } from 'utils/state';
-import { addFieldsToNodes, deepCopy, mapFieldNames } from 'utils/common';
+import {
+  addFieldsToNodes,
+  deepCopy,
+  mapFieldNames,
+  mapFieldNodes,
+} from 'utils/common';
 import { parse_curl } from 'curl-parser';
 import { getHeaders } from 'utils/common';
 import { defaultConnectorProps } from './ConnectorTemplates';
@@ -144,7 +149,7 @@ const CurlRequestEditor = () => {
       success: (data) => {
         const responseFieldsUpdate = {
           value: data,
-          mapping: addFieldsToNodes(mapFieldNames(data)),
+          mapping: mapFieldNodes(addFieldsToNodes(data)),
         };
         updates.flows = deepCopy(appContext.flows);
         updates.flows[`${appContext.selectedFlow}`].responseFields =
