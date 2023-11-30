@@ -2,7 +2,7 @@ import React from 'react';
 import { useRecoilState } from 'recoil';
 
 // userdef utils
-import {} from '../../utils/common';
+import { } from '../../utils/common';
 import { APP_CONTEXT } from '../../utils/state';
 import {
   CURRENCY_UNIT,
@@ -92,7 +92,7 @@ const Header = () => {
             />
           </React.Fragment>
         )}
-        <button>
+        {/* <button>
           <a
             style={{ textDecoration: 'none', color: '#fff' }}
             target="_blank"
@@ -101,7 +101,7 @@ const Header = () => {
           >
             Fork Hyperswitch
           </a>
-        </button>
+        </button> */}
       </div>
     </div>
   );
