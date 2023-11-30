@@ -80,7 +80,7 @@ const StatusMappingPopup = ({ onClose }) => {
       )[0] || {};
     let updatedResponseMapping =
       appContext.flows[appContext.selectedFlow].responseFields.mapping;
-    if (field.type === 'string') {
+    if (field.type.toLowerCase() === 'string') {
       const updates = { ...field, type: 'enum', value: [field.value].flat() };
       updatedResponseMapping = updateConnectorResponse(statusVariable, updates);
     }
