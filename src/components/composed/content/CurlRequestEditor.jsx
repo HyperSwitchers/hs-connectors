@@ -149,7 +149,7 @@ const CurlRequestEditor = () => {
       success: (data) => {
         const responseFieldsUpdate = {
           value: data,
-          mapping: mapFieldNodes(addFieldsToNodes(data)),
+          mapping: addFieldsToNodes(data),
         };
         updates.flows = deepCopy(appContext.flows);
         updates.flows[`${appContext.selectedFlow}`].responseFields =
