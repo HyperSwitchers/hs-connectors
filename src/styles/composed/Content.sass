@@ -7,17 +7,21 @@
   .flow-description
     grid-column: 1 / -1
   .curl-request-editor
-    min-width: 500px
-    width: 40vw
+    grid-column: 1 / -1
     .curl-input-section
       width: auto
       textarea
         padding: 10px
         min-height: 300px
   .request-body-section
+    grid-column: 1 / -1
+    flex-direction: row !important
+    flex-flow: row !important
     padding-left: 20px
+    .request-headers-mapping
+      min-width: 30vw
     .request-body-mapping
-      margin-top: 20px
+      margin-left: 20px
   .response-body-section
     display: flex
     grid-column: 1 / -1

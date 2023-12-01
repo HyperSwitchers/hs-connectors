@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Dropdown from '../../atomic/Dropdown';
 import 'jsoneditor/dist/jsoneditor.css';
-import { APP_CONTEXT } from 'utils/state';
+import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
 import { CODE_SNIPPETS } from 'utils/constants';
 import { useRecoilState } from 'recoil';
 import { deepCopy } from 'utils/common';
@@ -88,20 +88,26 @@ function AuthType() {
   }, [appContext.authType]);
 
   const onSaveClick = (requestData) => {
-    const updatedAuthTypeContent = {
-      type: selectedAuthType,
-      content: requestData,
-    };
     setIsSaved(true);
-    const updatedAuthType = deepCopy(appContext.authType);
-    updatedAuthType.value = updatedAuthTypeContent;
-    setAppContext({ ...appContext, authType: updatedAuthType });
+    const updatedAppContext = {
+      ...appContext,
+      authType: {
+        ...appContext.authType,
+        value: {
+          type: selectedAuthType,
+          content: requestData,
+        },
+      },
+      selectedFlow: 'Authorize',
+    };
+    setAppContext(updatedAppContext);
+    updateAppContextInLocalStorage(updatedAppContext);
   };
   const onAuthTypeChange = (e, jsonEditor) => {
     try {
-      const totalKeys = parseInt(e.target.value) - 1;
-      if (totalKeys < authTypes.length) {
-        const authType = authTypes.at(totalKeys);
+      const totalKeys = parseInt(e.target.value);
+      if (totalKeys <= authTypes.length) {
+        const authType = authTypes.at(totalKeys - 1);
         const updatedContent = { ...types[authType], ...content };
         Object.keys(updatedContent).map((k) => {
           if (!Object.keys(types[authType]).includes(k)) {
@@ -111,9 +117,13 @@ function AuthType() {
         setTotalKeys(totalKeys);
         setSelectedAuthType(authType);
         setContent(updatedContent);
-        const updatedAuthType = deepCopy(appContext.authType);
-        updatedAuthType.value = { type: authType, content: updatedContent };
-        setAppContext({ ...appContext, authType: updatedAuthType });
+        setAppContext({
+          ...appContext,
+          authType: {
+            ...appContext.authType,
+            value: { type: authType, content: updatedContent },
+          },
+        });
       }
     } catch (error) {}
   };
