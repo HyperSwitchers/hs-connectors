@@ -148,7 +148,7 @@ export const FLOW_OPTIONS = [
   'RSync',
 ];
 
-export const PAYMENT_METHOD_OPTIONS = ['Card', 'Wallet', 'BankRedirects'];
+export const PAYMENT_METHOD_OPTIONS = ['Card'];
 
 export const RESPONSE_TYPES = {
   status: ['status', 'payment_status'],
