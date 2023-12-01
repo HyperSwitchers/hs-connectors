@@ -90,15 +90,7 @@ const Content = () => {
                 ...appContext.flows[appContext.selectedFlow],
                 status: {
                   ...appContext.flows[appContext.selectedFlow].status,
-                  value:
-                    typeof appContext.flows[appContext.selectedFlow].status
-                      .value === 'object'
-                      ? {
-                          ...statusFields,
-                          ...appContext.flows[appContext.selectedFlow].status
-                            .value,
-                        }
-                      : statusFields,
+                  value: statusFields,
                 },
               },
             },
@@ -196,7 +188,7 @@ const Content = () => {
         {/* Status Mapping popup */}
         {isStatusMappingPopupOpen && (
           <StatusMappingPopup
-          setIsStatusMappingPopupOpen={setIsStatusMappingPopupOpen}
+            setIsStatusMappingPopupOpen={setIsStatusMappingPopupOpen}
           />
         )}
         {/* Code generation */}

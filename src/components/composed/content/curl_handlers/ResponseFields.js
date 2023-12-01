@@ -118,10 +118,11 @@ function IResponseFieldsTable({ suggestions = {} }) {
                           updatedFlows[
                             appContext.selectedFlow
                           ].hsResponseFields.mapping = updatedMapping;
+                          // debugger;
                           if (row === 'status') {
                             updatedFlows[
                               appContext.selectedFlow
-                            ].statusVariable = row;
+                            ].statusVariable = newValue.replace('$', '');
                           }
                           setAppContext({ ...appContext, flows: updatedFlows });
                         }}
