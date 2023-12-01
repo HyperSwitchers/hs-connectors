@@ -904,7 +904,7 @@ function printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, co
 
 export const generateRustCode = (connector, inputJson) => {
     const inputObject = JSON.parse(inputJson);
-    connectorName = connector;
+    connectorName = toPascalCase(connector);
 
     inputObject[connectorName].attemptStatus = Object.keys(inputObject[connectorName]?.attemptStatus).reduce((acc, key) => {
         if (inputObject[connectorName]?.attemptStatus[key] !== null) {
