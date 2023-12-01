@@ -196,7 +196,7 @@ const Content = () => {
         {/* Status Mapping popup */}
         {isStatusMappingPopupOpen && (
           <StatusMappingPopup
-            onClose={() => setIsStatusMappingPopupOpen(false)}
+          setIsStatusMappingPopupOpen={setIsStatusMappingPopupOpen}
           />
         )}
         {/* Code generation */}

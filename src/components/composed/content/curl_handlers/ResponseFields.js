@@ -118,7 +118,7 @@ function IResponseFieldsTable({ suggestions = {} }) {
                           updatedFlows[
                             appContext.selectedFlow
                           ].hsResponseFields.mapping = updatedMapping;
-                          if (newValue === '$status') {
+                          if (row === 'status') {
                             updatedFlows[
                               appContext.selectedFlow
                             ].statusVariable = row;

@@ -8,7 +8,7 @@ import { useRecoilState } from 'recoil';
 import { deepCopy, updateNestedJson } from 'utils/common';
 import jsonpath from 'jsonpath';
 
-const StatusMappingPopup = ({ onClose }) => {
+const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => { } }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
@@ -107,7 +107,7 @@ const StatusMappingPopup = ({ onClose }) => {
         }),
       0
     );
-    onClose();
+    setIsStatusMappingPopupOpen(false);
   };
 
   const updateJsonInput = (key, value) => {
@@ -221,7 +221,7 @@ const StatusMappingPopup = ({ onClose }) => {
         />
         <div className="button-group">
           <button onClick={handleSubmit}>Submit</button>
-          <button id="cancel-button" onClick={onClose}>
+          <button id="cancel-button" onClick={() => setIsStatusMappingPopupOpen(false)}>
             Cancel
           </button>
         </div>
