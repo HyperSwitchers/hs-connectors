@@ -87,17 +87,67 @@ impl TryFrom<types::RefundsResponseRouterData<api::RSync, ${connectorName}Refund
             ..item.data
         })
      }
- }
+}
 
 //TODO: Fill the struct with respective fields
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
-pub struct ${connectorName}ErrorResponse {
+pub struct ErrorResponse {
     pub status_code: u16,
     pub code: String,
     pub message: String,
     pub reason: Option<String>,
 }
 `;
+
+const errorStructs = `//TODO: Fill the struct with respective fields
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+pub struct ErrorResponse {
+    pub status_code: u16,
+    pub code: String,
+    pub message: String,
+    pub reason: Option<String>,
+}`;
+
+const templateRefundStatus = `#[allow(dead_code)]
+#[derive(Debug, Serialize, Default, Deserialize, Clone)]
+pub enum RefundStatus {
+    Succeeded,
+    Failed,
+    #[default]
+    Processing,
+}
+
+impl From<RefundStatus> for enums::RefundStatus {
+    fn from(item: RefundStatus) -> Self {
+        match item {
+            RefundStatus::Succeeded => Self::Success,
+            RefundStatus::Failed => Self::Failure,
+            RefundStatus::Processing => Self::Pending,
+            //TODO: Review mapping
+        }
+    }
+}`;
+
+const templateAttemptStatus = `
+#[derive(Debug, Serialize, Default, Deserialize, Clone)]
+pub enum AttemptStatus {
+    Succeeded,
+    Failed,
+    #[default]
+    Processing,
+}
+
+impl From<AttemptStatus> for enums::AttemptStatus {
+    fn from(item: AttemptStatus) -> Self {
+        match item {
+            AttemptStatus::Succeeded => Self::Charged,
+            AttemptStatus::Failed => Self::Failure,
+            AttemptStatus::Processing => Self::Authorizing,
+            //TODO: Review mapping
+        }
+    }
+}`;
+
 // Define the replacements for dynamic values
 const replacements = {
     card_number: `ccard.card_number.clone()`,
@@ -457,7 +507,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
         Ok(Self {
             response: Ok(types::RefundsResponseData {
                 connector_refund_id: item.response.${hsResponse.response.resource_id.substring(1)},
-                refund_status: enums::RefundStatus::from(item.response.${hsResponse.status.substring(1)}),
+                refund_status: enums::RefundStatus::${hsResponse.status.startsWith('$') ? "from(item.response." + hsResponse.status.substring(1) + ")" : "Pending"},
             }),
             ..item.data
         })
@@ -469,6 +519,13 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
 }
 
 function generateStatusMapping(statusType, inputJson) {
+    if (Object.keys(inputJson).length == 0) {
+        if (statusType == "RefundStatus") {
+            return templateRefundStatus;
+        } else {
+            return templateAttemptStatus;
+        }
+    }
     let statusArray = [];
     let tryFromArray = [];
     Object.entries(inputJson).forEach(([ConnectorStatus, AttemptStatus]) => {
@@ -837,9 +894,9 @@ function generatedResponseVariables(inputObject, parentName) {
     return structs;
 }
 
-function printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping) {
+function printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs) {
 
-    let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${connectorAmount}\n\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}`;
+    let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${connectorAmount}\n\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}\n${errorStructs}`;
     return output;
 
     // console.log(`${connectorAuthCode}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n${generatedResponseTryFrom}\n${statusMapping}\n`);
@@ -907,7 +964,7 @@ export const generateRustCode = (connector, inputJson) => {
         connectorTemplateCode = connectorTemplate;
         refundStatusMapping = '';
     }
-    return printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping);
+    return printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs);
     // console.log(nestedStructs2.join('\n'))
 
     // return nestedStructs.join('\n');

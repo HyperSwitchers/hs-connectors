@@ -22,7 +22,7 @@ const CodeGenerator = () => {
           let modifiedUpdatedRequestData = deepJsonSwap(
             deepCopy(
               appContext.flows[appContext.selectedFlow].requestFields.mapping ||
-                {}
+              {}
             )
           );
           let modifiedUpdatedResponseData = deepJsonSwap(
@@ -31,25 +31,28 @@ const CodeGenerator = () => {
                 .mapping || {}
             )
           );
-          const generatorInput = {
-            [appContext.connectorName]: {
-              authType: authType.type,
-              authKeys: authType.content || {},
-              amount: {
-                unit: appContext.currencyUnit,
-                unitType: appContext.currencyUnitType,
-              },
-              flows: {
-                [appContext.selectedFlow || 'Authorize']: {
-                  paymentsRequest: modifiedUpdatedRequestData,
-                  paymentsResponse: modifiedUpdatedResponseData,
-                  hsResponse:
-                    appContext.flows[appContext.selectedFlow].hsResponseFields
-                      .value || {},
-                },
+          const newFlow = appContext.selectedFlow || 'Authorize'
+          const generatorInput = deepCopy(appContext.generatorInput);
+          generatorInput[appContext.connectorName] = {
+            ...generatorInput[appContext.connectorName],
+            authType: authType.type,
+            authKeys: authType.content || {},
+            amount: {
+              unit: appContext.currencyUnit,
+              unitType: appContext.currencyUnitType,
+            },
+            flows: {
+              ...appContext.generatorInput[appContext.connectorName]?.flows || {},
+              [newFlow]: {
+                ...appContext.generatorInput[appContext.connectorName]?.flows[newFlow] || {},
+                paymentsRequest: modifiedUpdatedRequestData,
+                paymentsResponse: modifiedUpdatedResponseData,
+                hsResponse:
+                  appContext.flows[appContext.selectedFlow].hsResponseFields
+                    .value || {},
               },
             },
-          };
+          }
           if (appContext.selectedFlow.toLowerCase() === 'authorize') {
             generatorInput[appContext.connectorName].attemptStatus =
               appContext.flows[appContext.selectedFlow].status.value || {};
@@ -71,11 +74,9 @@ const CodeGenerator = () => {
       </button>
       <div>
         <BasicPopover
-          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${
-            appContext.connectorName
-          } ${
-            appContext.baseUrl || `https://api.${appContext.connectorName}.com`
-          }`}
+          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${appContext.connectorName
+            } ${appContext.baseUrl || `https://api.${appContext.connectorName}.com`
+            }`}
         />
       </div>
     </div>

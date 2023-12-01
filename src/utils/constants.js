@@ -159,7 +159,6 @@ export const SYNONYM_MAPPING = {
   Authorize: {
     amount: ['amount', 'authorization_amount'],
     billing_address_firstname: [
-      'name',
       'first_name',
       'firstname',
       'firstName',
@@ -213,6 +212,7 @@ export const SYNONYM_MAPPING = {
       'card_verification_value',
     ],
     card_holder_name: [
+      'name',
       'cardholderName',
       'holderName',
       'name_on_card',
