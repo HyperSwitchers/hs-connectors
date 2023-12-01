@@ -137,7 +137,7 @@ const CurlRequestEditor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = curlRequest.url;
+    let url = '/cors/' + curlRequest.url;
     const updates = {
       baseUrl: new URL(curlRequest?.url)?.origin,
     };
