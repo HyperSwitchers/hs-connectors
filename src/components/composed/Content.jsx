@@ -115,6 +115,13 @@ const Content = () => {
         <CurlRequestEditor />
         {/* Request fields */}
         <Paper elevation={0} className="request-body-section">
+          {/* Request Body */}
+          <div className="request-body-mapping">
+            <h3>Connector Request Fields - Body</h3>
+            <IRequestFieldsTable
+              suggestions={SYNONYM_MAPPING[appContext.selectedFlow]}
+            ></IRequestFieldsTable>
+          </div>
           {/* Request headers */}
           <div className="request-headers-mapping">
             <h3>Connector Request Fields - Headers</h3>
@@ -136,13 +143,6 @@ const Content = () => {
                 ),
               }}
             />
-          </div>
-          {/* Request Body */}
-          <div className="request-body-mapping">
-            <h3>Connector Request Fields - Body</h3>
-            <IRequestFieldsTable
-              suggestions={SYNONYM_MAPPING[appContext.selectedFlow]}
-            ></IRequestFieldsTable>
           </div>
         </Paper>
         {/* Response fields */}
