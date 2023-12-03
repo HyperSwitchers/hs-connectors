@@ -12,11 +12,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
-    JSON.stringify(
-      appContext.flows[appContext.selectedFlow].status.value || {},
-      null,
-      2
-    )
+    JSON.stringify(appContext.status.value || {}, null, 2)
   );
 
   /**
@@ -24,10 +20,9 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
    * Use - Update json input
    */
   useEffect(() => {
-    const updatedValue =
-      appContext.flows[appContext.selectedFlow].status.value || {};
+    const updatedValue = appContext.status.value || {};
     setJsonInput(JSON.stringify(updatedValue, null, 2));
-  }, [appContext.flows, appContext.selectedFlow]);
+  }, [appContext.status, appContext.selectedFlow]);
 
   const updateStatusMapping = (field, update) => {
     try {
@@ -35,17 +30,11 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
         () =>
           setAppContext({
             ...appContext,
-            flows: {
-              ...appContext.flows,
-              [appContext.selectedFlow]: {
-                ...appContext.flows[appContext.selectedFlow],
-                status: {
-                  ...appContext.flows[appContext.selectedFlow].status,
-                  value: {
-                    ...appContext.flows[appContext.selectedFlow].status.value,
-                    [field]: update,
-                  },
-                },
+            status: {
+              ...appContext.status,
+              value: {
+                ...appContext.status.value,
+                [field]: update,
               },
             },
           }),
@@ -57,9 +46,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
   };
 
   function updateConnectorResponse(row, update) {
-    let updatedMapping = deepCopy(
-      appContext.flows[appContext.selectedFlow].responseFields.mapping
-    );
+    let updatedMapping = deepCopy(appContext.responseFields.mapping);
     const fields = row.split('.');
     const keys = fields.flatMap((f) => [f, 'value']);
     keys.pop();
@@ -68,15 +55,13 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
   }
 
   const handleSubmit = () => {
-    const statusVariable =
-      appContext.flows[appContext.selectedFlow].statusVariable;
+    const statusVariable = appContext.statusVariable;
     const field =
       jsonpath.query(
-        appContext.flows[appContext.selectedFlow].responseFields.mapping,
+        appContext.responseFields.mapping,
         '$.' + statusVariable.replaceAll('.', '.value.').replaceAll('-', '')
       )[0] || {};
-    let updatedResponseMapping =
-      appContext.flows[appContext.selectedFlow].responseFields.mapping;
+    let updatedResponseMapping = appContext.responseFields.mapping;
     if (field.type.toLowerCase() === 'string') {
       const updates = { ...field, type: 'enum', value: [field.value].flat() };
       updatedResponseMapping = updateConnectorResponse(statusVariable, updates);
@@ -87,19 +72,13 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
       () =>
         setAppContext({
           ...appContext,
-          flows: {
-            ...appContext.flows,
-            [appContext.selectedFlow]: {
-              ...appContext.flows[appContext.selectedFlow],
-              responseFields: {
-                ...appContext.flows[appContext.selectedFlow].responseFields,
-                mapping: updatedResponseMapping,
-              },
-              status: {
-                ...appContext.flows[appContext.selectedFlow].status,
-                value: editedJson,
-              },
-            },
+          responseFields: {
+            ...appContext.responseFields,
+            mapping: updatedResponseMapping,
+          },
+          status: {
+            ...appContext.status,
+            value: editedJson,
           },
         }),
       0
@@ -159,9 +138,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
       <div className="popup">
         <h2>Enter Connector Satus</h2>
         <div className="status-mapping">
-          {Object.keys(
-            appContext.flows[appContext.selectedFlow].status.value || {}
-          ).length === 0 ? (
+          {Object.keys(appContext.status.value || {}).length === 0 ? (
             <div className="none">
               <div className="info">Status not found in response fields.</div>
               <div className="hint">
@@ -169,9 +146,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
               </div>
             </div>
           ) : (
-            Object.keys(
-              appContext.flows[appContext.selectedFlow].status.value || {}
-            ).map((f) => {
+            Object.keys(appContext.status.value || {}).map((f) => {
               return (
                 <React.Fragment key={f}>
                   <div className="status">{f}</div>
@@ -181,10 +156,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
                         id={`input-${f}`}
                         className="material-input status-mapping-input"
                         type="text"
-                        value={
-                          appContext.flows[appContext.selectedFlow].status
-                            .value[f]
-                        }
+                        value={appContext.status.value[f]}
                         onChange={(e) => handleKeyPress(f, e)}
                       />
                       <div

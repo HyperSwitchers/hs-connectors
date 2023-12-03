@@ -5,7 +5,7 @@ import { toPascalCase } from 'utils/Parser';
 import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
 import BasicPopover from '../../atomic/Popup';
 
-const CodeGenerator = () => {
+const CodeGenerator = ({ loadContext = (f) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   return (
@@ -15,27 +15,21 @@ const CodeGenerator = () => {
         onClick={(e) => {
           updateAppContextInLocalStorage(appContext);
           if (!appContext.authType.value) {
-            setAppContext({ ...appContext, selectedFlow: 'AuthType' });
+            loadContext('AuthType');
             return;
           }
           let authType = appContext.authType.value || {};
           let modifiedUpdatedRequestData = deepJsonSwap(
-            deepCopy(
-              appContext.flows[appContext.selectedFlow].requestFields.mapping ||
-                {}
-            )
+            deepCopy(appContext.requestFields.mapping || {})
           );
           let modifiedUpdatedResponseData = deepJsonSwap(
-            deepCopy(
-              appContext.flows[appContext.selectedFlow].responseFields
-                .mapping || {}
-            )
+            deepCopy(appContext.responseFields.mapping || {})
           );
-          const newFlow = appContext.selectedFlow || 'Authorize';
+          const currentFlow = appContext.selectedFlow || 'Authorize';
           const connectorPascalCase = toPascalCase(appContext.connectorName);
+          debugger;
           const generatorInput = {
             [connectorPascalCase]: {
-              ...appContext.generatorInput[connectorPascalCase],
               authType: authType.type,
               authKeys: authType.content || {},
               amount: {
@@ -43,28 +37,25 @@ const CodeGenerator = () => {
                 unitType: appContext.currencyUnitType,
               },
               flows: {
-                ...(appContext.generatorInput[connectorPascalCase]?.flows ||
-                  {}),
-                [newFlow]: {
-                  ...(appContext.generatorInput[connectorPascalCase]?.flows[
-                    newFlow
-                  ] || {}),
+                ...(appContext.generatorInput[appContext.connectorName]
+                  ?.flows || {}),
+                [currentFlow]: {
+                  ...(appContext.generatorInput[appContext.connectorName]
+                    ?.flows[currentFlow] || {}),
                   paymentsRequest: modifiedUpdatedRequestData,
                   paymentsResponse: modifiedUpdatedResponseData,
-                  hsResponse:
-                    appContext.flows[appContext.selectedFlow].hsResponseFields
-                      .value || {},
+                  hsResponse: appContext.hsResponseFields.value || {},
                 },
               },
             },
           };
           if (appContext.selectedFlow.toLowerCase() === 'authorize') {
-            generatorInput[connectorPascalCase].attemptStatus =
-              appContext.flows[appContext.selectedFlow].status.value || {};
+            generatorInput[appContext.connectorName].attemptStatus =
+              appContext.status.value || {};
           }
           if (appContext.selectedFlow.toLowerCase() === 'refund') {
-            generatorInput[connectorPascalCase].refundStatus =
-              appContext.flows[appContext.selectedFlow].status.value || {};
+            generatorInput[appContext.connectorName].refundStatus =
+              appContext.status.value || {};
           }
           setAppContext({
             ...appContext,
@@ -88,7 +79,7 @@ const CodeGenerator = () => {
             appContext.connectorPascalCase
           } ${
             appContext.baseUrl ||
-            `https://api.${appContext.connectorName.toLocaleLowerCase()}.com`
+            `https://api.${appContext.connectorName.toLowerCase()}.com`
           }`}
         />
       </div>

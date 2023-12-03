@@ -220,18 +220,15 @@ const ConnectorTemplate = () => {
       flows: { ...props.flows, ...deepCopy(appContext.props.flows) },
     };
     props.flows[appContext.selectedFlow].curl = {
-      input: appContext.flows[appContext.selectedFlow].curlCommand,
-      body: appContext.flows[appContext.selectedFlow].requestFields?.value,
-      headers:
-        appContext.flows[appContext.selectedFlow].requestHeaderFields?.value,
-      response:
-        appContext.flows[appContext.selectedFlow]?.responseFields?.value,
-      hsResponse:
-        appContext.flows[appContext.selectedFlow].hsResponseFields?.value,
+      input: appContext.curlCommand,
+      body: appContext.requestFields?.value,
+      headers: appContext.requestHeaderFields?.value,
+      response: appContext?.responseFields?.value,
+      hsResponse: appContext.hsResponseFields?.value,
     };
-    if (appContext.flows[appContext.selectedFlow]?.responseFields?.value) {
+    if (appContext?.responseFields?.value) {
       const flow = props.flows[appContext.selectedFlow] || {};
-      let ss = appContext.flows[appContext.selectedFlow].curlCommand
+      let ss = appContext.curlCommand
         .replace(/\s*\\\s*/g, ' ')
         .replace(/\n/g, '')
         .replace(/--data-raw|--data-urlencode/g, '-d');

@@ -30,11 +30,9 @@ function IRequestHeadersTable({ suggestions = {} }) {
    * Trigger - whenever appContext is updated
    */
   useEffect(() => {
-    const requestHeaders =
-      appContext.flows[appContext.selectedFlow]?.requestHeaderFields?.value ||
-      {};
+    const requestHeaders = appContext?.requestHeaderFields?.value || {};
     setFields(flattenObject(requestHeaders));
-  }, [appContext.flows, appContext.selectedFlow]);
+  }, [appContext.selectedFlow, appContext.requestHeaderFields]);
 
   return (
     <div className="editor">
@@ -55,19 +53,13 @@ function IRequestHeadersTable({ suggestions = {} }) {
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
-              if (
-                !appContext.flows[appContext.selectedFlow]?.requestHeaderFields
-                  .mapping
-              ) {
+              if (!appContext?.requestHeaderFields.mapping) {
                 return;
               }
-              let field =
-                appContext.flows[appContext.selectedFlow].requestHeaderFields
-                  .mapping[row] || {};
+              let field = appContext.requestHeaderFields.mapping[row] || {};
               try {
                 field = jsonpath.query(
-                  appContext.flows[appContext.selectedFlow].requestHeaderFields
-                    .mapping,
+                  appContext.requestHeaderFields.mapping,
                   `$.` + row
                 )[0];
               } catch (e) {}
@@ -84,11 +76,9 @@ function IRequestHeadersTable({ suggestions = {} }) {
                         sx={{ maxWidth: 500 }}
                         onInputChange={(event, newValue) => {
                           let updatedValue = deepCopy(
-                            appContext.flows[appContext.selectedFlow]
-                              ?.requestHeaderFields?.value
+                            appContext?.requestHeaderFields?.value
                           );
                           updatedValue[row] = newValue;
-                          const updatedFlows = deepCopy(appContext.flows);
                           if (
                             !(
                               typeof newValue === 'string' &&
@@ -97,10 +87,13 @@ function IRequestHeadersTable({ suggestions = {} }) {
                           ) {
                             delete updatedValue[row];
                           }
-                          updatedFlows[
-                            appContext.selectedFlow
-                          ].requestHeaderFields.value = updatedValue;
-                          setAppContext({ ...appContext, flows: updatedFlows });
+                          setAppContext({
+                            ...appContext,
+                            requestHeaderFields: {
+                              ...appContext.requestHeaderFields,
+                              value: updatedValue,
+                            },
+                          });
                         }}
                         renderInput={(params) => (
                           <TextField

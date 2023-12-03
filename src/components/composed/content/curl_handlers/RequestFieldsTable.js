@@ -39,11 +39,9 @@ function IRequestFieldsTable({ suggestions = {} }) {
    * Trigger - whenever appContext is updated
    */
   useEffect(() => {
-    const requestFields = deepCopy(
-      appContext.flows[appContext.selectedFlow].requestFields.value || {}
-    );
+    const requestFields = deepCopy(appContext.requestFields.value || {});
     setFields(flattenObject(requestFields));
-  }, [appContext.flows, appContext.selectedFlow]);
+  }, [appContext.selectedFlow, appContext.requestFields]);
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);
@@ -52,7 +50,7 @@ function IRequestFieldsTable({ suggestions = {} }) {
       try {
         row =
           jsonpath.query(
-            appContext.flows[appContext.selectedFlow].requestFields.mapping,
+            appContext.requestFields.mapping,
             '$.' + field.replaceAll('.', '.value.').replaceAll('-', '')
           )[0] || {};
       } catch (error) {
@@ -61,7 +59,7 @@ function IRequestFieldsTable({ suggestions = {} }) {
       }
       if (Array.isArray(row.value)) {
         let updatedMapping = {
-          ...appContext.flows[appContext.selectedFlow].requestFields.mapping,
+          ...appContext.requestFields.mapping,
         };
         const newVariants = row.value.concat(
           input.value
@@ -73,18 +71,19 @@ function IRequestFieldsTable({ suggestions = {} }) {
         const keys = fields.flatMap((f) => [f, 'value']);
         updatedMapping = updateNestedJson(updatedMapping, keys, newVariants);
         setVariantRequestor(null);
-        const updatedFlows = deepCopy(appContext.flows);
-        updatedFlows[appContext.selectedFlow].requestFields.mapping =
-          updatedMapping;
-        setAppContext({ ...appContext, flows: updatedFlows });
+        setAppContext({
+          ...appContext,
+          requestFields: {
+            ...appContext.requestFields,
+            mapping: updatedMapping,
+          },
+        });
       }
     }
   };
 
   const handleVariantDeletion = (field, variant) => {
-    let updatedMapping = deepCopy(
-      appContext.flows[appContext.selectedFlow].requestFields.mapping
-    );
+    let updatedMapping = deepCopy(appContext.requestFields.mapping);
     let row = {};
     try {
       row =
@@ -103,26 +102,30 @@ function IRequestFieldsTable({ suggestions = {} }) {
         const fields = field.split('.');
         const keys = fields.flatMap((f) => [f, 'value']);
         updatedMapping = updateNestedJson(updatedMapping, keys, row.value);
-        const updatedFlows = deepCopy(appContext.flows);
-        updatedFlows[appContext.selectedFlow].requestFields.mapping =
-          updatedMapping;
-        setAppContext({ ...appContext, flows: updatedFlows });
+        setAppContext({
+          ...appContext,
+          requestFields: {
+            ...appContext.requestFields,
+            mapping: updatedMapping,
+          },
+        });
       }
     }
   };
 
   function updateRequestFields(row, update) {
-    let updatedMapping = deepCopy(
-      appContext.flows[appContext.selectedFlow].requestFields.mapping
-    );
+    let updatedMapping = deepCopy(appContext.requestFields.mapping);
     const fields = row.split('.');
     const keys = fields.flatMap((f) => [f, 'value']);
     keys.pop();
     updatedMapping = updateNestedJson(updatedMapping, keys, update);
-    const updatedFlows = deepCopy(appContext.flows);
-    updatedFlows[appContext.selectedFlow].requestFields.mapping =
-      updatedMapping;
-    setAppContext({ ...appContext, flows: updatedFlows });
+    setAppContext({
+      ...appContext,
+      requestFields: {
+        ...appContext.requestFields,
+        mapping: updatedMapping,
+      },
+    });
   }
 
   return (
@@ -151,18 +154,14 @@ function IRequestFieldsTable({ suggestions = {} }) {
                 <b>DateType</b>
               </TableCell>
               {fields?.filter((row) => {
-                if (
-                  !appContext.flows[appContext.selectedFlow]?.requestFields
-                    .mapping
-                ) {
+                if (!appContext?.requestFields.mapping) {
                   return false;
                 }
                 let field = {};
                 try {
                   field =
                     jsonpath.query(
-                      appContext.flows[appContext.selectedFlow].requestFields
-                        .mapping,
+                      appContext.requestFields.mapping,
                       '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                     )[0] || {};
                 } catch (error) {
@@ -182,10 +181,7 @@ function IRequestFieldsTable({ suggestions = {} }) {
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
-              if (
-                !appContext.flows[appContext.selectedFlow]?.requestFields
-                  .mapping
-              ) {
+              if (!appContext?.requestFields.mapping) {
                 return null;
               }
               let field = {};
@@ -193,15 +189,13 @@ function IRequestFieldsTable({ suggestions = {} }) {
               try {
                 field =
                   jsonpath.query(
-                    appContext.flows[appContext.selectedFlow].requestFields
-                      .mapping,
+                    appContext.requestFields.mapping,
                     '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                   )[0] || {};
                 value =
                   typeof field.value === 'string'
                     ? field.value.startsWith('$')
-                      ? appContext.flows[appContext.selectedFlow].requestFields
-                          .value[row]
+                      ? appContext.requestFields.value[row]
                       : field.value
                     : field.value;
                 value = Array.isArray(value)

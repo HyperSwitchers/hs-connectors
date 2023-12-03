@@ -12,12 +12,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import 'jsoneditor/dist/jsoneditor.css';
-import {
-  deepCopy,
-  flattenObject,
-  is_mapped_field,
-  updateNestedJson,
-} from 'utils/common';
+import { flattenObject, is_mapped_field, updateNestedJson } from 'utils/common';
 import jsonpath from 'jsonpath';
 import { useRecoilState } from 'recoil';
 import { APP_CONTEXT } from 'utils/state';
@@ -36,10 +31,9 @@ function IResponseFieldsTable({ suggestions = {} }) {
    * Trigger - whenever appContext is updated
    */
   useEffect(() => {
-    const hsResponse =
-      appContext.flows[appContext.selectedFlow].hsResponseFields.value;
+    const hsResponse = appContext.hsResponseFields.value;
     setFields(flattenObject(hsResponse));
-  }, [appContext.flows, appContext.selectedFlow]);
+  }, [appContext.selectedFlow, appContext.hsResponseFields]);
 
   return (
     <div className="editor">
@@ -57,18 +51,14 @@ function IResponseFieldsTable({ suggestions = {} }) {
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
-              if (
-                !appContext.flows[appContext.selectedFlow]?.hsResponseFields
-                  .mapping
-              ) {
+              if (!appContext?.hsResponseFields.mapping) {
                 return null;
               }
               let field = {};
               try {
                 field =
                   jsonpath.query(
-                    appContext.flows[appContext.selectedFlow].hsResponseFields
-                      .mapping,
+                    appContext.hsResponseFields.mapping,
                     '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                   )[0] || {};
               } catch (error) {
@@ -90,12 +80,10 @@ function IResponseFieldsTable({ suggestions = {} }) {
                         sx={{ width: 300 }}
                         onChange={(event, newValue) => {
                           let updatedMapping = {
-                            ...appContext.flows[appContext.selectedFlow]
-                              .hsResponseFields.mapping,
+                            ...appContext.hsResponseFields.mapping,
                           };
                           let updatedResponse = {
-                            ...appContext.flows[appContext.selectedFlow]
-                              .hsResponseFields.value,
+                            ...appContext.hsResponseFields.value,
                           };
                           updatedResponse = updateNestedJson(
                             updatedResponse,
@@ -111,19 +99,19 @@ function IResponseFieldsTable({ suggestions = {} }) {
                             keys,
                             { ...field, value: newValue }
                           );
-                          const updatedFlows = deepCopy(appContext.flows);
-                          updatedFlows[
-                            appContext.selectedFlow
-                          ].hsResponseFields.value = updatedResponse;
-                          updatedFlows[
-                            appContext.selectedFlow
-                          ].hsResponseFields.mapping = updatedMapping;
+                          const updates = {
+                            hsResponseFields: {
+                              value: updatedResponse,
+                              mapping: updatedMapping,
+                            },
+                          };
                           if (row === 'status') {
-                            updatedFlows[
-                              appContext.selectedFlow
-                            ].statusVariable = newValue.replace('$', '');
+                            updates.statusVariable = newValue.replace('$', '');
                           }
-                          setAppContext({ ...appContext, flows: updatedFlows });
+                          setAppContext({
+                            ...appContext,
+                            ...updates,
+                          });
                         }}
                         renderInput={(params) => (
                           <TextField
