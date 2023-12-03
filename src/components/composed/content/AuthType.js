@@ -4,29 +4,13 @@ import React, { useEffect, useState } from 'react';
 import Dropdown from '../../atomic/Dropdown';
 import 'jsoneditor/dist/jsoneditor.css';
 import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
-import { CODE_SNIPPETS } from 'utils/constants';
+import { AUTH_KEYS, CODE_SNIPPETS, DEFAULT_AUTH_TYPE } from 'utils/constants';
 import { useRecoilState } from 'recoil';
-import { deepCopy } from 'utils/common';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 
 function AuthType() {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
-  const types = {
-    HeaderKey: { api_key: '' },
-    BodyKey: { api_key: '', key1: '' },
-    SignatureKey: {
-      api_key: '',
-      key1: '',
-      api_secret: '',
-    },
-    MultiAuthKey: {
-      api_key: '',
-      key1: '',
-      api_secret: '',
-      key2: '',
-    },
-  };
   const typesInfo = {
     HeaderKey: {
       api_key:
@@ -56,12 +40,14 @@ function AuthType() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const auth = appContext.authType.value;
   const [totalKeys, setTotalKeys] = useState(
-    authTypes.indexOf(auth?.type || 'HeaderKey') + 1
+    authTypes.indexOf(auth?.type || DEFAULT_AUTH_TYPE) + 1
   );
   const [selectedAuthType, setSelectedAuthType] = useState(
-    auth?.type || 'HeaderKey'
+    auth?.type || DEFAULT_AUTH_TYPE
   );
-  const [content, setContent] = useState(auth?.content || types['HeaderKey']);
+  const [content, setContent] = useState(
+    auth?.content || AUTH_KEYS[DEFAULT_AUTH_TYPE]
+  );
   const [codeIntegration, selectCodeIntegration] = useState(CODE_SNIPPETS[0]);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -99,7 +85,7 @@ function AuthType() {
         },
       },
       selectedFlow: 'Authorize',
-    };
+    }
     setAppContext(updatedAppContext);
     updateAppContextInLocalStorage(updatedAppContext);
   };
@@ -108,9 +94,9 @@ function AuthType() {
       const totalKeys = parseInt(e.target.value);
       if (totalKeys <= authTypes.length) {
         const authType = authTypes.at(totalKeys - 1);
-        const updatedContent = { ...types[authType], ...content };
+        const updatedContent = { ...AUTH_KEYS[authType], ...content };
         Object.keys(updatedContent).map((k) => {
-          if (!Object.keys(types[authType]).includes(k)) {
+          if (!Object.keys(AUTH_KEYS[authType]).includes(k)) {
             delete updatedContent[k];
           }
         });
@@ -209,13 +195,17 @@ function AuthType() {
             <div
               className="clear button"
               onClick={() => {
-                setContent(types[selectedAuthType]);
-                const updatedAuthType = deepCopy(appContext.authType);
-                updatedAuthType.value = {
-                  type: selectedAuthType,
-                  content: types[selectedAuthType],
-                };
-                setAppContext({ ...appContext, authType: updatedAuthType });
+                setContent(AUTH_KEYS[selectedAuthType]);
+                setAppContext({
+                  ...appContext,
+                  authType: {
+                    ...appContext.authType,
+                    value: {
+                      type: selectedAuthType,
+                      content: AUTH_KEYS[selectedAuthType],
+                    },
+                  },
+                });
               }}
             >
               Clear

@@ -36,10 +36,9 @@ function IResponseFieldsTable({ suggestions = {} }) {
    * Trigger - whenever appContext is updated
    */
   useEffect(() => {
-    const hsResponse =
-      appContext.flows[appContext.selectedFlow].hsResponseFields.value;
+    const hsResponse = appContext.hsResponseFields.value;
     setFields(flattenObject(hsResponse));
-  }, [appContext.flows, appContext.selectedFlow]);
+  }, [appContext.selectedFlow, appContext.hsResponseFields]);
 
   return (
     <div className="editor">
@@ -57,18 +56,14 @@ function IResponseFieldsTable({ suggestions = {} }) {
           </TableHead>
           <TableBody>
             {fields?.map((row) => {
-              if (
-                !appContext.flows[appContext.selectedFlow]?.hsResponseFields
-                  .mapping
-              ) {
+              if (!appContext?.hsResponseFields.mapping) {
                 return null;
               }
               let field = {};
               try {
                 field =
                   jsonpath.query(
-                    appContext.flows[appContext.selectedFlow].hsResponseFields
-                      .mapping,
+                    appContext.hsResponseFields.mapping,
                     '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                   )[0] || {};
               } catch (error) {
@@ -90,12 +85,10 @@ function IResponseFieldsTable({ suggestions = {} }) {
                         sx={{ width: 300 }}
                         onChange={(event, newValue) => {
                           let updatedMapping = {
-                            ...appContext.flows[appContext.selectedFlow]
-                              .hsResponseFields.mapping,
+                            ...appContext.hsResponseFields.mapping,
                           };
                           let updatedResponse = {
-                            ...appContext.flows[appContext.selectedFlow]
-                              .hsResponseFields.value,
+                            ...appContext.hsResponseFields.value,
                           };
                           updatedResponse = updateNestedJson(
                             updatedResponse,
@@ -111,6 +104,7 @@ function IResponseFieldsTable({ suggestions = {} }) {
                             keys,
                             { ...field, value: newValue }
                           );
+<<<<<<< Updated upstream
                           const updatedFlows = deepCopy(appContext.flows);
                           updatedFlows[
                             appContext.selectedFlow
@@ -123,8 +117,21 @@ function IResponseFieldsTable({ suggestions = {} }) {
                             updatedFlows[
                               appContext.selectedFlow
                             ].statusVariable = newValue.replace('$', '');
+=======
+                          const updates = {
+                            hsResponseFields: {
+                              value: updatedResponse,
+                              mapping: updatedMapping,
+                            },
+                          };
+                          if (newValue === '$status') {
+                            updates.statusVariable = row;
+>>>>>>> Stashed changes
                           }
-                          setAppContext({ ...appContext, flows: updatedFlows });
+                          setAppContext({
+                            ...appContext,
+                            ...updates,
+                          });
                         }}
                         renderInput={(params) => (
                           <TextField

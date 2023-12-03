@@ -214,14 +214,11 @@ const ConnectorTemplate = () => {
     const curl = {
       connector: appContext.connectorName,
       flow: appContext.selectedFlow,
-      input: appContext.flows[appContext.selectedFlow].curlCommand,
-      body: appContext.flows[appContext.selectedFlow].requestFields?.value,
-      headers:
-        appContext.flows[appContext.selectedFlow].requestHeaderFields?.value,
-      response:
-        appContext.flows[appContext.selectedFlow]?.responseFields?.value,
-      hsResponse:
-        appContext.flows[appContext.selectedFlow].hsResponseFields?.value,
+      input: appContext.curlCommand,
+      body: appContext.requestFields?.value,
+      headers: appContext.requestHeaderFields?.value,
+      response: appContext?.responseFields?.value,
+      hsResponse: appContext.hsResponseFields?.value,
     };
     if (curl?.connector && curl?.flow) {
       let props = localStorage.props
@@ -270,7 +267,7 @@ const ConnectorTemplate = () => {
         setAppContext({ ...appContext, wasCodeUpdatedBeforeDownload: true });
       }
     }
-  }, [appContext.flows]);
+  }, [appContext.selectedFlow]);
 
   const [isCopied, setIsCopied] = useState(false);
   // Function to handle the "Copy to Clipboard" button click event

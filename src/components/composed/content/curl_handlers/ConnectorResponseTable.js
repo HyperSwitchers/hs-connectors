@@ -19,7 +19,7 @@ import jsonpath from 'jsonpath';
 import { useRecoilState } from 'recoil';
 
 // userdef utils
-import { deepCopy, flattenObject, updateNestedJson } from 'utils/common';
+import { flattenObject, updateNestedJson } from 'utils/common';
 import { TYPES_LIST } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 
@@ -36,24 +36,23 @@ function IConnectorResponseTable() {
    * Trigger - whenever appContext is updated
    */
   useEffect(() => {
-    const connectorResponse = deepCopy(
-      appContext.flows[appContext.selectedFlow].responseFields.value || {}
-    );
+    const connectorResponse = deepCopy(appContext.responseFields.value || {});
     setFields(flattenObject(connectorResponse));
-  }, [appContext.flows, appContext.selectedFlow]);
+  }, [appContext.selectedFlow, appContext.responseFields]);
 
   function updateConnectorResponse(row, update) {
-    let updatedMapping = deepCopy(
-      appContext.flows[appContext.selectedFlow].responseFields.mapping
-    );
+    let updatedMapping = deepCopy(appContext.responseFields.mapping);
     const fields = row.split('.');
     const keys = fields.flatMap((f) => [f, 'value']);
     keys.pop();
     updatedMapping = updateNestedJson(updatedMapping, keys, update);
-    const updatedFlows = deepCopy(appContext.flows);
-    updatedFlows[appContext.selectedFlow].responseFields.mapping =
-      updatedMapping;
-    setAppContext({ ...appContext, flows: updatedFlows });
+    setAppContext({
+      ...appContext,
+      responseFields: {
+        ...appContext.responseFields,
+        mapping: updatedMapping,
+      },
+    });
   }
 
   const handleFieldClick = (row) => {
@@ -104,7 +103,7 @@ function IConnectorResponseTable() {
       try {
         row =
           jsonpath.query(
-            appContext.flows[appContext.selectedFlow].responseFields.mapping,
+            appContext.responseFields.mapping,
             '$.' + field.replaceAll('.', '.value.').replaceAll('-', '')
           )[0] || {};
       } catch (error) {
@@ -113,7 +112,7 @@ function IConnectorResponseTable() {
       }
       if (Array.isArray(row.value)) {
         let updatedMapping = {
-          ...appContext.flows[appContext.selectedFlow].responseFields.mapping,
+          ...appContext.responseFields.mapping,
         };
         const newVariants = row.value.concat(
           input?.value
@@ -125,18 +124,19 @@ function IConnectorResponseTable() {
         const keys = fields.flatMap((f) => [f, 'value']);
         updatedMapping = updateNestedJson(updatedMapping, keys, newVariants);
         setVariantRequestor(null);
-        const updatedFlows = deepCopy(appContext.flows);
-        updatedFlows[appContext.selectedFlow].responseFields.mapping =
-          updatedMapping;
-        setAppContext({ ...appContext, flows: updatedFlows });
+        setAppContext({
+          ...appContext,
+          responseFields: {
+            ...appContext.responseFields,
+            mapping: updatedMapping,
+          },
+        });
       }
     }
   };
 
   const handleVariantDeletion = (field, variant) => {
-    let updatedMapping = deepCopy(
-      appContext.flows[appContext.selectedFlow].responseFields.mapping
-    );
+    let updatedMapping = deepCopy(appContext.responseFields.mapping);
     let row = {};
     try {
       row =
@@ -155,10 +155,13 @@ function IConnectorResponseTable() {
         const fields = field.split('.');
         const keys = fields.flatMap((f) => [f, 'value']);
         updatedMapping = updateNestedJson(updatedMapping, keys, row.value);
-        const updatedFlows = deepCopy(appContext.flows);
-        updatedFlows[appContext.selectedFlow].responseFields.mapping =
-          updatedMapping;
-        setAppContext({ ...appContext, flows: updatedFlows });
+        setAppContext({
+          ...appContext,
+          responseFields: {
+            ...appContext.responseFields,
+            mapping: updatedMapping,
+          },
+        });
       }
     }
   };
@@ -182,18 +185,14 @@ function IConnectorResponseTable() {
                 <b>DataType</b>
               </TableCell>
               {fields?.filter((row) => {
-                if (
-                  !appContext.flows[appContext.selectedFlow]?.responseFields
-                    .mapping
-                ) {
+                if (!appContext?.responseFields.mapping) {
                   return false;
                 }
                 let field = {};
                 try {
                   field =
                     jsonpath.query(
-                      appContext.flows[appContext.selectedFlow].responseFields
-                        .mapping,
+                      appContext.responseFields.mapping,
                       '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                     )[0] || {};
                 } catch (error) {
@@ -213,21 +212,16 @@ function IConnectorResponseTable() {
               let field = {};
               let value = '';
               try {
-                if (
-                  appContext.flows[appContext.selectedFlow].responseFields
-                    .mapping
-                ) {
+                if (appContext.responseFields.mapping) {
                   field =
                     jsonpath.query(
-                      appContext.flows[appContext.selectedFlow].responseFields
-                        .mapping,
+                      appContext.responseFields.mapping,
                       '$.' + row.replaceAll('.', '.value.').replaceAll('-', '')
                     )[0] || {};
                   value =
                     typeof field.value === 'string'
                       ? field.value.startsWith('$')
-                        ? appContext.flows[appContext.selectedFlow]
-                            .responseFields.value[row]
+                        ? appContext.responseFields.value[row]
                         : field.value
                       : field.value;
                   value = Array.isArray(value)

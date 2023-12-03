@@ -7,16 +7,12 @@ import { useRecoilState } from 'recoil';
 
 // userdef utils
 import { APP_CONTEXT, storeItem } from 'utils/state';
-import {
-  addFieldsToNodes,
-  deepCopy,
-  mapFieldNames,
-  mapFieldNodes,
-} from 'utils/common';
+import { addFieldsToNodes, mapFieldNames } from 'utils/common';
 import { parse_curl } from 'curl-parser';
 import { getHeaders } from 'utils/common';
 import { defaultConnectorProps } from './ConnectorTemplates';
 import { toPascalCase } from 'utils/Parser';
+import { DEFAULT_CONNECTOR } from 'utils/constants';
 
 const CurlRequestEditor = () => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
@@ -30,10 +26,10 @@ const CurlRequestEditor = () => {
   useEffect(() => {
     const newFlow = appContext.selectedFlow;
     if (
-      !appContext.flows[newFlow].requestFields.mapping ||
-      !appContext.flows[newFlow].requestHeaderFields.mapping
+      !appContext.requestFields?.mapping ||
+      !appContext.requestHeaderFields?.mapping
     ) {
-      updateCurlRequest(appContext.flows[newFlow].curlCommand, newFlow);
+      updateCurlRequest(appContext.curlCommand, newFlow);
     }
   }, [appContext.selectedFlow]);
 
@@ -42,7 +38,6 @@ const CurlRequestEditor = () => {
       .replace(/\s*\\\s*/g, ' ')
       .replace(/\n/g, '')
       .replace(/--data-raw|--data-urlencode/g, '-d');
-    const newFlow = flow || appContext.selectedFlow;
     try {
       const fetchRequest = parse_curl(ss);
       const requestFields = JSON.parse(fetchRequest?.data?.ascii || '{}');
@@ -55,40 +50,35 @@ const CurlRequestEditor = () => {
         {}
       );
 
-      // Update state
-      const updatedFlow = deepCopy(appContext.flows[appContext.selectedFlow]);
-      updatedFlow.curlCommand = request;
-      updatedFlow.curlRequest = fetchRequest;
-      updatedFlow.requestFields = {
-        value: requestFields,
-        mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
-      };
-
-      updatedFlow.requestHeaderFields = {
-        value: requestHeaderFields,
-        mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
-      };
-      updatedFlow.hsResponseFields = {
-        ...updatedFlow?.hsResponseFields,
-        mapping: addFieldsToNodes(
-          mapFieldNames({
-            ...updatedFlow?.hsResponseFields.value,
-          })
-        ),
-      };
-
       // Updates
       if (fetchRequest) {
         saveFlowDetails(fetchRequest);
       }
-      const updatedFlows = deepCopy(appContext.flows);
-      updatedFlows[newFlow] = updatedFlow;
-      setAppContext({ ...appContext, flows: { ...updatedFlows } });
+      // debugger;
+      setAppContext({
+        ...appContext,
+        curlCommand: request,
+        curlRequest: fetchRequest,
+        requestFields: {
+          value: requestFields,
+          mapping: addFieldsToNodes(mapFieldNames({ ...requestFields })),
+        },
+        requestHeaderFields: {
+          value: requestHeaderFields,
+          mapping: addFieldsToNodes(mapFieldNames({ ...requestHeaderFields })),
+        },
+        hsResponseFields: {
+          ...appContext?.hsResponseFields,
+          mapping: addFieldsToNodes(
+            mapFieldNames({
+              ...appContext?.hsResponseFields.value,
+            })
+          ),
+        },
+      });
     } catch (e) {
       console.error('Failed while updating cURL request', e);
-      const updatedFlows = deepCopy(appContext.flows);
-      updatedFlows[newFlow].curlCommand = request;
-      setAppContext({ ...appContext, flows: { ...updatedFlows } });
+      setAppContext({ ...appContext, curlCommand: request });
     }
   };
 
@@ -99,7 +89,7 @@ const CurlRequestEditor = () => {
   const saveFlowDetails = (curl) => {
     let props = localStorage.props
       ? JSON.parse(localStorage.props)
-      : defaultConnectorProps(localStorage.connector || 'DemoCon');
+      : defaultConnectorProps(localStorage.connector || DEFAULT_CONNECTOR);
     let flow = props.flows[appContext.selectedFlow];
     if (flow) {
       flow.url_path = new URL(curl.url).pathname;
@@ -127,9 +117,7 @@ const CurlRequestEditor = () => {
   };
 
   const sendRequest = async () => {
-    const curlRequest = deepCopy(
-      appContext.flows[appContext.selectedFlow].curlRequest
-    );
+    const curlRequest = appContext.curlRequest;
     // Transforming the fetchRequest object into a valid JavaScript fetch request
     const requestOptions = {
       method: curlRequest.method,
@@ -151,9 +139,7 @@ const CurlRequestEditor = () => {
           value: data,
           mapping: addFieldsToNodes(data),
         };
-        updates.flows = deepCopy(appContext.flows);
-        updates.flows[`${appContext.selectedFlow}`].responseFields =
-          responseFieldsUpdate;
+        updates.responseFields = responseFieldsUpdate;
       },
       error: (data) => {
         console.log(data);
@@ -177,7 +163,7 @@ const CurlRequestEditor = () => {
         <h3>cURL Request</h3>
         <textarea
           ref={curlTextareaRef} // Add the ref to the text area
-          value={appContext.flows[appContext.selectedFlow].curlCommand}
+          value={appContext.curlCommand}
           onChange={(e) => updateCurlRequest(e.target.value)}
           placeholder="Enter your cURL request here..."
         />

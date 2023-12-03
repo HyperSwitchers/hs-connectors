@@ -15,7 +15,7 @@ import InfoIcon from '@mui/icons-material/Info';
 // userdef UI components
 import Dropdown from '../atomic/Dropdown';
 
-const Header = () => {
+const Header = ({ loadContext = (f) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   const handleConnectorNameChange = (event) => {
@@ -26,7 +26,7 @@ const Header = () => {
   const handleFlowOptionChange = (event) => {
     let flow = event.target.value;
     if (FLOW_OPTIONS.includes(flow)) {
-      setAppContext({ ...appContext, selectedFlow: flow });
+      loadContext(flow);
     }
   };
 

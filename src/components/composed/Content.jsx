@@ -23,25 +23,18 @@ import StatusMappingPopup from './content/StatusMappingPopup';
 import CodeGenerator from './content/CodeGenerator';
 import CodePreview from './content/CodePreview';
 
-const Content = () => {
+const Content = ({ loadContext = (f) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const prevRef = useRef(appContext);
   useEffect(() => {
     if (
-      Object.keys(appContext.flows).filter(
-        (f) =>
-          prevRef.current.flows[f]?.statusVariable !==
-            appContext.flows[f]?.statusVariable &&
-          !(
-            appContext.flows[f]?.status.value ||
-            appContext.flows[f]?.status.mapping
-          )
-      ).length > 0
+      prevRef.current.statusVariable !== appContext.statusVariable &&
+      !(appContext.status.value || appContext.status.mapping)
     ) {
       handleStatusMappingButtonClick();
     }
     prevRef.current = appContext;
-  }, [appContext.flows]);
+  }, [appContext.selectedFlow]);
 
   // Component specifc states
   const [isStatusMappingPopupOpen, setIsStatusMappingPopupOpen] =
@@ -49,14 +42,13 @@ const Content = () => {
 
   const handleStatusMappingButtonClick = () => {
     let statusFields = {};
-    const statusVariable =
-      appContext.flows[appContext.selectedFlow].statusVariable;
+    const statusVariable = appContext.statusVariable;
     if (typeof statusVariable === 'string') {
       let field = null;
       try {
         field =
           jsonpath.query(
-            appContext.flows[appContext.selectedFlow].responseFields.mapping,
+            appContext.responseFields.mapping,
             '$.' +
               statusVariable
                 // @ts-ignore
@@ -84,15 +76,9 @@ const Content = () => {
         () =>
           setAppContext({
             ...appContext,
-            flows: {
-              ...appContext.flows,
-              [appContext.selectedFlow]: {
-                ...appContext.flows[appContext.selectedFlow],
-                status: {
-                  ...appContext.flows[appContext.selectedFlow].status,
-                  value: statusFields,
-                },
-              },
+            status: {
+              ...appContext.status,
+              value: statusFields,
             },
           }),
         0
@@ -103,11 +89,11 @@ const Content = () => {
   const renderMainContent = (appContext) => {
     return (
       <div className="app-content-main">
-        {appContext.flows[appContext.selectedFlow]?.description ? (
+        {appContext.description ? (
           <div
             className="flow-description"
             dangerouslySetInnerHTML={{
-              __html: appContext.flows[appContext.selectedFlow].description,
+              __html: appContext.description,
             }}
           ></div>
         ) : null}
@@ -159,10 +145,8 @@ const Content = () => {
               id="responseStatusMapping"
               className={`${
                 !(
-                  typeof appContext.flows[appContext.selectedFlow]
-                    .statusVariable === 'string' &&
-                  appContext.flows[appContext.selectedFlow].statusVariable
-                    .length > 0
+                  typeof appContext.statusVariable === 'string' &&
+                  appContext.statusVariable.length > 0
                 )
                   ? 'disabled'
                   : ''
@@ -170,18 +154,14 @@ const Content = () => {
               onClick={handleStatusMappingButtonClick}
             >
               {!(
-                typeof appContext.flows[appContext.selectedFlow]
-                  .statusVariable === 'string' &&
-                appContext.flows[appContext.selectedFlow].statusVariable
-                  .length > 0
+                typeof appContext.statusVariable === 'string' &&
+                appContext.statusVariable.length > 0
               )
                 ? 'Map Status to HyperSwitch field'
                 : 'Status Mapping'}
             </button>
             <IResponseFieldsTable
-              suggestions={
-                appContext.flows[appContext.selectedFlow]?.responseFields?.value
-              }
+              suggestions={appContext?.responseFields?.value}
             ></IResponseFieldsTable>
           </div>
         </Paper>
@@ -192,7 +172,7 @@ const Content = () => {
           />
         )}
         {/* Code generation */}
-        <CodeGenerator />
+        <CodeGenerator loadContext={loadContext} />
         {/* Generated code preview */}
         <CodePreview />
       </div>

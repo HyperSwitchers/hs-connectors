@@ -280,3 +280,41 @@ export const TYPES_MAPPING = {
 export const CURRENCY_UNIT = ['Minor', 'Base'];
 
 export const CURRENCY_UNIT_TYPE = ['String', 'i64', 'f64'];
+
+export const DEFAULT_CURL = {
+  authorize: `curl --location --request POST 'https://api.sandbox.checkout.com/payments'     --header 'Authorization: Bearer sk_sbox_3w2n46fb6m4tlp3c6ukvixwoget'     --header 'Content-Type: application/json'     --data-raw '{
+    "source": {
+      "type": "card",
+      "number": "4242424242424242",
+      "expiry_month": 1,
+      "expiry_year": 30,
+      "name": "John Smith",
+      "cvv": "100"
+    },
+    "processing_channel_id": "pc_gcjstkyrr4eudnjkqlro3kymcu",
+    "amount": 1040,
+    "currency": "GBP",
+    "reference": "123lala",
+    "capture": false
+  }'`,
+};
+
+export const DEFAULT_CONNECTOR = 'DemoCon';
+
+export const DEFAULT_AUTH_TYPE = 'HeaderKey';
+
+export const AUTH_KEYS = {
+  HeaderKey: { api_key: '' },
+  BodyKey: { api_key: '', key1: '' },
+  SignatureKey: {
+    api_key: '',
+    key1: '',
+    api_secret: '',
+  },
+  MultiAuthKey: {
+    api_key: '',
+    key1: '',
+    api_secret: '',
+    key2: '',
+  },
+};

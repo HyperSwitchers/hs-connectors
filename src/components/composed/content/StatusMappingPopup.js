@@ -5,18 +5,17 @@ import React, { useEffect, useState } from 'react';
 import { HYPERSWITCH_STATUS_LIST } from '../../../utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 import { useRecoilState } from 'recoil';
+<<<<<<< Updated upstream
 import { deepCopy, updateNestedJson } from 'utils/common';
 import jsonpath from 'jsonpath';
+=======
+>>>>>>> Stashed changes
 
 const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [showSuggestions, setShowSuggestions] = useState(null);
   const [jsonInput, setJsonInput] = useState(
-    JSON.stringify(
-      appContext.flows[appContext.selectedFlow].status.value || {},
-      null,
-      2
-    )
+    JSON.stringify(appContext.status.value || {}, null, 2)
   );
 
   /**
@@ -24,10 +23,13 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
    * Use - Update json input
    */
   useEffect(() => {
-    const updatedValue =
-      appContext.flows[appContext.selectedFlow].status.value || {};
+    const updatedValue = appContext.status.value || {};
     setJsonInput(JSON.stringify(updatedValue, null, 2));
+<<<<<<< Updated upstream
   }, [appContext.flows, appContext.selectedFlow]);
+=======
+  }, [appContext.status, appContext.selectedFlow]);
+>>>>>>> Stashed changes
 
   const updateStatusMapping = (field, update) => {
     try {
@@ -35,17 +37,11 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
         () =>
           setAppContext({
             ...appContext,
-            flows: {
-              ...appContext.flows,
-              [appContext.selectedFlow]: {
-                ...appContext.flows[appContext.selectedFlow],
-                status: {
-                  ...appContext.flows[appContext.selectedFlow].status,
-                  value: {
-                    ...appContext.flows[appContext.selectedFlow].status.value,
-                    [field]: update,
-                  },
-                },
+            status: {
+              ...appContext.status,
+              value: {
+                ...appContext.status.value,
+                [field]: update,
               },
             },
           }),
@@ -87,6 +83,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
       () =>
         setAppContext({
           ...appContext,
+<<<<<<< Updated upstream
           flows: {
             ...appContext.flows,
             [appContext.selectedFlow]: {
@@ -100,6 +97,11 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
                 value: editedJson,
               },
             },
+=======
+          status: {
+            ...appContext.status,
+            value: editedJson,
+>>>>>>> Stashed changes
           },
         }),
       0
@@ -159,9 +161,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
       <div className="popup">
         <h2>Enter Connector Satus</h2>
         <div className="status-mapping">
-          {Object.keys(
-            appContext.flows[appContext.selectedFlow].status.value || {}
-          ).length === 0 ? (
+          {Object.keys(appContext.status.value || {}).length === 0 ? (
             <div className="none">
               <div className="info">Status not found in response fields.</div>
               <div className="hint">
@@ -169,9 +169,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
               </div>
             </div>
           ) : (
-            Object.keys(
-              appContext.flows[appContext.selectedFlow].status.value || {}
-            ).map((f) => {
+            Object.keys(appContext.status.value || {}).map((f) => {
               return (
                 <React.Fragment key={f}>
                   <div className="status">{f}</div>
@@ -181,10 +179,7 @@ const StatusMappingPopup = ({ setIsStatusMappingPopupOpen = (b) => {} }) => {
                         id={`input-${f}`}
                         className="material-input status-mapping-input"
                         type="text"
-                        value={
-                          appContext.flows[appContext.selectedFlow].status
-                            .value[f]
-                        }
+                        value={appContext.status.value[f]}
                         onChange={(e) => handleKeyPress(f, e)}
                       />
                       <div

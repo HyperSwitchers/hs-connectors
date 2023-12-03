@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { deepCopy, deepJsonSwap } from 'utils/common';
-import { FLOW_OPTIONS } from 'utils/constants';
 import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
 import BasicPopover from '../../atomic/Popup';
 
-const CodeGenerator = () => {
+const CodeGenerator = ({ loadContext = (f) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   return (
@@ -15,23 +14,17 @@ const CodeGenerator = () => {
         onClick={(e) => {
           updateAppContextInLocalStorage(appContext);
           if (!appContext.authType.value) {
-            setAppContext({ ...appContext, selectedFlow: 'AuthType' });
+            loadContext('AuthType');
             return;
           }
           let authType = appContext.authType.value || {};
           let modifiedUpdatedRequestData = deepJsonSwap(
-            deepCopy(
-              appContext.flows[appContext.selectedFlow].requestFields.mapping ||
-              {}
-            )
+            deepCopy(appContext.requestFields.mapping || {})
           );
           let modifiedUpdatedResponseData = deepJsonSwap(
-            deepCopy(
-              appContext.flows[appContext.selectedFlow].responseFields
-                .mapping || {}
-            )
+            deepCopy(appContext.responseFields.mapping || {})
           );
-          const newFlow = appContext.selectedFlow || 'Authorize'
+          const currentFlow = appContext.selectedFlow || 'Authorize';
           const generatorInput = deepCopy(appContext.generatorInput);
           generatorInput[appContext.connectorName] = {
             ...generatorInput[appContext.connectorName],
@@ -42,24 +35,24 @@ const CodeGenerator = () => {
               unitType: appContext.currencyUnitType,
             },
             flows: {
-              ...appContext.generatorInput[appContext.connectorName]?.flows || {},
-              [newFlow]: {
-                ...appContext.generatorInput[appContext.connectorName]?.flows[newFlow] || {},
+              ...generatorInput[appContext.connectorName].flows,
+              [currentFlow]: {
+                ...(appContext.generatorInput[appContext.connectorName]?.flows[
+                  currentFlow
+                ] || {}),
                 paymentsRequest: modifiedUpdatedRequestData,
                 paymentsResponse: modifiedUpdatedResponseData,
-                hsResponse:
-                  appContext.flows[appContext.selectedFlow].hsResponseFields
-                    .value || {},
+                hsResponse: appContext.hsResponseFields.value || {},
               },
             },
-          }
+          };
           if (appContext.selectedFlow.toLowerCase() === 'authorize') {
             generatorInput[appContext.connectorName].attemptStatus =
-              appContext.flows[appContext.selectedFlow].status.value || {};
+              appContext.status.value || {};
           }
           if (appContext.selectedFlow.toLowerCase() === 'refund') {
             generatorInput[appContext.connectorName].refundStatus =
-              appContext.flows[appContext.selectedFlow].status.value || {};
+              appContext.status.value || {};
           }
           setAppContext({ ...appContext, generatorInput });
           let targetElement = document.getElementById('generated-code-snippet');
@@ -74,9 +67,11 @@ const CodeGenerator = () => {
       </button>
       <div>
         <BasicPopover
-          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${appContext.connectorName
-            } ${appContext.baseUrl || `https://api.${appContext.connectorName}.com`
-            }`}
+          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${
+            appContext.connectorName
+          } ${
+            appContext.baseUrl || `https://api.${appContext.connectorName}.com`
+          }`}
         />
       </div>
     </div>
