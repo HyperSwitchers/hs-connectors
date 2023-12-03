@@ -88,15 +88,6 @@ impl TryFrom<types::RefundsResponseRouterData<api::RSync, ${connectorName}Refund
         })
      }
 }
-
-//TODO: Fill the struct with respective fields
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
-pub struct ErrorResponse {
-    pub status_code: u16,
-    pub code: String,
-    pub message: String,
-    pub reason: Option<String>,
-}
 `;
 
 const errorStructs = `//TODO: Fill the struct with respective fields

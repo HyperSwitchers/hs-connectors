@@ -48,10 +48,10 @@ function IResponseFieldsTable({ suggestions = {} }) {
           <TableHead>
             <TableRow>
               <TableCell>
-                <b>Connector Field Name</b>
+                <b>Hyperswitch Field Name</b>
               </TableCell>
               <TableCell>
-                <b>Hyperswitch Field Name</b>
+                <b>Connector Field Name</b>
               </TableCell>
             </TableRow>
           </TableHead>
