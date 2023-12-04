@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useRecoilState } from 'recoil';
 import { deepCopy, deepJsonSwap } from 'utils/common';
-import { FLOW_OPTIONS } from 'utils/constants';
+import { toPascalCase } from 'utils/Parser';
 import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
 import BasicPopover from '../../atomic/Popup';
 
@@ -22,7 +22,7 @@ const CodeGenerator = () => {
           let modifiedUpdatedRequestData = deepJsonSwap(
             deepCopy(
               appContext.flows[appContext.selectedFlow].requestFields.mapping ||
-              {}
+                {}
             )
           );
           let modifiedUpdatedResponseData = deepJsonSwap(
@@ -31,10 +31,11 @@ const CodeGenerator = () => {
                 .mapping || {}
             )
           );
-          const newFlow = appContext.selectedFlow || 'Authorize'
+          const newFlow = appContext.selectedFlow || 'Authorize';
           const generatorInput = deepCopy(appContext.generatorInput);
-          generatorInput[appContext.connectorName] = {
-            ...generatorInput[appContext.connectorName],
+          const connectorPascalCase = toPascalCase(appContext.connectorName);
+          generatorInput[connectorPascalCase] = {
+            ...generatorInput[connectorPascalCase],
             authType: authType.type,
             authKeys: authType.content || {},
             amount: {
@@ -42,9 +43,11 @@ const CodeGenerator = () => {
               unitType: appContext.currencyUnitType,
             },
             flows: {
-              ...appContext.generatorInput[appContext.connectorName]?.flows || {},
+              ...(appContext.generatorInput[connectorPascalCase]?.flows || {}),
               [newFlow]: {
-                ...appContext.generatorInput[appContext.connectorName]?.flows[newFlow] || {},
+                ...(appContext.generatorInput[connectorPascalCase]?.flows[
+                  newFlow
+                ] || {}),
                 paymentsRequest: modifiedUpdatedRequestData,
                 paymentsResponse: modifiedUpdatedResponseData,
                 hsResponse:
@@ -52,16 +55,16 @@ const CodeGenerator = () => {
                     .value || {},
               },
             },
-          }
+          };
           if (appContext.selectedFlow.toLowerCase() === 'authorize') {
-            generatorInput[appContext.connectorName].attemptStatus =
+            generatorInput[connectorPascalCase].attemptStatus =
               appContext.flows[appContext.selectedFlow].status.value || {};
           }
           if (appContext.selectedFlow.toLowerCase() === 'refund') {
-            generatorInput[appContext.connectorName].refundStatus =
+            generatorInput[connectorPascalCase].refundStatus =
               appContext.flows[appContext.selectedFlow].status.value || {};
           }
-          setAppContext({ ...appContext, generatorInput });
+          setAppContext({ ...appContext, generatorInput, connectorPascalCase });
           let targetElement = document.getElementById('generated-code-snippet');
           targetElement.scrollIntoView({
             behavior: 'smooth',
@@ -74,9 +77,12 @@ const CodeGenerator = () => {
       </button>
       <div>
         <BasicPopover
-          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${appContext.connectorName
-            } ${appContext.baseUrl || `https://api.${appContext.connectorName}.com`
-            }`}
+          curl={`curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- ${
+            appContext.connectorPascalCase
+          } ${
+            appContext.baseUrl ||
+            `https://api.${appContext.connectorName.toLocaleLowerCase()}.com`
+          }`}
         />
       </div>
     </div>

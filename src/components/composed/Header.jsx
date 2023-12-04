@@ -14,13 +14,15 @@ import InfoIcon from '@mui/icons-material/Info';
 
 // userdef UI components
 import Dropdown from '../atomic/Dropdown';
+import { toPascalCase } from 'utils/Parser';
 
 const Header = () => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
 
   const handleConnectorNameChange = (event) => {
     let connectorName = event.target.value;
-    setAppContext({ ...appContext, connectorName });
+    let connectorPascalCase = toPascalCase(connectorName);
+    setAppContext({ ...appContext, connectorName, connectorPascalCase });
   };
 
   const handleFlowOptionChange = (event) => {

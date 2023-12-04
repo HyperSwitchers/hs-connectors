@@ -1,6 +1,6 @@
 // @ts-check
 
-import { atom, selector } from 'recoil';
+import { atom } from 'recoil';
 
 /// States required for code generation journey
 // - Connector name
@@ -18,6 +18,7 @@ export const APP_CONTEXT = atom({
   key: 'context',
   default: {
     baseUrl: '',
+    connectorPascalCase: 'DemoCon',
     connectorName: 'DemoCon',
     currencyUnit: 'Minor',
     currencyUnitType: 'i64',

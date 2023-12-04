@@ -212,7 +212,7 @@ const ConnectorTemplate = () => {
   };
   useEffect(() => {
     const curl = {
-      connector: appContext.connectorName,
+      connector: appContext.connectorPascalCase,
       flow: appContext.selectedFlow,
       input: appContext.flows[appContext.selectedFlow].curlCommand,
       body: appContext.flows[appContext.selectedFlow].requestFields?.value,
@@ -226,9 +226,10 @@ const ConnectorTemplate = () => {
     if (curl?.connector && curl?.flow) {
       let props = localStorage.props
         ? JSON.parse(localStorage.props)
-        : defaultConnectorProps(curl?.connector);
-      props.flows[curl?.flow].curl = {};
-      props.flows[curl?.flow].curl = {
+        : defaultConnectorProps(curl.connector);
+      props.connector = curl.connector;
+      props.flows[curl.flow].curl = {};
+      props.flows[curl.flow].curl = {
         input: curl.input,
         hsResponse: curl.hsResponse,
         body: curl.body,
@@ -270,7 +271,7 @@ const ConnectorTemplate = () => {
         setAppContext({ ...appContext, wasCodeUpdatedBeforeDownload: true });
       }
     }
-  }, [appContext.flows]);
+  }, [appContext.flows, appContext.connectorPascalCase]);
 
   const [isCopied, setIsCopied] = useState(false);
   // Function to handle the "Copy to Clipboard" button click event
@@ -285,7 +286,7 @@ const ConnectorTemplate = () => {
 
   return (
     <div>
-      <h3>{appContext.connectorName.toLowerCase()}.rs</h3>
+      <h3>{appContext.connectorPascalCase.toLowerCase()}.rs</h3>
       <div data-testid="generated-code">
         <button onClick={handleCopyClick}>Copy to Clipboard</button>
         {isCopied && <span>Copied to clipboard!</span>}

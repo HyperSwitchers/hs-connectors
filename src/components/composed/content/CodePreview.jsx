@@ -48,11 +48,11 @@ const CodePreview = () => {
   useEffect(() => {
     try {
       if (
-        appContext.connectorName &&
+        appContext.connectorPascalCase &&
         Object.keys(appContext.generatorInput).length > 0
       ) {
         const rustCode = generateRustCode(
-          appContext.connectorName,
+          appContext.connectorPascalCase,
           JSON.stringify(appContext.generatorInput)
         );
         if (codeSnippet !== rustCode) {
