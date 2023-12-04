@@ -49,6 +49,8 @@ const Content = () => {
 
   const handleStatusMappingButtonClick = () => {
     let statusFields = {};
+    let statusFieldsCopy =
+      appContext.flows[appContext.selectedFlow].status.value || {};
     const statusVariable =
       appContext.flows[appContext.selectedFlow].statusVariable;
     if (typeof statusVariable === 'string') {
@@ -67,18 +69,16 @@ const Content = () => {
         console.error('jsonpath query failed', error);
         return;
       }
-      if (typeof field.value === 'object') {
-        if (Array.isArray(field.value)) {
-          field.value.map((s) => {
-            statusFields[s] = null;
-            return null;
-          });
-        } else {
-          statusFields = { ...statusFields, ...field.value };
-        }
-      } else {
-        statusFields[field.value] = null;
-      }
+      (typeof field.value === 'object'
+        ? Array.isArray(field.value)
+          ? field.value
+          : Object.keys(field.value)
+        : [field.value]
+      ).map((f) =>
+        !statusFieldsCopy[f]
+          ? (statusFields[f] = null)
+          : (statusFields[f] = statusFieldsCopy[f])
+      );
       setIsStatusMappingPopupOpen(true);
       setTimeout(
         () =>
