@@ -1,5 +1,6 @@
 // @ts-check
 
+import { defaultConnectorProps } from 'components/composed/content/ConnectorTemplates';
 import { atom } from 'recoil';
 
 /// States required for code generation journey
@@ -27,6 +28,8 @@ export const APP_CONTEXT = atom({
     loading: false,
     selectedFlow: 'AuthType',
     selectedPaymentMethodOption: '',
+    codeInvalidated: false,
+    props: defaultConnectorProps('DemoCon'),
     authType: {
       value: null,
       mapping: null,

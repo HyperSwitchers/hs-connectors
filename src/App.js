@@ -67,7 +67,11 @@ function App() {
         };
       }
     });
-    setAppContext({ ...context, flows: { ...context.flows, ...updatedFlows } });
+    setAppContext({
+      ...appContext,
+      ...context,
+      flows: { ...context.flows, ...updatedFlows },
+    });
   }, []);
 
   return (

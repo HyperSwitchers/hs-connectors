@@ -215,3 +215,7 @@ export const getHeaders = (headers) => {
     return acc;
   }, {});
 };
+
+export const convertToValidVariableName = (str) => {
+  return str.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
+};

@@ -12,6 +12,8 @@ import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // I
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
 import { APP_CONTEXT, storeItem } from 'utils/state';
 import { useRecoilState } from 'recoil';
+import { parse_curl } from 'curl-parser';
+import { convertToValidVariableName, deepCopy, getHeaders } from 'utils/common';
 
 function toPascalCase(str) {
   return str
@@ -210,10 +212,14 @@ const ConnectorTemplate = () => {
     }
     return {};
   };
+
   useEffect(() => {
-    const curl = {
-      connector: appContext.connectorPascalCase,
-      flow: appContext.selectedFlow,
+    let props = defaultConnectorProps(appContext.connectorPascalCase);
+    props = {
+      ...props,
+      flows: { ...props.flows, ...deepCopy(appContext.props.flows) },
+    };
+    props.flows[appContext.selectedFlow].curl = {
       input: appContext.flows[appContext.selectedFlow].curlCommand,
       body: appContext.flows[appContext.selectedFlow].requestFields?.value,
       headers:
@@ -223,29 +229,44 @@ const ConnectorTemplate = () => {
       hsResponse:
         appContext.flows[appContext.selectedFlow].hsResponseFields?.value,
     };
-    if (curl?.connector && curl?.flow) {
-      let props = localStorage.props
-        ? JSON.parse(localStorage.props)
-        : defaultConnectorProps(curl.connector);
-      props.connector = curl.connector;
-      props.flows[curl.flow].curl = {};
-      props.flows[curl.flow].curl = {
-        input: curl.input,
-        hsResponse: curl.hsResponse,
-        body: curl.body,
-        headers: curl.headers,
-        response: curl.response,
-      };
-      storeItem('props', JSON.stringify(props));
+    if (appContext.flows[appContext.selectedFlow]?.responseFields?.value) {
+      const flow = props.flows[appContext.selectedFlow] || {};
+      let ss = appContext.flows[appContext.selectedFlow].curlCommand
+        .replace(/\s*\\\s*/g, ' ')
+        .replace(/\n/g, '')
+        .replace(/--data-raw|--data-urlencode/g, '-d');
+      const fetchRequest = parse_curl(ss);
+
+      flow.url_path = new URL(fetchRequest.url).pathname;
+      flow.http_method = toPascalCase(fetchRequest.method);
+      let headers = getHeaders(fetchRequest.headers);
+      props.content_type = headers['Content-Type'] || headers['content-type'];
+      flow.headers = Object.keys(headers).map((key) =>
+        convertToValidVariableName(key)
+      );
+      // if request body is present then build request body
+      flow?.enabled.push(
+        'get_headers',
+        'get_content_type',
+        'get_url',
+        'build_request',
+        'handle_response',
+        'get_error_response'
+      );
+      if (Object.keys(JSON.parse(fetchRequest.data.ascii)).length > 0) {
+        flow?.enabled.push('get_request_body');
+      }
+      props.flows[appContext.selectedFlow] = flow;
     }
-    if (ConnectorIntegration) {
+    setAppContext({ ...appContext, props });
+  }, [appContext.connectorPascalCase]);
+
+  useEffect(() => {
+    if (appContext.codeInvalidated) {
+      const props = appContext.props;
       const template = handlebars.compile(ConnectorIntegration);
       const connector_common_template = handlebars.compile(ConnectorCommon);
       const connector_webhook_template = handlebars.compile(ConnectorWebhook);
-      const connector = localStorage.connector || 'tttt';
-      const props = localStorage.props
-        ? JSON.parse(localStorage.props)
-        : defaultConnectorProps(connector);
       const flows = props.flows;
       const renderedTemplate =
         connector_common_template({
@@ -266,12 +287,17 @@ const ConnectorTemplate = () => {
         connector_webhook_template({
           struct_name: toPascalCase(props.connector),
         });
+      storeItem('props', JSON.stringify(props));
       if (renderedTemplate !== generatedCode) {
         setGeneratedCode(renderedTemplate);
-        setAppContext({ ...appContext, wasCodeUpdatedBeforeDownload: true });
       }
+      setAppContext({
+        ...appContext,
+        wasCodeUpdatedBeforeDownload: renderedTemplate !== generatedCode,
+        codeInvalidated: false,
+      });
     }
-  }, [appContext.flows, appContext.connectorPascalCase]);
+  }, [appContext.codeInvalidated, appContext.generatorInput]);
 
   const [isCopied, setIsCopied] = useState(false);
   // Function to handle the "Copy to Clipboard" button click event

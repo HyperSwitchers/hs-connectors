@@ -9,6 +9,7 @@ import { useRecoilState } from 'recoil';
 import { APP_CONTEXT, storeItem } from 'utils/state';
 import {
   addFieldsToNodes,
+  convertToValidVariableName,
   deepCopy,
   mapFieldNames,
   mapFieldNodes,
@@ -91,10 +92,6 @@ const CurlRequestEditor = () => {
       setAppContext({ ...appContext, flows: { ...updatedFlows } });
     }
   };
-
-  function convertToValidVariableName(str) {
-    return str.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
-  }
 
   const saveFlowDetails = (curl) => {
     let props = localStorage.props

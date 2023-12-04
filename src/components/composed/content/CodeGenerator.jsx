@@ -32,27 +32,29 @@ const CodeGenerator = () => {
             )
           );
           const newFlow = appContext.selectedFlow || 'Authorize';
-          const generatorInput = deepCopy(appContext.generatorInput);
           const connectorPascalCase = toPascalCase(appContext.connectorName);
-          generatorInput[connectorPascalCase] = {
-            ...generatorInput[connectorPascalCase],
-            authType: authType.type,
-            authKeys: authType.content || {},
-            amount: {
-              unit: appContext.currencyUnit,
-              unitType: appContext.currencyUnitType,
-            },
-            flows: {
-              ...(appContext.generatorInput[connectorPascalCase]?.flows || {}),
-              [newFlow]: {
-                ...(appContext.generatorInput[connectorPascalCase]?.flows[
-                  newFlow
-                ] || {}),
-                paymentsRequest: modifiedUpdatedRequestData,
-                paymentsResponse: modifiedUpdatedResponseData,
-                hsResponse:
-                  appContext.flows[appContext.selectedFlow].hsResponseFields
-                    .value || {},
+          const generatorInput = {
+            [connectorPascalCase]: {
+              ...appContext.generatorInput[connectorPascalCase],
+              authType: authType.type,
+              authKeys: authType.content || {},
+              amount: {
+                unit: appContext.currencyUnit,
+                unitType: appContext.currencyUnitType,
+              },
+              flows: {
+                ...(appContext.generatorInput[connectorPascalCase]?.flows ||
+                  {}),
+                [newFlow]: {
+                  ...(appContext.generatorInput[connectorPascalCase]?.flows[
+                    newFlow
+                  ] || {}),
+                  paymentsRequest: modifiedUpdatedRequestData,
+                  paymentsResponse: modifiedUpdatedResponseData,
+                  hsResponse:
+                    appContext.flows[appContext.selectedFlow].hsResponseFields
+                      .value || {},
+                },
               },
             },
           };
@@ -64,7 +66,12 @@ const CodeGenerator = () => {
             generatorInput[connectorPascalCase].refundStatus =
               appContext.flows[appContext.selectedFlow].status.value || {};
           }
-          setAppContext({ ...appContext, generatorInput, connectorPascalCase });
+          setAppContext({
+            ...appContext,
+            codeInvalidated: true,
+            generatorInput,
+            connectorPascalCase,
+          });
           let targetElement = document.getElementById('generated-code-snippet');
           targetElement.scrollIntoView({
             behavior: 'smooth',

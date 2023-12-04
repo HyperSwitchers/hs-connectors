@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 
 // userdef utils
@@ -18,9 +18,18 @@ import { toPascalCase } from 'utils/Parser';
 
 const Header = () => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
+  const [connectorName, setConnectorName] = useState(appContext.connectorName);
+
+  useEffect(() => {
+    setConnectorName(appContext.connectorName);
+  }, [appContext.connectorName]);
 
   const handleConnectorNameChange = (event) => {
     let connectorName = event.target.value;
+    setConnectorName(connectorName);
+  };
+
+  const handleConnectorNameUpdate = () => {
     let connectorPascalCase = toPascalCase(connectorName);
     setAppContext({ ...appContext, connectorName, connectorPascalCase });
   };
@@ -62,8 +71,9 @@ const Header = () => {
             className="conector"
             type="text"
             placeholder="Enter Connector Name"
+            onBlur={handleConnectorNameUpdate}
             onChange={handleConnectorNameChange}
-            defaultValue={appContext.connectorName}
+            value={connectorName}
           />
         </div>
         &nbsp;&nbsp;&nbsp;
