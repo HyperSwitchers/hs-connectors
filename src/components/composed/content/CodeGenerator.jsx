@@ -27,7 +27,6 @@ const CodeGenerator = ({ loadContext = (f) => {} }) => {
           );
           const currentFlow = appContext.selectedFlow || 'Authorize';
           const connectorPascalCase = toPascalCase(appContext.connectorName);
-          debugger;
           const generatorInput = {
             [connectorPascalCase]: {
               authType: authType.type,
@@ -57,6 +56,7 @@ const CodeGenerator = ({ loadContext = (f) => {} }) => {
             generatorInput[appContext.connectorName].refundStatus =
               appContext.status.value || {};
           }
+          debugger
           setAppContext({
             ...appContext,
             codeInvalidated: true,

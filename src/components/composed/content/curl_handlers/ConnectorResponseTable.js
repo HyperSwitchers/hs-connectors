@@ -38,7 +38,12 @@ function IConnectorResponseTable() {
   useEffect(() => {
     const connectorResponse = deepCopy(appContext.responseFields.value || {});
     setFields(flattenObject(connectorResponse));
-  }, [appContext.selectedFlow, appContext.responseFields]);
+    console.warn(
+      'DEBUG RESPONSE UPDATE',
+      appContext.responseFields.value,
+      flattenObject(connectorResponse)
+    );
+  }, [appContext.selectedFlow, appContext.responseFields.value]);
 
   function updateConnectorResponse(row, update) {
     let updatedMapping = deepCopy(appContext.responseFields.mapping);

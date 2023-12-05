@@ -29,11 +29,11 @@ const CurlRequestEditor = () => {
    */
   useEffect(() => {
     const newFlow = appContext.selectedFlow;
+    console.log('DEBUG cURL EDITOR', appContext);
     if (
       !appContext.requestFields?.mapping ||
       !appContext.requestHeaderFields?.mapping
     ) {
-      debugger;
       updateCurlRequest(appContext.curlCommand, newFlow);
     }
   }, [appContext.selectedFlow]);
@@ -59,7 +59,6 @@ const CurlRequestEditor = () => {
       if (fetchRequest) {
         saveFlowDetails(fetchRequest);
       }
-      // debugger;
       setAppContext({
         ...appContext,
         curlCommand: request,
@@ -126,7 +125,7 @@ const CurlRequestEditor = () => {
       body: curlRequest.data.ascii,
     };
 
-    let url = '/cors/' + curlRequest.url;
+    let url = curlRequest.url;
     const updates = {
       baseUrl: new URL(curlRequest?.url)?.origin,
     };

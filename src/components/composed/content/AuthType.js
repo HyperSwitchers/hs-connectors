@@ -9,7 +9,7 @@ import { useRecoilState } from 'recoil';
 import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 
-function AuthType() {
+function AuthType({ loadContext = (f, u) => {} }) {
   const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
   const typesInfo = {
     HeaderKey: {
@@ -71,12 +71,11 @@ function AuthType() {
     if (auth?.content) {
       setContent(auth.content);
     }
-  }, [appContext.authType]);
+  }, [appContext.authType, appContext.selectedFlow]);
 
   const onSaveClick = (requestData) => {
     setIsSaved(true);
-    const updatedAppContext = {
-      ...appContext,
+    loadContext('Authorize', {
       authType: {
         ...appContext.authType,
         value: {
@@ -84,10 +83,7 @@ function AuthType() {
           content: requestData,
         },
       },
-      selectedFlow: 'Authorize',
-    }
-    setAppContext(updatedAppContext);
-    updateAppContextInLocalStorage(updatedAppContext);
+    });
   };
   const onAuthTypeChange = (e, jsonEditor) => {
     try {

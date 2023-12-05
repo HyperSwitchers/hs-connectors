@@ -27,6 +27,7 @@ const Content = ({ loadContext = (f) => {} }) => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const prevRef = useRef(appContext);
   useEffect(() => {
+    console.warn('DEBUG CONTENT UPDATE', appContext, prevRef.current);
     if (
       prevRef.current.statusVariable !== appContext.statusVariable &&
       !(appContext.status.value || appContext.status.mapping)
@@ -181,7 +182,7 @@ const Content = ({ loadContext = (f) => {} }) => {
   return (
     <div className="app-content">
       {appContext.selectedFlow === 'AuthType' ? (
-        <AuthType />
+        <AuthType loadContext={loadContext} />
       ) : (
         renderMainContent(appContext)
       )}

@@ -41,7 +41,7 @@ function IRequestFieldsTable({ suggestions = {} }) {
   useEffect(() => {
     const requestFields = deepCopy(appContext.requestFields.value || {});
     setFields(flattenObject(requestFields));
-  }, [appContext.selectedFlow, appContext.requestFields]);
+  }, [appContext.selectedFlow, appContext.requestFields.value]);
 
   const handleVariantAddition = (field) => {
     const input = document.getElementById(`variant-input-${field}`);

@@ -1,11 +1,11 @@
 // @ts-check
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRecoilState } from 'recoil';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // userdef utils
 import { APP_CONTEXT, FLOWS, fetchItem } from 'utils/state';
-import { addFieldsToNodes, mapFieldNames } from 'utils/common';
+import { addFieldsToNodes, deepCopy, mapFieldNames } from 'utils/common';
 
 // userdef UI components
 import Content from './components/composed/Content.jsx';
@@ -20,66 +20,71 @@ function App() {
    * Usecase - fetch app_context from localStorage and merge with default state
    * Trigger - on every mount
    */
+  let firstLoad = false;
   useEffect(() => {
-    // Try to fetch from localStorage
-    let context = fetchItem('app_context');
-    context = typeof context === 'object' ? context : appContext;
-    if (typeof appContext === 'object') {
-      console.info('Found app_context in localStorage, updating app state');
+    if (!firstLoad) {
+      // Try to fetch from localStorage
+      let context = fetchItem('app_context');
+      context = typeof context === 'object' ? context : appContext;
+      if (typeof appContext === 'object') {
+        console.info('Found app_context in localStorage, updating app state');
+      }
+      setAppContext(context);
+      loadContext(context.selectedFlow);
+      firstLoad = true;
     }
-
-    setAppContext(context);
-    loadContext(context.selectedFlow);
   }, []);
 
   // Store flow details
-  const loadContext = (newFlow) => {
-    debugger;
+  const loadContext = (newFlow, updates = {}) => {
     // Store current values in flows
-    const flowsUpdates = {
-      [appContext.connectorName]: {
-        ...(flows[appContext.connectorName] || {}),
-        [appContext.selectedFlow]: {
-          curlCommand: appContext.curlCommand,
-          curlRequest: appContext.curlRequest,
-          requestFields: appContext.requestFields,
-          requestHeaderFields: appContext.requestHeaderFields,
-          responseFields: appContext.responseFields,
-          hsResponseFields: appContext.hsResponseFields,
-          status: appContext.status,
-        },
-      },
-    };
     setFlows({
       ...flows,
-      ...flowsUpdates,
+      [appContext.selectedFlow]: {
+        curlCommand: appContext.curlCommand,
+        curlRequest: appContext.curlRequest,
+        requestFields: appContext.requestFields,
+        requestHeaderFields: appContext.requestHeaderFields,
+        responseFields: appContext.responseFields,
+        hsResponseFields: appContext.hsResponseFields,
+        status: appContext.status,
+      },
     });
 
+    debugger;
+
     // Load appContext with persisted values
-    const appContextUpdates = {
-      selectedFlow: newFlow,
-    };
-    if (
-      flows[appContext.connectorName] &&
-      flows[appContext.connectorName][newFlow]
-    ) {
-      appContextUpdates.curlCommand =
-        flows[appContext.connectorName][newFlow].curlCommand;
-      appContextUpdates.curlRequest =
-        flows[appContext.connectorName][newFlow].curlRequest;
-      appContextUpdates.requestFields =
-        flows[appContext.connectorName][newFlow].requestFields;
+    const appContextUpdates = deepCopy(appContext);
+    appContextUpdates.selectedFlow = newFlow;
+    if (flows[newFlow]) {
+      appContextUpdates.curlCommand = flows[newFlow].curlCommand;
+      appContextUpdates.curlRequest = flows[newFlow].curlRequest;
+      appContextUpdates.requestFields = flows[newFlow].requestFields;
       appContextUpdates.requestHeaderFields =
-        flows[appContext.connectorName][newFlow].requestHeaderFields;
-      appContextUpdates.responseFields =
-        flows[appContext.connectorName][newFlow].responseFields;
-      appContextUpdates.hsResponseFields =
-        flows[appContext.connectorName][newFlow].hsResponseFields;
-      appContextUpdates.status =
-        flows[appContext.connectorName][newFlow].status;
+        flows[newFlow].requestHeaderFields;
+      appContextUpdates.responseFields = flows[newFlow].responseFields;
+      appContextUpdates.hsResponseFields = flows[newFlow].hsResponseFields;
+      appContextUpdates.status = flows[newFlow].status;
+    } else {
+      appContextUpdates.curlCommand = '';
+      appContextUpdates.curlRequest = null;
+      appContextUpdates.requestFields = { value: null, mapping: null };
+      appContextUpdates.requestHeaderFields = { value: null, mapping: null };
+      appContextUpdates.responseFields = { value: null, mapping: null };
+      appContextUpdates.hsResponseFields = {
+        value: {
+          status: '',
+          response: {
+            resource_id: '',
+          },
+        },
+        mapping: null,
+      };
+      appContextUpdates.status = { value: null, mapping: null };
     }
 
-    const curl = appContext.curlCommand || DEFAULT_CURL[newFlow.toLowerCase()];
+    const curl =
+      appContextUpdates.curlCommand || DEFAULT_CURL[newFlow.toLowerCase()];
     if (curl && !appContextUpdates.curlRequest) {
       const curlRequest = parse_curl(
         curl
@@ -96,7 +101,6 @@ function App() {
         {}
       );
       const requestFields = JSON.parse(curlRequest?.data?.ascii || '{}');
-      const hsResponseFields = appContext.hsResponseFields.value;
       appContextUpdates.curlCommand = curl;
       appContextUpdates.curlRequest = curlRequest;
       appContextUpdates.requestFields = {
@@ -107,15 +111,33 @@ function App() {
         value: requestHeaderFields,
         mapping: addFieldsToNodes(mapFieldNames(requestHeaderFields)),
       };
+    }
+    if (!appContextUpdates.hsResponseFields.mapping) {
+      const hsResponseFields = appContextUpdates.hsResponseFields.value;
       appContextUpdates.hsResponseFields = {
         value: hsResponseFields,
         mapping: addFieldsToNodes(mapFieldNames(hsResponseFields)),
       };
     }
-
-    setAppContext({
-      ...appContext,
+    console.warn(newFlow, flows);
+    console.warn('DEBUG LOADING', {
       ...appContextUpdates,
+      ...updates,
+    });
+    console.warn('DEBUG STORING', {
+      [appContext.selectedFlow]: {
+        curlCommand: appContext.curlCommand,
+        curlRequest: appContext.curlRequest,
+        requestFields: appContext.requestFields,
+        requestHeaderFields: appContext.requestHeaderFields,
+        responseFields: appContext.responseFields,
+        hsResponseFields: appContext.hsResponseFields,
+        status: appContext.status,
+      },
+    });
+    setAppContext({
+      ...appContextUpdates,
+      ...updates,
     });
   };
 
