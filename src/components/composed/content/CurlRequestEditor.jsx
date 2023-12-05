@@ -6,17 +6,17 @@ import { Paper } from '@mui/material';
 import { useRecoilState } from 'recoil';
 
 // userdef utils
-import { APP_CONTEXT, storeItem } from 'utils/state';
+import { APP_CONTEXT } from 'utils/state';
 import {
   addFieldsToNodes,
   convertToValidVariableName,
   mapFieldNames,
+  storeItem,
 } from 'utils/common';
 import { parse_curl } from 'curl-parser';
 import { getHeaders } from 'utils/common';
-import { defaultConnectorProps } from './ConnectorTemplates';
 import { toPascalCase } from 'utils/Parser';
-import { DEFAULT_CONNECTOR } from 'utils/constants';
+import { DEFAULT_CONNECTOR, defaultConnectorProps } from 'utils/constants';
 
 const CurlRequestEditor = () => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);

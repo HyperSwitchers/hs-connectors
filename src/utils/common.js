@@ -219,3 +219,27 @@ export const getHeaders = (headers) => {
 export const convertToValidVariableName = (str) => {
   return str.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
 };
+
+export const storeItem = (key, value) => {
+  localStorage[key] = value;
+};
+
+export const fetchItem = (key) => {
+  let value = localStorage[key];
+  try {
+    value = JSON.parse(value);
+  } catch (err) {
+    console.error(`Failed to parse ${key} from localStorage`);
+  }
+  return value;
+};
+
+export const updateAppContextInLocalStorage = (appContext) => {
+  try {
+    const jsonStr = JSON.stringify(appContext);
+    storeItem('app_context', jsonStr);
+    console.info('Stored app_context in localStorage', jsonStr);
+  } catch (error) {
+    console.info('Failed to persist appContext in localStorage', error);
+  }
+};

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useRecoilState } from 'recoil';
-import { deepCopy, deepJsonSwap } from 'utils/common';
+import { deepCopy, deepJsonSwap, updateAppContextInLocalStorage } from 'utils/common';
 import { toPascalCase } from 'utils/Parser';
-import { APP_CONTEXT, updateAppContextInLocalStorage } from 'utils/state';
+import { APP_CONTEXT } from 'utils/state';
 import BasicPopover from '../../atomic/Popup';
 
 const CodeGenerator = ({ loadContext = (f) => {} }) => {

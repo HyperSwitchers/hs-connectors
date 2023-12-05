@@ -1,5 +1,7 @@
 // @ts-check
 
+import { toPascalCase } from './Parser';
+
 export const AUTH_TYPES_MAPPING = {
   api_key: [],
   key1: [],
@@ -317,4 +319,190 @@ export const AUTH_KEYS = {
     api_secret: '',
     key2: '',
   },
+};
+
+export const DEFAULT_FLOW = 'AuthType';
+
+export const defaultConnectorProps = (connector) => {
+  let connectorPascalCase = toPascalCase(connector);
+  return {
+    connector: connector,
+    url: '',
+    content_type: '',
+    struct_name: connectorPascalCase,
+    connector_name: connector,
+    flows: {
+      PaymentMethodToken: {
+        trait_name: 'api::PaymentMethodToken',
+        data_type: 'types::PaymentMethodTokenizationData',
+        response_data: 'types::PaymentsResponseData',
+        enabled: [],
+      },
+      AccessTokenAuth: {
+        trait_name: 'api::AccessTokenAuth',
+        data_type: 'types::AccessTokenRequestData',
+        response_data: 'types::AccessToken',
+        enabled: [],
+      },
+      MandateSetup: {
+        trait_name: 'api::SetupMandate',
+        data_type: 'types::SetupMandateRequestData',
+        response_data: 'types::PaymentsResponseData',
+        enabled: [],
+      },
+      Authorize: {
+        trait_name: 'api::Authorize',
+        data_type: 'types::PaymentsAuthorizeData',
+        router_type: 'types::PaymentsAuthorizeRouterData',
+        request_type: 'AuthorizeRequest',
+        response_type: 'AuthorizeResponse',
+        router_data_type: 'RouterData',
+        response_data: 'types::PaymentsResponseData',
+        flow_type: 'types::PaymentsAuthorizeType',
+        url_path: '',
+        http_method: '',
+        enabled: ['convert_router_amount'],
+      },
+      Void: {
+        trait_name: 'api::Void',
+        data_type: 'types::PaymentsCancelData',
+        response_data: 'types::PaymentsResponseData',
+        response_type: 'VoidResponse',
+        router_data_type: 'RouterData',
+        flow_type: 'types::PaymentsVoidType',
+        http_method: 'Post',
+        enabled: [],
+      },
+      PSync: {
+        trait_name: 'api::PSync',
+        data_type: 'types::PaymentsSyncData',
+        router_type: 'types::PaymentsSyncRouterData',
+        response_data: 'types::PaymentsResponseData',
+        response_type: 'PsyncResponse',
+        router_data_type: 'RouterData',
+        http_method: 'Get',
+        flow_type: 'types::PaymentsSyncType',
+        enabled: [],
+      },
+      Capture: {
+        trait_name: 'api::Capture',
+        data_type: 'types::PaymentsCaptureData',
+        router_type: `types::PaymentsCaptureRouterData`,
+        router_data_type: 'RouterData',
+        response_type: 'CaptureResponse',
+        response_data: 'types::PaymentsResponseData',
+        flow_type: 'types::PaymentsCaptureType',
+        http_method: 'Post',
+        enabled: [],
+      },
+      Session: {
+        trait_name: 'api::Session',
+        data_type: 'types::PaymentsSessionData',
+        response_data: 'types::PaymentsResponseData',
+        router_type: 'types::PaymentsSyncRouterData',
+        enabled: [],
+      },
+      Refund: {
+        trait_name: 'api::Execute',
+        data_type: 'types::RefundsData',
+        router_type: `types::RefundsRouterData<api::Execute>`,
+        request_type: 'RefundRequest',
+        response_type: 'RefundResponse',
+        router_data_type: 'RefundsRouterData',
+        response_data: 'types::RefundsResponseData',
+        http_method: 'Post',
+        flow_type: 'types::RefundExecuteType',
+        enabled: ['convert_router_amount'],
+        refund_amount: true,
+      },
+      RSync: {
+        trait_name: 'api::RSync',
+        data_type: 'types::RefundsData',
+        router_type: `types::RefundSyncRouterData`,
+        request_type: 'RefundRequest',
+        response_type: 'RefundResponse',
+        router_data_type: 'RefundsRouterData',
+        response_data: 'types::RefundsResponseData',
+        http_method: 'Get',
+        flow_type: 'types::RefundSyncType',
+        enabled: [],
+      },
+    },
+  };
+};
+
+export const TOOLTIPS = {
+  flowType: 'Type of API to be integrated',
+  paymentMethodType: 'Method to be used for the payment',
+};
+
+export const DESCRIPTION = {
+  authorize: `<div><p><b>Authorizing Payment with Hyperswitch</b></p>
+  <p>Understanding how to authorize a payment to the processor through Hyperswitch is essential for smooth and secure transactions. In the case of card payments, you'll need to identify the specific object that the processor accepts for authorization, such as the "Charge" object. This "Charge" object represents a payment made with a credit or debit card.</p>
+      
+      <p><b>Here's a simplified breakdown of the request and response body mapping between the processor and Hyperswitch:</b></p>
+      
+      <p><b>Request to Processor:</b> When initiating a card payment, you'll send a request to the processor. This request typically includes information about the payment, such as the card details, the amount to be charged, and any additional required data.</p>
+      
+      <p><b>Response from Processor:</b> The processor will respond with a confirmation or authorization for the payment. This response may contain various details, including a unique transaction identifier, authorization codes, and any other relevant information.</p>
+      
+      <p>Hyperswitch acts as the intermediary, facilitating the communication between your system and the payment processor, ensuring that the authorization process is secure and compliant. Understanding the request and response body mapping is crucial for successful payment authorizations through Hyperswitch.</p></div>`,
+};
+
+export const DEFAULT_APP_CONTEXT = {
+  connectorName: DEFAULT_CONNECTOR,
+  connectorPascalCase: DEFAULT_CONNECTOR,
+  curlCommand: DEFAULT_CURL[DEFAULT_FLOW.toLowerCase()],
+  curlRequest: null,
+  currencyUnit: 'Minor',
+  currencyUnitType: 'i64',
+  paymentMethodType: null,
+  statusVariable: null,
+  selectedFlow: DEFAULT_FLOW,
+  codeInvalidated: false,
+  downloadInvalidated: false,
+  loading: false,
+  description: DESCRIPTION[DEFAULT_FLOW.toLowerCase()],
+  authType: {
+    value: null,
+    mapping: null,
+  },
+  hsResponseFields: {
+    value: {
+      status: '',
+      response: {
+        resource_id: '',
+      },
+    },
+    mapping: null,
+  },
+  requestFields: {
+    value: null,
+    mapping: null,
+  },
+  requestHeaderFields: {
+    value: null,
+    mapping: null,
+  },
+  responseFields: {
+    value: null,
+    mapping: null,
+  },
+  status: {
+    value: null,
+    mapping: null,
+  },
+};
+
+export const DEFAULT_TRANSFORMER_STATE = {
+  connectorName: DEFAULT_CONNECTOR,
+  authType: DEFAULT_AUTH_TYPE,
+  authKeys: AUTH_KEYS[DEFAULT_AUTH_TYPE],
+  amount: {
+    unit: 'Minor',
+    currencyUnitType: 'i64',
+  },
+  flows: {},
+  attempStatus: {},
+  refundStatus: {},
 };

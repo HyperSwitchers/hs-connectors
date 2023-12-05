@@ -10,10 +10,11 @@ import {
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { githubGist } from 'react-syntax-highlighter/dist/esm/styles/hljs'; // Import a suitable style for SyntaxHighlighter
 import copy from 'copy-to-clipboard'; // Import the copy-to-clipboard library
-import { APP_CONTEXT, storeItem } from 'utils/state';
+import { APP_CONTEXT } from 'utils/state';
 import { useRecoilState } from 'recoil';
 import { parse_curl } from 'curl-parser';
-import { convertToValidVariableName, deepCopy, getHeaders } from 'utils/common';
+import { convertToValidVariableName, deepCopy, getHeaders, storeItem } from 'utils/common';
+import { defaultConnectorProps } from 'utils/constants';
 
 function toPascalCase(str) {
   return str
@@ -29,131 +30,6 @@ function toCamelCase(str) {
     .replace(/\s+/g, '');
 }
 
-export const defaultConnectorProps = (connector) => {
-  let connectorPascalCase = toPascalCase(connector);
-  return {
-    connector: connector,
-    url: '',
-    content_type: '',
-    flows: {
-      PaymentMethodToken: {
-        trait_name: 'api::PaymentMethodToken',
-        data_type: 'types::PaymentMethodTokenizationData',
-        response_data: 'types::PaymentsResponseData',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      AccessTokenAuth: {
-        trait_name: 'api::AccessTokenAuth',
-        data_type: 'types::AccessTokenRequestData',
-        response_data: 'types::AccessToken',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      MandateSetup: {
-        trait_name: 'api::SetupMandate',
-        data_type: 'types::SetupMandateRequestData',
-        response_data: 'types::PaymentsResponseData',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      Authorize: {
-        trait_name: 'api::Authorize',
-        data_type: 'types::PaymentsAuthorizeData',
-        router_type: 'types::PaymentsAuthorizeRouterData',
-        request_type: 'AuthorizeRequest',
-        response_type: 'AuthorizeResponse',
-        router_data_type: 'RouterData',
-        response_data: 'types::PaymentsResponseData',
-        flow_type: 'types::PaymentsAuthorizeType',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        url_path: '',
-        http_method: '',
-        enabled: ['convert_router_amount'],
-      },
-      Void: {
-        trait_name: 'api::Void',
-        data_type: 'types::PaymentsCancelData',
-        response_data: 'types::PaymentsResponseData',
-        response_type: 'VoidResponse',
-        router_data_type: 'RouterData',
-        flow_type: 'types::PaymentsVoidType',
-        http_method: 'Post',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      PSync: {
-        trait_name: 'api::PSync',
-        data_type: 'types::PaymentsSyncData',
-        router_type: 'types::PaymentsSyncRouterData',
-        response_data: 'types::PaymentsResponseData',
-        response_type: 'PsyncResponse',
-        router_data_type: 'RouterData',
-        http_method: 'Get',
-        flow_type: 'types::PaymentsSyncType',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      Capture: {
-        trait_name: 'api::Capture',
-        data_type: 'types::PaymentsCaptureData',
-        router_type: `types::PaymentsCaptureRouterData`,
-        router_data_type: 'RouterData',
-        response_type: 'CaptureResponse',
-        response_data: 'types::PaymentsResponseData',
-        flow_type: 'types::PaymentsCaptureType',
-        http_method: 'Post',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      Session: {
-        trait_name: 'api::Session',
-        data_type: 'types::PaymentsSessionData',
-        response_data: 'types::PaymentsResponseData',
-        router_type: 'types::PaymentsSyncRouterData',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-      Refund: {
-        trait_name: 'api::Execute',
-        data_type: 'types::RefundsData',
-        router_type: `types::RefundsRouterData<api::Execute>`,
-        request_type: 'RefundRequest',
-        response_type: 'RefundResponse',
-        router_data_type: 'RefundsRouterData',
-        response_data: 'types::RefundsResponseData',
-        http_method: 'Post',
-        flow_type: 'types::RefundExecuteType',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: ['convert_router_amount'],
-        refund_amount: true,
-      },
-      RSync: {
-        trait_name: 'api::RSync',
-        data_type: 'types::RefundsData',
-        router_type: `types::RefundSyncRouterData`,
-        request_type: 'RefundRequest',
-        response_type: 'RefundResponse',
-        router_data_type: 'RefundsRouterData',
-        response_data: 'types::RefundsResponseData',
-        http_method: 'Get',
-        flow_type: 'types::RefundSyncType',
-        struct_name: connectorPascalCase,
-        connector_name: connector,
-        enabled: [],
-      },
-    },
-  };
-};
 const ConnectorTemplate = () => {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [generatedCode, setGeneratedCode] = useState('');

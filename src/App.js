@@ -1,17 +1,22 @@
 // @ts-check
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { parse_curl } from 'curl-parser';
 
 // userdef utils
-import { APP_CONTEXT, FLOWS, fetchItem } from 'utils/state';
-import { addFieldsToNodes, deepCopy, mapFieldNames } from 'utils/common';
+import { APP_CONTEXT, FLOWS } from 'utils/state';
+import {
+  addFieldsToNodes,
+  deepCopy,
+  fetchItem,
+  mapFieldNames,
+} from 'utils/common';
+import { DEFAULT_CURL } from 'utils/constants.js';
 
 // userdef UI components
-import Content from './components/composed/Content.jsx';
-import Header from './components/composed/Header.jsx';
-import { parse_curl } from 'curl-parser';
-import { DEFAULT_CURL } from 'utils/constants.js';
+import HeaderNew from 'components/composed/HeaderNew.jsx';
+import ContentNew from 'components/composed/ContentNew';
 
 function App() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
@@ -143,10 +148,14 @@ function App() {
 
   return (
     <Router>
-      <Header loadContext={loadContext} />
-      <Routes>
-        <Route path="*" element={<Content loadContext={loadContext} />} />
-      </Routes>
+      <div className="app">
+        <HeaderNew />
+        {/* <Header loadContext={loadContext} /> */}
+        <Routes>
+          <Route path="*" element={<ContentNew />} />
+          {/* <Route path="*" element={<Content loadContext={loadContext} />} /> */}
+        </Routes>
+      </div>
     </Router>
   );
 }
