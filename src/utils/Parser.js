@@ -897,7 +897,7 @@ export const generateRustCode = (connector, inputJson) => {
     const inputObject = JSON.parse(inputJson);
     connectorName = toPascalCase(connector);
 
-    inputObject[connectorName].attemptStatus = Object.keys(inputObject[connectorName]?.attemptStatus).reduce((acc, key) => {
+    inputObject[connectorName].attemptStatus = Object.keys(inputObject[connectorName]?.attemptStatus || {}).reduce((acc, key) => {
         if (inputObject[connectorName]?.attemptStatus[key] !== null) {
             acc[key] = inputObject[connectorName]?.attemptStatus[key];
         }
