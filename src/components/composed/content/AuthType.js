@@ -10,33 +10,6 @@ import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/Info';
 
 function AuthType({ loadContext = (f, u) => {} }) {
-  const authTypes = ['HeaderKey', 'BodyKey', 'SignatureKey', 'MultiAuthKey'];
-  const typesInfo = {
-    HeaderKey: {
-      api_key:
-        'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.',
-    },
-    BodyKey: {
-      api_key:
-        'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.',
-      key1: 'API Key 1 is an additional key or authorization that you need to provide to the processor. It is an extra layer of security or identification required for specific transactions.',
-    },
-    SignatureKey: {
-      api_key:
-        'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.',
-      key1: 'API Key 1 is an additional key or authorization that you need to provide to the processor. It is an extra layer of security or identification required for specific transactions.',
-      api_secret:
-        'The API Secret is provided by the processor and is used to generate a signature for authentication and security purposes. It helps verify the integrity of your requests and data.',
-    },
-    MultiAuthKey: {
-      api_key:
-        'This is the API Key provided by the processor. Think of it as a bearer token, which is like a secure key that grants access to your account.',
-      key1: 'API Key 1 is an additional key or authorization that you need to provide to the processor. It is an extra layer of security or identification required for specific transactions.',
-      api_secret:
-        'The API Secret is provided by the processor and is used to generate a signature for authentication and security purposes. It helps verify the integrity of your requests and data.',
-      key2: 'Similar to API Key 1, API Key 2 is another additional key or authorization that you need to provide to the processor. It may serve a unique purpose or role in the authorization process.',
-    },
-  };
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const auth = appContext.authType.value;
   const [totalKeys, setTotalKeys] = useState(

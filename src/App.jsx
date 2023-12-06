@@ -1,20 +1,20 @@
 // @ts-check
 
 import React, { useEffect, useState } from 'react';
+import { useRecoilState } from 'recoil';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // userdef UI components
-import ContentNew from 'components/composed/ContentNew';
-import HeaderNew from 'components/composed/HeaderNew';
-import { APP_CONTEXT, FLOWS } from 'utils/state';
-import { useRecoilState } from 'recoil';
-import { deepCopy, fetchItem, storeItem } from 'utils/common';
+import ContentNew from './components/composed/ContentNew';
+import HeaderNew from './components/composed/HeaderNew';
+import { APP_CONTEXT, FLOWS } from './utils/state';
+import { fetchItem, storeItem } from './utils/common';
 import {
   DEFAULT_APP_CONTEXT,
   DEFAULT_CURL,
   DEFAULT_FLOW,
   DESCRIPTION,
-} from 'utils/constants';
+} from './utils/constants';
 import { parse_curl } from 'curl-parser';
 
 export default function App() {
