@@ -57,12 +57,12 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                       obj[k] !== null || obj[k] !== undefined ? obj[k] : {},
                     content
                   ),
-                fieldSuggestions = [
-                  ...(headers[header].suggestions || []),
-                  value,
-                ],
+                fieldSuggestions = [...(headers[header].suggestions || [])],
                 updateField = headers[header].update;
 
+              if (header !== 'type') {
+                fieldSuggestions.push(value);
+              }
               let currentValue = [];
               const fields = field.split('.').flatMap((f) => [f, 'value']);
               fields.pop();
