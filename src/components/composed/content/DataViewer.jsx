@@ -91,7 +91,6 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                             ...currentField,
                             [updateField]: newValue,
                           };
-                          debugger;
                           updateFields(field, updates);
                         }}
                       />

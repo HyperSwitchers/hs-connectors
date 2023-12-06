@@ -8,7 +8,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import ContentNew from './components/composed/ContentNew';
 import HeaderNew from './components/composed/HeaderNew';
 import { APP_CONTEXT, FLOWS } from './utils/state';
-import { fetchItem, storeItem } from './utils/common';
+import { addFieldsToNodes, fetchItem, storeItem } from './utils/common';
 import {
   DEFAULT_APP_CONTEXT,
   DEFAULT_CURL,
@@ -82,6 +82,7 @@ export default function App() {
     }
   }, [appContext.selectedFlow]);
 
+  // Update flows on responseFields change
   useEffect(() => {
     const prevResponseFields = flows[appContext.selectedFlow]?.responseFields,
       responseFields = appContext.responseFields;
@@ -95,6 +96,21 @@ export default function App() {
       }));
     }
   }, [appContext.responseFields]);
+
+  // Form mapping for hsResponseFields
+  useEffect(() => {
+    const hsResponseFields = appContext.hsResponseFields;
+    if (hsResponseFields.value && !hsResponseFields.mapping) {
+      // @ts-ignore
+      setAppContext((prevState) => ({
+        ...prevState,
+        hsResponseFields: {
+          ...prevState.hsResponseFields,
+          mapping: addFieldsToNodes(hsResponseFields.value),
+        },
+      }));
+    }
+  }, [appContext.hsResponseFields]);
 
   return (
     <Router>

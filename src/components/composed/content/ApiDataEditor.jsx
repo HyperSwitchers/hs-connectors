@@ -51,6 +51,34 @@ export default function ApiDataEditor() {
         ).reduce((arr, key) => [...arr, '$' + key], []),
       },
     },
+    responseFields: {
+      field: {
+        value: 'Connector Field Name',
+      },
+      value: {
+        value: 'Value',
+      },
+      type: {
+        value: 'Data Type',
+        update: 'type',
+        type: 'dropdown',
+        suggestions: TYPES_LIST,
+      },
+    },
+    hsResponseFields: {
+      field: {
+        value: 'HyperSwitch Field Name',
+      },
+      valueMap: {
+        value: 'Connector Field Name',
+        type: 'dropdown',
+        update: 'value',
+        suggestions: Object.keys(appContext.responseFields?.value || {}).reduce(
+          (arr, key) => [...arr, '$' + key],
+          []
+        ),
+      },
+    },
   });
 
   useEffect(() => {
@@ -60,21 +88,41 @@ export default function ApiDataEditor() {
       (arr, key) => [...arr, '$' + updatedAuthContent[key]],
       []
     );
+    const columnUpdates = {};
     if (
       JSON.stringify(columns.requestHeaders.valueMap.suggestions || []) !==
       JSON.stringify(updatedHeaderSuggestions)
     ) {
-      setColumns((prevState) => ({
-        ...prevState,
-        requestHeaders: {
-          ...prevState.requestHeaders,
-          valueMap: {
-            ...prevState.requestHeaders.valueMap,
-            suggestions: updatedHeaderSuggestions,
-          },
+      columnUpdates.requestHeaders = {
+        ...columns.requestHeaders,
+        valueMap: {
+          ...columns.requestHeaders.valueMap,
+          suggestions: updatedHeaderSuggestions,
         },
-      }));
+      };
     }
+
+    const updatedResponseFields = appContext.responseFields.value || {};
+    const updatedResponseSuggestions = flattenObject(updatedResponseFields).map(
+      (f) => '$' + f
+    );
+    if (
+      JSON.stringify(columns.hsResponseFields.valueMap.suggestions || []) !==
+      JSON.stringify(updatedResponseSuggestions)
+    ) {
+      columnUpdates.hsResponseFields = {
+        ...columns.hsResponseFields,
+        valueMap: {
+          ...columns.hsResponseFields.valueMap,
+          suggestions: updatedResponseSuggestions,
+        },
+      };
+    }
+
+    setColumns((prevState) => ({
+      ...prevState,
+      ...columnUpdates,
+    }));
   }, [flows]);
 
   return (
@@ -94,6 +142,26 @@ export default function ApiDataEditor() {
           headers={columns.requestHeaders}
           fieldNames={flattenObject(appContext.requestHeaderFields.value)}
         />
+      </div>
+      <div className="response-fields">
+        <h2>Connector Response Fields</h2>
+        {appContext.responseFields.mapping && (
+          <DataViewer
+            appContextField="responseFields"
+            headers={columns.responseFields}
+            fieldNames={flattenObject(appContext.responseFields.value)}
+          />
+        )}
+      </div>
+      <div className="hs-response-fields">
+        <h2>Connector Response Mapping</h2>
+        {appContext.hsResponseFields.mapping && (
+          <DataViewer
+            appContextField="hsResponseFields"
+            headers={columns.hsResponseFields}
+            fieldNames={flattenObject(appContext.hsResponseFields.value)}
+          />
+        )}
       </div>
     </div>
   );
