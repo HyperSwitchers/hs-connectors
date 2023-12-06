@@ -28,11 +28,11 @@ export default function AuthTypeNew() {
   useEffect(() => {
     if (appContext.authType.value) {
       if (appContext.authType.value.type) {
-        setTotalKeys(Object.keys(appContext.authType.value.type).length);
         setAuthType(appContext.authType.value.type);
       }
 
       if (appContext.authType.value.content) {
+        setTotalKeys(Object.keys(appContext.authType.value.content).length);
         setAuthTypeContent(appContext.authType.value.content);
       }
     }

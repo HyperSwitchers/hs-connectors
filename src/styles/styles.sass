@@ -5,19 +5,18 @@ $gray: #333333
 $platinum: #E5DFDC
 $silver: #CBBFB9
 $smoky-black: #100C05
+$off-white: #FEFEFE
 
 body
   padding: 5px
-  background-color: $platinum
+  background-color: $off-white
 
-// Atomic components
 @import ./atom/info
-
-// Composed
 @import ./composed/app
 @import ./composed/AuthType
 @import ./composed/ConnectorResponseTable
 @import ./composed/ConnectorRequestBodyTable
-@import ./composed/Content
 @import ./composed/CurlRequestExtractor
 @import ./composed/StatusMappingPopup
+
+@import ./common

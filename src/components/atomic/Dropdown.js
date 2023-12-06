@@ -11,9 +11,11 @@ function Dropdown({ options, handleSelectChange, selectedOption, type }) {
         value={selectedOption}
         onChange={handleSelectChange}
       >
-        <option disabled value="">
-          Select {type}
-        </option>
+        {type ? (
+          <option disabled value="">
+            Select {type}
+          </option>
+        ) : null}
         {options.map((option, index) => (
           <option key={index} value={option}>
             {option}

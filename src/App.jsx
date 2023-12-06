@@ -45,36 +45,21 @@ export default function App() {
     }
   }, [flows]);
 
-  // Form cURL request
-  useEffect(() => {
-    if (
-      typeof appContext.curlCommand === 'string' &&
-      appContext.curlCommand !== ''
-    ) {
-      const curl = appContext.curlCommand
-        .replace(/\s*\\\s*/g, ' ')
-        .replace(/\n/g, '')
-        .replace(/--data-raw|--data-urlencode/g, '-d');
-      try {
-        const request = parse_curl(curl);
-        setAppContext((prevState) => ({ ...prevState, curlRequest: request }));
-      } catch (error) {
-        console.warn('WARNING', 'Failed to parse cURL request', curl);
-      }
-    } else {
-      setAppContext((prevState) => ({ ...prevState, curlRequest: null }));
-    }
-  }, [appContext.curlCommand]);
-
   // Swap app's context on flow change
   useEffect(() => {
     const newFlow = appContext.selectedFlow,
       prevFlow = flow;
     if (newFlow !== prevFlow) {
-      setFlows((prevState) => ({
-        ...prevState,
-        [prevFlow]: { ...appContext, selectedFlow: prevFlow },
-      }));
+      const prevFlowData = { [prevFlow]: flows[prevFlow] },
+        updatedFlowData = {
+          [prevFlow]: { ...appContext, selectedFlow: prevFlow },
+        };
+      if (JSON.stringify(prevFlowData) !== JSON.stringify(updatedFlowData)) {
+        setFlows((prevState) => ({
+          ...prevState,
+          ...updatedFlowData,
+        }));
+      }
       if (flows[newFlow]) {
         setAppContext(flows[newFlow]);
       } else {
@@ -96,6 +81,20 @@ export default function App() {
       setFlow(newFlow);
     }
   }, [appContext.selectedFlow]);
+
+  useEffect(() => {
+    const prevResponseFields = flows[appContext.selectedFlow]?.responseFields,
+      responseFields = appContext.responseFields;
+    if (
+      responseFields &&
+      JSON.stringify(prevResponseFields) !== JSON.stringify(responseFields)
+    ) {
+      setFlows((prevState) => ({
+        ...prevState,
+        [appContext.selectedFlow]: appContext,
+      }));
+    }
+  }, [appContext.responseFields]);
 
   return (
     <Router>

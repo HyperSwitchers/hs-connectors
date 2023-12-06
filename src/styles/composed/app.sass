@@ -3,7 +3,6 @@
   flex-flow: column
 
   &-header
-    background-color: $silver
     padding: 10px
     &-drop-downs
       display: flex
@@ -19,3 +18,8 @@
             margin-right: 5px
 
   &-content
+    display: grid
+    grid-template-columns: auto 1fr
+    grid-auto-rows: auto
+    gap: 20px
+    @import ./Content
