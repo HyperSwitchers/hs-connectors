@@ -461,7 +461,6 @@ export const DEFAULT_APP_CONTEXT = {
   selectedFlow: DEFAULT_FLOW,
   codeInvalidated: false,
   downloadInvalidated: false,
-  loading: false,
   description: DESCRIPTION[DEFAULT_FLOW.toLowerCase()],
   authType: {
     value: null,
@@ -495,16 +494,18 @@ export const DEFAULT_APP_CONTEXT = {
 };
 
 export const DEFAULT_TRANSFORMER_STATE = {
-  connectorName: DEFAULT_CONNECTOR,
-  authType: DEFAULT_AUTH_TYPE,
-  authKeys: AUTH_KEYS[DEFAULT_AUTH_TYPE],
-  amount: {
-    unit: 'Minor',
-    currencyUnitType: 'i64',
+  [DEFAULT_CONNECTOR]: {
+    connectorName: DEFAULT_CONNECTOR,
+    authType: DEFAULT_AUTH_TYPE,
+    authKeys: AUTH_KEYS[DEFAULT_AUTH_TYPE],
+    amount: {
+      unit: 'Minor',
+      unitType: 'i64',
+    },
+    flows: {},
+    attempStatus: {},
+    refundStatus: {},
   },
-  flows: {},
-  attempStatus: {},
-  refundStatus: {},
 };
 
 export const AUTH_KEYS_INFO = {

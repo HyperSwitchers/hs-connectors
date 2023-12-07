@@ -56,22 +56,6 @@ export default function CurlEditor() {
           },
           {}
         );
-        console.warn('DEBUG', {
-          requestFields: {
-            value: requestFields,
-            mapping: {
-              ...addFieldsToNodes(requestFields),
-              ...appContext.requestFields.mapping,
-            },
-          },
-          requestHeaderFields: {
-            value: requestHeaderFields,
-            mapping: {
-              ...addFieldsToNodes(requestHeaderFields),
-              ...appContext.requestHeaderFields.mapping,
-            },
-          },
-        });
         setAppContext((prevState) => ({
           ...prevState,
           requestFields: {
@@ -92,6 +76,18 @@ export default function CurlEditor() {
       } catch (error) {
         console.warn('Failed to parse request body and header fields', error);
       }
+    } else {
+      setAppContext((prevState) => ({
+        ...prevState,
+        requestFields: {
+          value: null,
+          mapping: null,
+        },
+        requestHeaderFields: {
+          value: null,
+          mapping: null,
+        },
+      }));
     }
   }, [appContext.curlRequest]);
 

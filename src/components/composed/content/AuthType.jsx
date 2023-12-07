@@ -10,7 +10,7 @@ import { AUTH_KEYS, AUTH_KEYS_INFO, DEFAULT_AUTH_TYPE } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 import { useEffect } from 'react';
 
-export default function AuthTypeNew() {
+export default function AuthType() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const AUTH_TYPES = Object.keys(AUTH_KEYS);
 
@@ -18,12 +18,12 @@ export default function AuthTypeNew() {
     appContext.authType.value?.content || AUTH_KEYS[DEFAULT_AUTH_TYPE]
   );
   const [authType, setAuthType] = useState(
-    Object.keys(appContext.authType.value?.type || {})[0] || DEFAULT_AUTH_TYPE
+    appContext.authType.value?.type || DEFAULT_AUTH_TYPE
   );
   const [totalKeys, setTotalKeys] = useState(
     AUTH_TYPES.indexOf(appContext.authType.value?.type || DEFAULT_AUTH_TYPE) + 1
   );
-  const [wasSaved, setWasSaved] = useState(false);
+  const [wasSaved, setWasSaved] = useState(true);
 
   useEffect(() => {
     if (appContext.authType.value) {
@@ -39,7 +39,11 @@ export default function AuthTypeNew() {
   }, [appContext.authType]);
 
   useEffect(() => {
-    if (wasSaved) {
+    if (
+      (wasSaved && authType !== appContext.authType.value?.type) ||
+      JSON.stringify(authTypeContent) !==
+        JSON.stringify(appContext.authType.value?.content || {})
+    ) {
       setWasSaved(false);
     }
   }, [authType, authTypeContent]);
@@ -96,21 +100,12 @@ export default function AuthTypeNew() {
 
   const handleClearOperation = () => {
     setAuthTypeContent(AUTH_KEYS[authType]);
-    setAppContext((prevState) => ({
-      ...prevState,
-      authType: {
-        ...prevState.authType,
-        value: {
-          type: authType,
-          content: AUTH_KEYS[authType],
-        },
-      },
-    }));
   };
 
   const handleSaveOperation = () => {
     setAppContext((prevState) => ({
       ...prevState,
+      selectedFlow: 'Authorize',
       authType: {
         ...prevState.authType,
         value: {

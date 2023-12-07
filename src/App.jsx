@@ -5,8 +5,8 @@ import { useRecoilState } from 'recoil';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // userdef UI components
-import ContentNew from './components/composed/ContentNew';
-import HeaderNew from './components/composed/HeaderNew';
+import Content from './components/composed/Content.jsx';
+import Header from './components/composed/Header.jsx';
 import { APP_CONTEXT, FLOWS } from './utils/state';
 import { addFieldsToNodes, fetchItem, storeItem } from './utils/common';
 import {
@@ -15,7 +15,6 @@ import {
   DEFAULT_FLOW,
   DESCRIPTION,
 } from './utils/constants';
-import { parse_curl } from 'curl-parser';
 
 export default function App() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
@@ -26,15 +25,20 @@ export default function App() {
 
   // Load app's context on boot
   useEffect(() => {
-    const flows = fetchItem('flows');
-    if (flows) {
-      setFlows(flows);
-      if (flows[DEFAULT_FLOW]) {
-        setAppContext(flows[DEFAULT_FLOW]);
+    try {
+      let storedState = fetchItem('app_context') || {};
+      const flows = fetchItem('flows') || {};
+      if (flows[appContext.selectedFlow || DEFAULT_FLOW]) {
+        storedState = { ...appContext, ...storedState, ...flows[DEFAULT_FLOW] };
+      } else {
+        storedState = { ...appContext, ...storedState };
       }
-      console.info('INFO', 'Boot completed');
+      setAppContext(storedState);
+      setFlows(flows);
+    } catch (error) {
+      console.warn('INFO', 'Failed to load from localStorage');
     }
-
+    console.info('INFO', 'Boot completed');
     setBootComplete(true);
   }, []);
 
@@ -45,6 +49,13 @@ export default function App() {
     }
   }, [flows]);
 
+  // Store state in localStorage
+  useEffect(() => {
+    if (bootComplete) {
+      storeItem('app_context', JSON.stringify(appContext));
+    }
+  }, [appContext]);
+
   // Swap app's context on flow change
   useEffect(() => {
     const newFlow = appContext.selectedFlow,
@@ -52,7 +63,16 @@ export default function App() {
     if (newFlow !== prevFlow) {
       const prevFlowData = { [prevFlow]: flows[prevFlow] },
         updatedFlowData = {
-          [prevFlow]: { ...appContext, selectedFlow: prevFlow },
+          [prevFlow]: {
+            curlCommand: appContext.curlCommand,
+            curlRequest: appContext.curlRequest,
+            hsResponseFields: appContext.hsResponseFields,
+            requestFields: appContext.requestFields,
+            requestHeaderFields: appContext.requestHeaderFields,
+            responseFields: appContext.responseFields,
+            status: appContext.status,
+            statusVariable: appContext.statusVariable,
+          },
         };
       if (JSON.stringify(prevFlowData) !== JSON.stringify(updatedFlowData)) {
         setFlows((prevState) => ({
@@ -61,26 +81,92 @@ export default function App() {
         }));
       }
       if (flows[newFlow]) {
-        setAppContext(flows[newFlow]);
+        setAppContext((prevState) => ({ ...prevState, ...flows[newFlow] }));
       } else {
         setAppContext({
-          ...DEFAULT_APP_CONTEXT,
-          connectorName: appContext.connectorName,
-          connectorPascalCase: appContext.connectorPascalCase,
+          ...appContext,
           curlCommand: DEFAULT_CURL[newFlow.toLowerCase()] || '',
-          currencyUnit: appContext.currencyUnit,
-          currencyUnitType: appContext.currencyUnitType,
-          paymentMethodType: appContext.paymentMethodType,
           selectedFlow: newFlow,
-          codeInvalidated: appContext.codeInvalidated,
-          downloadInvalidated: appContext.downloadInvalidated,
-          loading: appContext.loading,
           description: DESCRIPTION[newFlow.toLowerCase()],
+          curlRequest: null,
+          hsResponseFields: {
+            value: {
+              status: '',
+              response: {
+                resource_id: '',
+              },
+            },
+            mapping: null,
+          },
+          requestFields: {
+            value: null,
+            mapping: null,
+          },
+          requestHeaderFields: {
+            value: null,
+            mapping: null,
+          },
+          responseFields: {
+            value: null,
+            mapping: null,
+          },
+          status: {
+            value: null,
+            mapping: null,
+          },
         });
       }
       setFlow(newFlow);
     }
   }, [appContext.selectedFlow]);
+
+  // Update flows on requestFields change
+  useEffect(() => {
+    const prevRequestFields = flows[appContext.selectedFlow]?.requestFields,
+      requestFields = appContext.requestFields;
+    if (
+      requestFields &&
+      JSON.stringify(prevRequestFields) !== JSON.stringify(requestFields)
+    ) {
+      setFlows((prevState) => ({
+        ...prevState,
+        [appContext.selectedFlow]: {
+          curlCommand: appContext.curlCommand,
+          curlRequest: appContext.curlRequest,
+          hsResponseFields: appContext.hsResponseFields,
+          requestFields: appContext.requestFields,
+          requestHeaderFields: appContext.requestHeaderFields,
+          status: appContext.status,
+          statusVariable: appContext.statusVariable,
+        },
+      }));
+    }
+  }, [appContext.requestFields]);
+
+  // Update flows on requestHeaderFields change
+  useEffect(() => {
+    const prevRequestHeaderFields =
+        flows[appContext.selectedFlow]?.requestHeaderFields,
+      requestHeaderFields = appContext.requestHeaderFields;
+    if (
+      requestHeaderFields &&
+      JSON.stringify(prevRequestHeaderFields) !==
+        JSON.stringify(requestHeaderFields)
+    ) {
+      setFlows((prevState) => ({
+        ...prevState,
+        [appContext.selectedFlow]: {
+          curlCommand: appContext.curlCommand,
+          curlRequest: appContext.curlRequest,
+          hsResponseFields: appContext.hsResponseFields,
+          requestFields: appContext.requestFields,
+          requestHeaderFields: appContext.requestHeaderFields,
+          status: appContext.status,
+          statusVariable: appContext.statusVariable,
+        },
+      }));
+    }
+  }, [appContext.requestHeaderFields]);
 
   // Update flows on responseFields change
   useEffect(() => {
@@ -101,7 +187,6 @@ export default function App() {
   useEffect(() => {
     const hsResponseFields = appContext.hsResponseFields;
     if (hsResponseFields.value && !hsResponseFields.mapping) {
-      // @ts-ignore
       setAppContext((prevState) => ({
         ...prevState,
         hsResponseFields: {
@@ -112,14 +197,32 @@ export default function App() {
     }
   }, [appContext.hsResponseFields]);
 
+  // Form mapping for status
+  useEffect(() => {
+    const status = appContext.status;
+    if (status.value && !status.mapping) {
+      setAppContext((prevState) => ({
+        ...prevState,
+        status: {
+          ...prevState.status,
+          mapping: addFieldsToNodes(status.value),
+        },
+      }));
+    }
+  }, [appContext.status]);
+
   return (
     <Router>
-      <div className="app">
-        <HeaderNew />
-        <Routes>
-          <Route path="*" element={<ContentNew />} />
-        </Routes>
-      </div>
+      {bootComplete ? (
+        <React.Fragment>
+          <div className="app">
+            <Header />
+            <Routes>
+              <Route path="*" element={<Content />} />
+            </Routes>
+          </div>{' '}
+        </React.Fragment>
+      ) : null}
     </Router>
   );
 }

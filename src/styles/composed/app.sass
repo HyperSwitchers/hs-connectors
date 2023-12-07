@@ -1,21 +1,21 @@
 .app
   display: flex
   flex-flow: column
-
+  padding-left: 20px
   &-header
-    padding: 10px
+    padding: 10px 0
     &-drop-downs
       display: flex
-      .drop-down
+      & > div
         margin-left: 20px
         display: flex
         align-items: center
-        label
-          margin-right: 10px
-          display: flex
-          align-items: center
-          svg
-            margin-right: 5px
+      label
+        margin-right: 10px
+        display: flex
+        align-items: center
+        svg
+          margin-right: 5px
 
   &-content
     display: grid

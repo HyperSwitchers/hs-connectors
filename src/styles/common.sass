@@ -22,6 +22,22 @@ textarea
     border-color: $silver
     outline: 0
 
+.button
+  cursor: pointer
+  padding: 10px 15px
+  border: 1px solid $silver
+  border-radius: 4px
+  width: max-content
+  &.clear
+    margin-right: 10px
+    background-color: $platinum
+  &.save
+    color: white
+    background-color: $blue
+    &.disabled
+      cursor: not-allowed
+      background-color: $blue-light
+
 .loader
   border: 4px solid $silver
   border-radius: 50%

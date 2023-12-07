@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import DataViewer from './DataViewer';
-import { flattenObject } from 'utils/common';
+import { deepCopy, flattenObject } from 'utils/common';
 import { useRecoilState } from 'recoil';
 import { APP_CONTEXT, FLOWS } from 'utils/state';
-import { SYNONYM_MAPPING, TYPES_LIST } from 'utils/constants';
+import {
+  HYPERSWITCH_STATUS_LIST,
+  SYNONYM_MAPPING,
+  TYPES_LIST,
+} from 'utils/constants';
 
 export default function ApiDataEditor() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [flows, setFlows] = useRecoilState(FLOWS);
+
+  const [statusMapping, setStatusMapping] = useState(
+    appContext.status?.value || {}
+  );
   const [columns, setColumns] = useState({
     requestHeaders: {
       field: {
@@ -80,10 +88,10 @@ export default function ApiDataEditor() {
       },
     },
   });
+  const [showSuggestions, setShowSuggestions] = useState('');
 
   useEffect(() => {
-    const updatedAuthContent =
-      flows['AuthType']?.authType?.value?.content || {};
+    const updatedAuthContent = appContext?.authType?.value?.content || {};
     const updatedHeaderSuggestions = Object.keys(updatedAuthContent).reduce(
       (arr, key) => [...arr, '$' + updatedAuthContent[key]],
       []
@@ -125,44 +133,160 @@ export default function ApiDataEditor() {
     }));
   }, [flows]);
 
+  // Status mapping initialization
+  useEffect(() => {
+    if (
+      appContext.responseFields.mapping &&
+      appContext.hsResponseFields.mapping?.status?.value?.startsWith('$')
+    ) {
+      const responseFields = deepCopy(appContext.responseFields.mapping.status);
+      const field = appContext.hsResponseFields.mapping.status.value.replace(
+        '$',
+        ''
+      );
+      const fields = field.split('.').flatMap((f) => [f, 'value']);
+      let vmap = fields.reduce(
+        (obj, f) => obj[f],
+        appContext.responseFields.mapping
+      );
+      vmap = Array.isArray(vmap) ? vmap : [vmap];
+      responseFields.valueMap = vmap;
+      setStatusMapping({
+        ...vmap.reduce((obj, k) => {
+          obj[k] = '';
+          return obj;
+        }, {}),
+      });
+    }
+  }, [appContext.responseFields.mapping, appContext.hsResponseFields.mapping]);
+
+  const renderSuggestions = (field, suggestions) => {
+    const suggestionContainer = document.getElementById(`suggestions-${field}`);
+    const inputField = document.getElementById(`input-${field}`);
+    if (
+      suggestionContainer instanceof HTMLDivElement &&
+      inputField instanceof HTMLInputElement
+    ) {
+      suggestionContainer.innerHTML = '';
+      setShowSuggestions(field);
+      if (suggestions.length === 0) {
+        setShowSuggestions(null);
+      }
+      const statusMappingUpdates = {};
+      suggestions.map((suggestion) => {
+        const div = document.createElement('div');
+        div.textContent = suggestion;
+        div.addEventListener('click', function (e) {
+          inputField.value = suggestion;
+          suggestionContainer.innerHTML = '';
+          setShowSuggestions(null);
+          statusMappingUpdates[field] = suggestion;
+          setAppContext((prevState) => ({
+            ...prevState,
+            status: {
+              ...prevState.status,
+              value: { ...(prevState.status.value || {}), [field]: suggestion },
+            },
+          }));
+        });
+        suggestionContainer.appendChild(div);
+      });
+    }
+  };
+
   return (
     <div className="api-data-editor">
-      <div className="request-body">
-        <h2>Connector Request Body Fields</h2>
-        <DataViewer
-          appContextField="requestFields"
-          headers={columns.requestFields}
-          fieldNames={flattenObject(appContext.requestFields.value)}
-        />
-      </div>
-      <div className="request-header">
-        <h2>Connector Request Header Fields</h2>
-        <DataViewer
-          appContextField="requestHeaderFields"
-          headers={columns.requestHeaders}
-          fieldNames={flattenObject(appContext.requestHeaderFields.value)}
-        />
-      </div>
-      <div className="response-fields">
-        <h2>Connector Response Fields</h2>
-        {appContext.responseFields.mapping && (
+      {appContext.requestFields.value ? (
+        <div className="request-body">
+          <h2>Connector Request Body Fields</h2>
           <DataViewer
-            appContextField="responseFields"
-            headers={columns.responseFields}
-            fieldNames={flattenObject(appContext.responseFields.value)}
+            appContextField="requestFields"
+            headers={columns.requestFields}
+            fieldNames={flattenObject(appContext.requestFields.value)}
           />
-        )}
-      </div>
-      <div className="hs-response-fields">
-        <h2>Connector Response Mapping</h2>
-        {appContext.hsResponseFields.mapping && (
+        </div>
+      ) : null}
+      {appContext.requestHeaderFields.value ? (
+        <div className="request-header">
+          <h2>Connector Request Header Fields</h2>
           <DataViewer
-            appContextField="hsResponseFields"
-            headers={columns.hsResponseFields}
-            fieldNames={flattenObject(appContext.hsResponseFields.value)}
+            appContextField="requestHeaderFields"
+            headers={columns.requestHeaders}
+            fieldNames={flattenObject(appContext.requestHeaderFields.value)}
           />
-        )}
-      </div>
+        </div>
+      ) : null}
+      {appContext.responseFields.value ? (
+        <div className="response-fields">
+          <h2>Connector Response Fields</h2>
+          {appContext.responseFields.mapping && (
+            <DataViewer
+              appContextField="responseFields"
+              headers={columns.responseFields}
+              fieldNames={flattenObject(appContext.responseFields.value)}
+            />
+          )}
+        </div>
+      ) : null}
+      {appContext.responseFields.value ? (
+        <div className="response-mapping">
+          <div className="hs-response-mapping">
+            <h2>Connector Response Mapping</h2>
+            {appContext.responseFields.mapping && (
+              <DataViewer
+                appContextField="hsResponseFields"
+                headers={columns.hsResponseFields}
+                fieldNames={flattenObject(appContext.hsResponseFields.value)}
+              />
+            )}
+          </div>
+          {typeof appContext.hsResponseFields.mapping.status.value ===
+            'string' &&
+          appContext.hsResponseFields.mapping.status.value !== '' &&
+          Object.keys(statusMapping).length > 0 ? (
+            <div className="hs-status-mapping">
+              <h2>Connector Status Mapping</h2>
+              <div className="data-viewer">
+                {Object.keys(statusMapping).map((f) => (
+                  <React.Fragment key={f}>
+                    <div className="status">{f}</div>
+                    <div className="autocomplete">
+                      <div className="input">
+                        <input
+                          id={`input-${f}`}
+                          className="material-input status-mapping-input"
+                          type="text"
+                          value={(appContext?.status?.value || {})[f]}
+                        />
+                        <div
+                          className="status-dropdown"
+                          onClick={() => {
+                            setShowSuggestions(f);
+                            renderSuggestions(
+                              f,
+                              !showSuggestions
+                                ? HYPERSWITCH_STATUS_LIST[
+                                    appContext.selectedFlow
+                                  ]
+                                : []
+                            );
+                          }}
+                        >
+                          {showSuggestions === f ? 'x' : '...'}
+                        </div>
+                      </div>
+                      <div
+                        className="suggestions"
+                        id={`suggestions-${f}`}
+                      ></div>
+                    </div>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

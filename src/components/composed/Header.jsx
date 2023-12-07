@@ -1,104 +1,89 @@
-import React, { useEffect, useState } from 'react';
+import Tooltip from '@mui/material/Tooltip';
+import Dropdown from 'components/atomic/Dropdown';
+import InfoIcon from '@mui/icons-material/Info';
+import React, { useState } from 'react';
 import { useRecoilState } from 'recoil';
 
-// userdef utils
-import { APP_CONTEXT } from '../../utils/state';
 import {
   CURRENCY_UNIT,
   CURRENCY_UNIT_TYPE,
   FLOW_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
-} from '../../utils/constants';
-import Tooltip from '@mui/material/Tooltip';
-import InfoIcon from '@mui/icons-material/Info';
-
-// userdef UI components
-import Dropdown from '../atomic/Dropdown';
+  TOOLTIPS,
+} from 'utils/constants';
+import { APP_CONTEXT } from 'utils/state';
 import { toPascalCase } from 'utils/Parser';
 
-const Header = ({ loadContext = (f) => {} }) => {
+export default function HeaderNew() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
-  const [connectorName, setConnectorName] = useState(appContext.connectorName);
 
-  useEffect(() => {
-    setConnectorName(appContext.connectorName);
-  }, [appContext.connectorName]);
+  const [connectorName, setConnectorName] = useState(
+    appContext.connectorName.toString()
+  );
 
-  const handleConnectorNameChange = (event) => {
-    let connectorName = event.target.value;
-    setConnectorName(connectorName);
-  };
-
-  const handleConnectorNameUpdate = () => {
-    let connectorPascalCase = toPascalCase(connectorName);
-    setAppContext({ ...appContext, connectorName, connectorPascalCase });
-  };
-
-  const handleFlowOptionChange = (event) => {
-    let flow = event.target.value;
-    if (FLOW_OPTIONS.includes(flow)) {
-      loadContext(flow);
+  const handleConnectorNameChange = (e) => {
+    const connectorName = e?.target?.value;
+    if (connectorName) {
+      setConnectorName(connectorName);
     }
   };
 
-  const handlePaymentMethodOptionChange = (event) => {
-    setAppContext({
-      ...appContext,
-      selectedPaymentMethodOption: event.target.value,
-    });
+  const handleConnectorNameUpdate = () => {
+    setAppContext((prevState) => ({
+      ...prevState,
+      connectorName,
+      connectorPascalCase: toPascalCase(connectorName),
+    }));
   };
 
-  const handleCurrencyUnitOptionChange = (event) => {
-    setAppContext({
-      ...appContext,
-      currencyUnit: event?.target?.value || '',
-    });
+  const handleCurrencyUnitChange = (e) => {
+    setAppContext((prevState) => ({
+      ...prevState,
+      currencyUnit: e?.target?.value || prevState.currencyUnit,
+    }));
   };
 
-  const handleCurrencyUnitTypeOptionChange = (event) => {
-    setAppContext({
-      ...appContext,
-      currencyUnitType: event?.target?.value || '',
-    });
+  const handleCurrencyUnitTypeChange = (e) => {
+    setAppContext((prevState) => ({
+      ...prevState,
+      currencyUnitType: e?.target?.value || prevState.currencyUnitType,
+    }));
+  };
+
+  const handleFlowChange = (e) => {
+    const flow = e?.target?.value;
+    if (FLOW_OPTIONS.includes(flow)) {
+      setAppContext((prevState) => ({ ...prevState, selectedFlow: flow }));
+    }
+  };
+
+  const handlePaymentMethodChange = (e) => {
+    const paymentMethodType = e?.target?.value;
+    if (PAYMENT_METHOD_OPTIONS.includes(paymentMethodType)) {
+      setAppContext((prevState) => ({
+        ...prevState,
+        selectedFlow: paymentMethodType,
+      }));
+    }
   };
 
   return (
     <div className="app-header">
-      <div className="dropdown-wrapper hs-headers">
-        <div>
-          <label htmlFor="dropdown">Connector:&nbsp;&nbsp;&nbsp;</label>
+      <div className="app-header-drop-downs">
+        <div className="connector-name">
+          <label>Connector</label>
           <input
-            className="conector"
             type="text"
             placeholder="Enter Connector Name"
-            onBlur={handleConnectorNameUpdate}
-            onChange={handleConnectorNameChange}
             value={connectorName}
+            onChange={handleConnectorNameChange}
+            onBlur={handleConnectorNameUpdate}
           />
         </div>
-        &nbsp;&nbsp;&nbsp;
-        <Tooltip title="API type" placement="right">
-          <InfoIcon
-            style={{
-              height: '15px',
-              width: '15px',
-            }}
-          />
-        </Tooltip>
-        &nbsp;
-        <label htmlFor="dropdown">Flow:&nbsp;&nbsp;&nbsp;</label>
-        <Dropdown
-          options={FLOW_OPTIONS}
-          handleSelectChange={handleFlowOptionChange}
-          selectedOption={appContext.selectedFlow}
-          type="Flow Type"
-        />
-        {appContext.selectedFlow !== 'AuthType' ? (
-          <React.Fragment>
-            <Tooltip
-              title="Payment method against which the txn would be tried"
-              placement="right"
-            >
+        <div className="drop-down flow-type">
+          <label>
+            {' '}
+            <Tooltip title={TOOLTIPS.flowType} placement="top">
               <InfoIcon
                 style={{
                   height: '15px',
@@ -106,48 +91,58 @@ const Header = ({ loadContext = (f) => {} }) => {
                 }}
               />
             </Tooltip>
-            &nbsp;
-            <label htmlFor="dropdown">Payment Method:&nbsp;&nbsp;&nbsp;</label>
-            <Dropdown
-              options={PAYMENT_METHOD_OPTIONS}
-              handleSelectChange={handlePaymentMethodOptionChange}
-              selectedOption={appContext.selectedPaymentMethodOption}
-              type="Payment Method"
-            />
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            <label htmlFor="dropdown">Currency Unit:&nbsp;&nbsp;&nbsp;</label>
-            <Dropdown
-              options={CURRENCY_UNIT}
-              handleSelectChange={handleCurrencyUnitOptionChange}
-              selectedOption={appContext.currencyUnit}
-              type="Currency Unit"
-            />
-            <label htmlFor="dropdown">
-              Currency Unit Type:&nbsp;&nbsp;&nbsp;
+            Flow
+          </label>
+          <Dropdown
+            options={FLOW_OPTIONS}
+            handleSelectChange={handleFlowChange}
+            selectedOption={appContext.selectedFlow}
+            type="Flow Type"
+          />
+        </div>
+        {appContext.selectedFlow !== 'AuthType' ? (
+          <div className="drop-down payment-method">
+            <label>
+              <Tooltip title={TOOLTIPS.paymentMethodType} placement="top">
+                <InfoIcon
+                  style={{
+                    height: '15px',
+                    width: '15px',
+                  }}
+                />
+              </Tooltip>
+              Payment Method
             </label>
             <Dropdown
-              options={CURRENCY_UNIT_TYPE}
-              handleSelectChange={handleCurrencyUnitTypeOptionChange}
-              selectedOption={appContext.currencyUnitType}
-              type="Currency Unit Type"
+              options={PAYMENT_METHOD_OPTIONS}
+              handleSelectChange={handlePaymentMethodChange}
+              selectedOption={appContext.paymentMethodType}
+              type="Payment Method"
             />
+          </div>
+        ) : (
+          <React.Fragment>
+            <div className="drop-down currency-unit">
+              <label>Currency Unit</label>
+              <Dropdown
+                options={CURRENCY_UNIT}
+                handleSelectChange={handleCurrencyUnitChange}
+                selectedOption={appContext.paymentMethodType}
+                type="Currency Unit"
+              />
+            </div>
+            <div className="drop-down currency-unit-type">
+              <label>Currency Unit Type</label>
+              <Dropdown
+                options={CURRENCY_UNIT_TYPE}
+                handleSelectChange={handleCurrencyUnitTypeChange}
+                selectedOption={appContext.paymentMethodType}
+                type="Currency Unit Type"
+              />
+            </div>
           </React.Fragment>
         )}
-        {/* <button>
-          <a
-            style={{ textDecoration: 'none', color: '#fff' }}
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://github.com/juspay/hyperswitch/fork"
-          >
-            Fork Hyperswitch
-          </a>
-        </button> */}
       </div>
     </div>
   );
-};
-
-export default Header;
+}
