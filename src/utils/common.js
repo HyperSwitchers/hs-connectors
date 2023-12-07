@@ -219,3 +219,93 @@ export const getHeaders = (headers) => {
 export const convertToValidVariableName = (str) => {
   return str.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '_');
 };
+
+export const storeItem = (key, value) => {
+  localStorage[key] = value;
+};
+
+export const fetchItem = (key) => {
+  let value = localStorage[key];
+  try {
+    value = JSON.parse(value);
+  } catch (err) {
+    console.error(`Failed to parse ${key} from localStorage`);
+  }
+  return value;
+};
+
+export const updateAppContextInLocalStorage = (appContext) => {
+  try {
+    const jsonStr = JSON.stringify(appContext);
+    storeItem('app_context', jsonStr);
+    console.info('Stored app_context in localStorage', jsonStr);
+  } catch (error) {
+    console.info('Failed to persist appContext in localStorage', error);
+  }
+};
+
+export const toCamelCase = (str) =>
+  str
+    .replace(/(?:^\w|[A-Z]|\b\w)/g, (match, index) => {
+      return index === 0 ? match.toLowerCase() : match.toUpperCase();
+    })
+    .replace(/\s+/g, '');
+
+export const findCommonHeaders = (data) => {
+  let maxHeaders = [];
+  let maxHeadersCount = 0;
+
+  for (const key in data) {
+    if (data[key].headers && data[key].headers.length > maxHeadersCount) {
+      maxHeaders = data[key].headers;
+      maxHeadersCount = data[key].headers.length;
+    }
+  }
+  return maxHeaders;
+};
+
+export const buildAuthHeaders = (data) => {
+  for (const key in data) {
+    let headers = data[key]?.curl?.headers || {};
+    for (const header in headers) {
+      let auth_value = buildAuthHeaderKey(headers[header]);
+      if (auth_value) {
+        let contents = headers[header].split('$');
+        auth_value =
+          contents.length > 1 && contents[0]
+            ? `format!("` + contents[0] + `{}", ` + auth_value + `)`
+            : auth_value;
+        return {
+          header_auth_key: getAuthHeaderKey(header),
+          header_auth_value: auth_value + '.into_masked()',
+        };
+      }
+    }
+  }
+  return {};
+};
+
+export const buildAuthHeaderKey = (data) => {
+  if (data.includes('$base_64_encode')) {
+    let fields = data.split('_colon_');
+    return (
+      'consts::BASE64_ENGINE.encode(format!("{}:{}", auth.' +
+      fields[0].substr('$base_64_encode_'.length) +
+      '.peek(), auth.' +
+      fields[1] +
+      '.peek()))'
+    );
+  } else {
+    return 'auth.' + data.substr(1) + '.expose()';
+  }
+};
+
+export const getAuthHeaderKey = (data) => {
+  if (data === 'Authorization') return 'headers::AUTHORIZATION.to_string()';
+  if (data === 'X-API-KEY') return 'headers::X_API_KEY.to_string()';
+  if (data === 'API-KEY') return 'headers::API_KEY.to_string()';
+  if (data === 'apikey') return 'headers::APIKEY.to_string()';
+  if (data === 'X-CC-Api-Key') return 'headers::X_CC_API_KEY.to_string()';
+  if (data === 'X-Trans-Key') return 'headers::X_TRANS_KEY.to_string()';
+  return data;
+};

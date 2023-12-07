@@ -1,8 +1,8 @@
 const nestedStructsMap = new Map();
 const structOccurrences = new Map();
 var nestedFields = {};
-var connectorName = localStorage.props
-    ? JSON.parse(localStorage.props)?.connector
+var connectorName = localStorage.app_context
+    ? JSON.parse(localStorage.app_context)?.connectorName
     : '';
 
 const connectorImports = `use api_models::payments::Card;

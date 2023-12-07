@@ -6,7 +6,7 @@ import { RecoilRoot } from 'recoil';
 
 // userdef modules
 import './index.sass';
-import App from './App';
+import App from './App.jsx';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

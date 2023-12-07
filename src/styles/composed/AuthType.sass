@@ -2,7 +2,6 @@
   display: flex
   flex-flow: column
   gap: 30px
-  margin-left: 50px
 
   &-subheader > code
     color: $gray
@@ -47,8 +46,11 @@
       gap: 20px
       .auth-key
         &-field
+          display: flex
+          align-items: center
           margin-right: 20px
           &-value
+            margin-right: 5px
             font-weight: 600
             font-size: 18px
             display: flex
@@ -59,20 +61,6 @@
       display: flex
       font-size: 15px
       justify-content: flex-end
-      .button
-        cursor: pointer
-        padding: 10px 15px
-        border: 1px solid $silver
-        border-radius: 4px
-      .clear
-        margin-right: 10px
-        background-color: $platinum
-      .save
-        color: white
-        background-color: $blue
-        &.disabled
-          cursor: not-allowed
-          background-color: $blue-light
 
   &-code-snippets
     background-color: $smoky-black
@@ -96,17 +84,3 @@
         padding: 10px 20px
         &:hover
           color: $blue
-
-.material-input
-  padding: 10px 15px
-  font-size: 16px
-  border: 1px solid #ccc
-  border-radius: 3px
-  transition: border-color 0.3s ease, box-shadow 0.3s ease
-  font-size: 13px
-  height: max-content
-
-.material-input:focus
-  outline: none
-  border-color: #007bff
-  box-shadow: 0 0 2px rgba(0, 123, 255, 0.5)
