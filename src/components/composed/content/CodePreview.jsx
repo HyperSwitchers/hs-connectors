@@ -18,6 +18,7 @@ import {
   deepJsonSwap,
   findCommonHeaders,
   getHeaders,
+  storeItem,
   toCamelCase,
 } from 'utils/common';
 
@@ -68,12 +69,13 @@ export default function CodePreview() {
     } catch (error) {
       console.warn('ERROR', 'Failed to generate connector integration code');
     }
+
+    storeItem('prop_state', JSON.stringify(propState));
   }, [propState]);
 
   // Regenerate transformerIntegrationCode
   useEffect(() => {
     try {
-      // debugger
       const rustCode = generateRustCode(
         appContext.connectorPascalCase,
         JSON.stringify(transformerState)
@@ -84,6 +86,8 @@ export default function CodePreview() {
     } catch (error) {
       console.warn('ERROR', 'Failed to generate Transformer code', error);
     }
+
+    storeItem('transformer_state', JSON.stringify(transformerState));
   }, [transformerState]);
 
   // Regenerate transformer and connector integration props
@@ -106,28 +110,23 @@ export default function CodePreview() {
             unitType: appContext.currencyUnitType,
           },
           flows: {
+            ...transformerState[appContext.connectorPascalCase]?.flows,
             [appContext.selectedFlow]: {
               paymentsRequest: modifiedRequestData,
               paymentsResponse: modifiedResponseData,
               hsResponse: appContext.hsResponseFields.value || {},
             },
           },
+          attemptStatus:
+            appContext.selectedFlow.toLowerCase() === 'authorize'
+              ? appContext.status.value || {}
+              : flows['Authorize']?.status?.value || {},
+          refundStatus:
+            appContext.selectedFlow.toLowerCase() === 'refund'
+              ? appContext.status.value || {}
+              : flows['Refund']?.status?.value || {},
         },
       };
-      if (
-        flows['Authorize']?.status?.value ||
-        appContext.selectedFlow.toLowerCase() === 'authorize'
-      ) {
-        updatedTransformerState[appContext.connectorPascalCase].attemptStatus =
-          flows['Authorize'].status?.value || appContext.status?.value;
-      }
-      if (
-        flows['Refund']?.status?.value ||
-        appContext.selectedFlow.toLowerCase() === 'refund'
-      ) {
-        updatedTransformerState[appContext.connectorPascalCase].refundStatus =
-          flows['Refund'].status?.value || appContext.status?.value;
-      }
       setTransformerState((prevState) => ({
         ...prevState,
         ...updatedTransformerState,
@@ -167,16 +166,26 @@ export default function CodePreview() {
 
       // Set flag for code re-generation
       setRegenerateCode(false);
+      setAppContext((prevState) => ({ ...prevState, codeInvalidated: false }));
     }
   }, [regenerateCode]);
 
   return (
     <div className="code-preview">
       <div className="code-preview-header">
-        <div className="button" onClick={() => setRegenerateCode(true)}>
-          Generate Code
+        <div
+          className={`save button${
+            appContext.codeInvalidated ? '' : ' disabled'
+          }`}
+          onClick={() =>
+            appContext.codeInvalidated ? setRegenerateCode(true) : null
+          }
+        >
+          {appContext.codeInvalidated ? 'Generate Code' : 'Code generated!'}
         </div>
-        <div className="button">Raise GitHub PR</div>
+        <div className="save button" onClick={() => {}}>
+          Raise GitHub PR
+        </div>
         <h2>Generated Code Snippet</h2>
       </div>
       <div className="connector-integration">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DataViewer from './DataViewer';
-import { deepCopy, flattenObject } from 'utils/common';
+import { addFieldsToNodes, deepCopy, flattenObject } from 'utils/common';
 import { useRecoilState } from 'recoil';
 import { APP_CONTEXT, FLOWS } from 'utils/state';
 import {
@@ -176,6 +176,10 @@ export default function ApiDataEditor() {
       suggestions.map((suggestion) => {
         const div = document.createElement('div');
         div.textContent = suggestion;
+        const updatedStatus = {
+          ...(appContext.status.value || {}),
+          [field]: suggestion,
+        };
         div.addEventListener('click', function (e) {
           inputField.value = suggestion;
           suggestionContainer.innerHTML = '';
@@ -183,9 +187,10 @@ export default function ApiDataEditor() {
           statusMappingUpdates[field] = suggestion;
           setAppContext((prevState) => ({
             ...prevState,
+            codeInvalidated: true,
             status: {
-              ...prevState.status,
-              value: { ...(prevState.status.value || {}), [field]: suggestion },
+              value: updatedStatus,
+              mapping: addFieldsToNodes(updatedStatus),
             },
           }));
         });

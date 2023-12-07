@@ -2,7 +2,7 @@ import { Checkbox } from '@mui/material';
 import Dropdown from 'components/atomic/Dropdown';
 import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
-import { deepCopy, updateNestedJson } from 'utils/common';
+import { addFieldsToNodes, deepCopy, updateNestedJson } from 'utils/common';
 import { APP_CONTEXT } from 'utils/state';
 
 export default function DataViewer({ appContextField, headers, fieldNames }) {
@@ -30,8 +30,17 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
         );
         updatedMapping = updateNestedJson(updatedMapping, fields, newVariants);
         setVariantRequestor(null);
+        const updatedStatus = newVariants.reduce((obj, v) => {
+          obj[v] = (appContext.status?.value || {})[v] || '';
+          return obj;
+        }, {});
         setAppContext((prevState) => ({
           ...prevState,
+          codeInvalidated: true,
+          status: {
+            value: updatedStatus,
+            mapping: addFieldsToNodes(updatedStatus),
+          },
           [appContextField]: {
             ...appContext[appContextField],
             mapping: updatedMapping,
@@ -57,8 +66,17 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
           keys,
           updatedCurrentField.value
         );
+        const updatedStatus = updatedCurrentField.value.reduce((obj, v) => {
+          obj[v] = (appContext.status?.value || {})[v] || '';
+          return obj;
+        }, {});
         setAppContext({
           ...appContext,
+          codeInvalidated: true,
+          status: {
+            value: updatedStatus,
+            mapping: addFieldsToNodes(updatedStatus),
+          },
           [appContextField]: {
             ...appContext[appContextField],
             mapping: updatedMapping,
@@ -111,6 +129,7 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
 
     setAppContext((prevState) => ({
       ...prevState,
+      codeInvalidated: true,
       [appContextField]: {
         ...prevState[appContextField],
         mapping: updatedMapping,

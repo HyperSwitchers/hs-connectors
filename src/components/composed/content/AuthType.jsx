@@ -106,6 +106,7 @@ export default function AuthType() {
     setAppContext((prevState) => ({
       ...prevState,
       selectedFlow: 'Authorize',
+      codeInvalidated: true,
       authType: {
         ...prevState.authType,
         value: {

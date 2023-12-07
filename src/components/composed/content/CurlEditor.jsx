@@ -33,12 +33,18 @@ export default function CurlEditor() {
         .replace(/--data-raw|--data-urlencode/g, '-d');
       try {
         const request = parse_curl(curl);
-        setAppContext((prevState) => ({ ...prevState, curlRequest: request }));
+        setAppContext((prevState) => ({
+          ...prevState,
+          curlRequest: request,
+        }));
       } catch (error) {
         console.warn('WARNING', 'Failed to parse cURL request', curl);
       }
     } else {
-      setAppContext((prevState) => ({ ...prevState, curlRequest: null }));
+      setAppContext((prevState) => ({
+        ...prevState,
+        curlRequest: null,
+      }));
     }
   }, [appContext.curlCommand]);
 
@@ -95,6 +101,7 @@ export default function CurlEditor() {
     setAppContext((prevState) => ({
       ...prevState,
       curlCommand,
+      codeInvalidated: true,
     }));
   };
 
@@ -116,11 +123,13 @@ export default function CurlEditor() {
         url,
         headers: getHeaders(curlRequest.headers),
         data: curlRequest.data.ascii,
-        success: (data) =>
-          (updates.responseFields = {
+        success: (data) => {
+          updates.responseFields = {
             value: data,
             mapping: addFieldsToNodes(data),
-          }),
+          };
+          updates.codeInvalidated = true;
+        },
         error: (data) => {
           console.error(
             'ERROR',

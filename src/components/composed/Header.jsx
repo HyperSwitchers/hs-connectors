@@ -33,6 +33,7 @@ export default function HeaderNew() {
       ...prevState,
       connectorName,
       connectorPascalCase: toPascalCase(connectorName),
+      codeInvalidated: true,
     }));
   };
 
@@ -40,6 +41,7 @@ export default function HeaderNew() {
     setAppContext((prevState) => ({
       ...prevState,
       currencyUnit: e?.target?.value || prevState.currencyUnit,
+      codeInvalidated: true,
     }));
   };
 
@@ -47,13 +49,18 @@ export default function HeaderNew() {
     setAppContext((prevState) => ({
       ...prevState,
       currencyUnitType: e?.target?.value || prevState.currencyUnitType,
+      codeInvalidated: true,
     }));
   };
 
   const handleFlowChange = (e) => {
     const flow = e?.target?.value;
     if (FLOW_OPTIONS.includes(flow)) {
-      setAppContext((prevState) => ({ ...prevState, selectedFlow: flow }));
+      setAppContext((prevState) => ({
+        ...prevState,
+        selectedFlow: flow,
+        codeInvalidated: true,
+      }));
     }
   };
 
@@ -63,6 +70,7 @@ export default function HeaderNew() {
       setAppContext((prevState) => ({
         ...prevState,
         selectedFlow: paymentMethodType,
+        codeInvalidated: true,
       }));
     }
   };

@@ -7,18 +7,29 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 // userdef UI components
 import Content from './components/composed/Content.jsx';
 import Header from './components/composed/Header.jsx';
-import { APP_CONTEXT, FLOWS } from './utils/state';
+import {
+  APP_CONTEXT,
+  FLOWS,
+  PROP_STATE,
+  TRANSFORMER_STATE,
+} from './utils/state';
 import { addFieldsToNodes, fetchItem, storeItem } from './utils/common';
 import {
   DEFAULT_APP_CONTEXT,
+  DEFAULT_CONNECTOR,
   DEFAULT_CURL,
   DEFAULT_FLOW,
+  DEFAULT_TRANSFORMER_STATE,
   DESCRIPTION,
+  defaultConnectorProps,
 } from './utils/constants';
 
 export default function App() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [flows, setFlows] = useRecoilState(FLOWS);
+  const [propState, setPropState] = useRecoilState(PROP_STATE);
+  const [transformerState, setTransformerState] =
+    useRecoilState(TRANSFORMER_STATE);
 
   const [bootComplete, setBootComplete] = useState(false);
   const [flow, setFlow] = useState(appContext.selectedFlow);
@@ -35,6 +46,14 @@ export default function App() {
       }
       setAppContext(storedState);
       setFlows(flows);
+
+      const propState =
+        fetchItem('prop_state') ||
+        defaultConnectorProps(storedState.connectorName || DEFAULT_CONNECTOR);
+      const transformerState =
+        fetchItem('transformer_state') || DEFAULT_TRANSFORMER_STATE;
+      setPropState(propState);
+      setTransformerState(transformerState);
     } catch (error) {
       console.warn('INFO', 'Failed to load from localStorage');
     }
