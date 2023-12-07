@@ -117,7 +117,7 @@ export default function CurlEditor() {
       setWait(true);
       const curlRequest = appContext.curlRequest;
       const updates = {};
-      const url = curlRequest.url;
+      const url = '/cors/' + curlRequest.url;
       const req = {
         method: curlRequest.method,
         url,
