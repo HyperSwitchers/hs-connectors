@@ -176,6 +176,7 @@ export default function ApiDataEditor() {
       suggestions.map((suggestion) => {
         const div = document.createElement('div');
         div.textContent = suggestion;
+        div.id = `suggestion-${suggestion}`;
         const updatedStatus = {
           ...(appContext.status.value || {}),
           [field]: suggestion,

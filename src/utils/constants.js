@@ -534,3 +534,6 @@ export const AUTH_KEYS_INFO = {
     key2: 'Similar to API Key 1, API Key 2 is another additional key or authorization that you need to provide to the processor. It may serve a unique purpose or role in the authorization process.',
   },
 };
+
+export const CURL_FOR_PR =
+  'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- {{connector_pascal_case}} {{base_url}}';

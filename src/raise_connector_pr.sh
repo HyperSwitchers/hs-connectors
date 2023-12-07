@@ -1,9 +1,9 @@
-#!/bin/bash                                                                                                                                                                                                   
+#!/bin/bash
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux                      
+    # Linux
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
     sudo apt-add-repository https://cli.github.com/packages
-    sudo apt update                                  
+    sudo apt update
     sudo apt install gh
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
@@ -19,17 +19,18 @@ repo_to_fork="juspay/hyperswitch"
 
 # Fork the repository
 gh repo fork $repo_to_fork --clone=true --remote=true
-payment_gateway=$1;
-base_url=$1;
-if [ -z "$payment_gateway" || -z "$base_url"] ; then
+payment_gateway=$1
+base_url=$2
+if [ -z "$payment_gateway" || -z "$base_url"]; then
     echo "$RED Connector name or base url not present: try $GREEN\"sh raise_pr.sh adyen\""
     exit 1
 fi
-# git clone 
+# git clone
+connector_lower_case=$(echo $1 | tr '[:upper:]' '[:lower:]')
 cd hyperswitch
 sh scripts/add_connector.sh $1 $2
-cp ~/Downloads/"$(ls -Art ~/Downloads | grep $1 | tail -n 1)" crates/router/src/connector/$1.rs
-cp ~/Downloads/"$(ls -Art ~/Downloads | grep 'transformer' | tail -n 1)" crates/router/src/connector/$1/transformers.rs
+cp ~/Downloads/"$(ls -Art ~/Downloads | grep $connector_lower_case | tail -n 1)" crates/router/src/connector/$connector_lower_case.rs
+cp ~/Downloads/"$(ls -Art ~/Downloads | grep 'transformer' | tail -n 1)" crates/router/src/connector/$connector_lower_case/transformers.rs
 echo "Showing all changed files"
 git add .
 git status

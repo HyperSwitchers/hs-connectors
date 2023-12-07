@@ -131,22 +131,61 @@
   overflow: hidden
   gap: 20px
   &-header
+    width: min-content
+    overflow: hidden
     grid-column: 1 / -1
     display: grid
-    grid-template-columns: repeat(2, min-content)
+    grid-template-columns: min-content max-content
     gap: 0
     .button:first-child
       margin-right: 10px
     h2
       grid-column: 1 / -1
-  .filename
-    font-size: 18px
-    font-family: monospace
-    font-weight: 900
+    .pr-steps
+      grid-column: 1 / -1
+      max-width: 80%
+      background-color: $off-white
+      padding: 10px
+      border-radius: 5px
+      margin-top: 20px
+      display: grid
+      grid-template-columns: 1fr repeat(2, min-content)
+      .button
+        font-size: 10px
+        padding: 5px 10px
+        margin-left: 20px
+        font-weight: 500
+        &:hover
+          background-color: $silver
+      .close:hover
+        background-color: $crimson-red
+        color: $off-white
+      .curl
+        grid-column: 1 / -1
+        font-weight: 600
+        font-family: monospace
+        font-size: 16px
+        margin-top: 10px
+  .connector-integration, .transformer-integration
+    & > div
+      display: flex
+      .filename
+        font-size: 18px
+        font-family: monospace
+        font-weight: 900
+      .button
+        font-size: 10px
+        padding: 5px 10px
+        margin-left: 20px
+        font-weight: 500
+        &:hover
+          background-color: $silver
   #connectors, #transformers
     overflow: scroll
     max-width: calc(50vw - 60px)
     border-radius: 3px
     padding: 20px !important
+    display: block
     & code
       overflow-wrap: break-word
+      max-width: calc(50vw - 60px)

@@ -228,7 +228,10 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                           currentValue !== undefined ? (
                             Array.isArray(currentValue) ? (
                               currentValue.map((v) => (
-                                <div className="variant-wrap">
+                                <div
+                                  key={`variant-${i}-${v}`}
+                                  className="variant-wrap"
+                                >
                                   {v}
                                   <div
                                     className="variant-delete"

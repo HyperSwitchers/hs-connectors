@@ -1,5 +1,6 @@
 // @ts-check
 
+import copy from 'copy-to-clipboard';
 import handlebars from 'handlebars';
 import React, { useEffect, useState } from 'react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -16,12 +17,13 @@ import {
   buildAuthHeaders,
   deepCopy,
   deepJsonSwap,
+  download,
   findCommonHeaders,
   getHeaders,
   storeItem,
   toCamelCase,
 } from 'utils/common';
-
+import { CURL_FOR_PR } from 'utils/constants';
 import { APP_CONTEXT, FLOWS, PROP_STATE, TRANSFORMER_STATE } from 'utils/state';
 
 export default function CodePreview() {
@@ -35,6 +37,37 @@ export default function CodePreview() {
   const [transformerIntegrationCode, setTransformerIntegrationCode] =
     useState('');
   const [regenerateCode, setRegenerateCode] = useState(false);
+  const [isCopied, setIsCopied] = useState({
+    prCurl: false,
+    connectorIntegrationCode: false,
+    transformerIntegrationCode: false,
+  });
+  const [showPrSteps, setShowPrSteps] = useState(false);
+  const [prCurl, setPrCurl] = useState(
+    CURL_FOR_PR.replace(
+      '{{connector_pascal_case}}',
+      appContext.connectorPascalCase
+    ).replace(
+      '{{base_url}}',
+      appContext.curlRequest.url ||
+        `https://api.${appContext.connectorName.toLowerCase()}.com`
+    )
+  );
+
+  useEffect(() => {
+    const updatedPrCurl = CURL_FOR_PR.replace(
+      '{{connector_pascal_case}}',
+      appContext.connectorPascalCase
+    ).replace(
+      '{{base_url}}',
+      appContext.curlRequest.url ||
+        `https://api.${appContext.connectorName.toLowerCase()}.com`
+    );
+
+    if (updatedPrCurl !== prCurl) {
+      setPrCurl(updatedPrCurl);
+    }
+  }, [appContext.connectorPascalCase, appContext.curlRequest]);
 
   // Regenerate connectorIntegrationCode
   useEffect(() => {
@@ -166,9 +199,52 @@ export default function CodePreview() {
 
       // Set flag for code re-generation
       setRegenerateCode(false);
-      setAppContext((prevState) => ({ ...prevState, codeInvalidated: false }));
+      setAppContext((prevState) => ({
+        ...prevState,
+        codeInvalidated: false,
+        downloadInvalidated: true,
+      }));
     }
   }, [regenerateCode]);
+
+  const handleClipboardCopy = (key) => {
+    if (typeof isCopied[key] === 'boolean') {
+      let copyContent = '';
+      switch (key) {
+        case 'prCurl':
+          copyContent = prCurl;
+          break;
+        case 'connectorIntegrationCode':
+          copyContent = connectorIntegrationCode;
+          break;
+        case 'transformerIntegrationCode':
+          copyContent = transformerIntegrationCode;
+          break;
+      }
+      copy(copyContent);
+      setIsCopied((prevState) => ({ ...prevState, [key]: true }));
+      setTimeout(
+        () => setIsCopied((prevState) => ({ ...prevState, [key]: false })),
+        1000
+      );
+    }
+  };
+
+  const handlePrSteps = () => {
+    setShowPrSteps(true);
+    if (appContext.downloadInvalidated) {
+      download(
+        connectorIntegrationCode,
+        `${appContext.connectorName.toLowerCase()}.rs`,
+        'text'
+      );
+      download(transformerIntegrationCode, 'transformers.rs', 'text');
+      setAppContext((prevState) => ({
+        ...prevState,
+        downloadInvalidated: false,
+      }));
+    }
+  };
 
   return (
     <div className="code-preview">
@@ -183,21 +259,61 @@ export default function CodePreview() {
         >
           {appContext.codeInvalidated ? 'Generate Code' : 'Code generated!'}
         </div>
-        <div className="save button" onClick={() => {}}>
+        <div
+          className={`save button${showPrSteps ? ' disabled' : ''}`}
+          onClick={() => handlePrSteps()}
+        >
           Raise GitHub PR
         </div>
+        {showPrSteps && (
+          <div id="pr-steps" className="pr-steps">
+            <div className="info">
+              Run below command in your terminal for raising a PR
+            </div>
+            <div
+              className="copy button"
+              onClick={() => handleClipboardCopy('prCurl')}
+            >
+              {!isCopied.prCurl ? 'Copy' : 'Copied to clipboard!'}
+            </div>
+            <div className="close button" onClick={() => setShowPrSteps(false)}>
+              X
+            </div>
+            <div className="curl">{prCurl}</div>
+          </div>
+        )}
         <h2>Generated Code Snippet</h2>
       </div>
       <div className="connector-integration">
-        <div className="filename">
-          {appContext.connectorName.toLowerCase()}.rs
+        <div>
+          <div className="filename">
+            {appContext.connectorName.toLowerCase()}.rs
+          </div>
+          <div
+            className="copy button"
+            onClick={() => handleClipboardCopy('connectorIntegrationCode')}
+          >
+            {!isCopied.connectorIntegrationCode
+              ? 'Copy'
+              : 'Copied to clipboard!'}
+          </div>
         </div>
         <SyntaxHighlighter id="connectors" language="rust" style={githubGist}>
           {connectorIntegrationCode}
         </SyntaxHighlighter>
       </div>
       <div className="transformer-integration">
-        <div className="filename">transformers.rs</div>
+        <div>
+          <div className="filename">transformers.rs</div>
+          <div
+            className="copy button"
+            onClick={() => handleClipboardCopy('transformerIntegrationCode')}
+          >
+            {!isCopied.transformerIntegrationCode
+              ? 'Copy'
+              : 'Copied to clipboard!'}
+          </div>
+        </div>
         <SyntaxHighlighter id="transformers" language="rust" style={githubGist}>
           {transformerIntegrationCode}
         </SyntaxHighlighter>
