@@ -884,7 +884,7 @@ function printTemplateCode(connectorAuthCode, connectorAmount, nestedStructsMap,
     let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${connectorAmount}\n\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}\n${errorStructs}`;
     return output;
 
-    // console.log(`${connectorAuthCode}\n\n${[...nestedStructsMap.values()].join('')}\n${generatedTryFrom}\n${paymentsRequestTryFrom}\n${generatedResponseTryFrom}\n${statusMapping}\n`);
+    // console.log(connectorImports);console.log(connectorAuthCode);console.log(connectorAmount);console.log(nestedStructsMap);console.log(tryFromsArray);console.log(attemptStatusMapping);console.log(refundStatusMapping);console.log(connectorTemplateCode);console.log(errorStructs);
 }
 
 export const generateRustCode = (connector, inputJson) => {
@@ -930,7 +930,9 @@ export const generateRustCode = (connector, inputJson) => {
 
 
         // tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, nestedStructs3));
-        tryFromsArray.push(generateTryFroms(connectorName, flowType, nestedStructs2, inputObject[connectorName]?.flows[flowType].hsResponse));
+        if (inputObject[connectorName]?.flows[flowType].hsResponse) {
+            tryFromsArray.push(generateTryFroms(connectorName, flowType, nestedStructs2, inputObject[connectorName]?.flows[flowType].hsResponse));
+        }
 
         nestedStructs2 = [];
         // nestedStructs3 = [];

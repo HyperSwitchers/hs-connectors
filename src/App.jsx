@@ -20,12 +20,13 @@ import {
   storeItem,
 } from './utils/common';
 import {
-  DEFAULT_CONNECTOR,
   DEFAULT_CURL,
   DEFAULT_FLOW,
-  DEFAULT_TRANSFORMER_STATE,
+  DEFAULT_APP_CONTEXT,
   DESCRIPTION,
   defaultConnectorProps,
+  DEFAULT_TRANSFORMER_STATE,
+  DEFAULT_CONNECTOR,
 } from './utils/constants';
 
 export default function App() {
@@ -111,12 +112,12 @@ export default function App() {
           curlCommand: DEFAULT_CURL[newFlow.toLowerCase()] || '',
           selectedFlow: newFlow,
           description: DESCRIPTION[newFlow.toLowerCase()],
-          curlRequest: DEFAULT_TRANSFORMER_STATE.curlRequest,
-          hsResponseFields: DEFAULT_TRANSFORMER_STATE.hsResponseFields,
-          requestFields: DEFAULT_TRANSFORMER_STATE.requestFields,
-          requestHeaderFields: DEFAULT_TRANSFORMER_STATE.requestHeaderFields,
-          responseFields: DEFAULT_TRANSFORMER_STATE.responseFields,
-          status: DEFAULT_TRANSFORMER_STATE.status,
+          curlRequest: DEFAULT_APP_CONTEXT.curlRequest,
+          hsResponseFields: DEFAULT_APP_CONTEXT.hsResponseFields,
+          requestFields: DEFAULT_APP_CONTEXT.requestFields,
+          requestHeaderFields: DEFAULT_APP_CONTEXT.requestHeaderFields,
+          responseFields: DEFAULT_APP_CONTEXT.responseFields,
+          status: DEFAULT_APP_CONTEXT.status,
         });
       }
       setFlow(newFlow);
