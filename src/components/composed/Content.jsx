@@ -19,11 +19,9 @@ export default function Content() {
         <React.Fragment>
           <CurlEditor />
           {appContext.curlRequest ? <ApiDataEditor /> : null}
-          {appContext.responseFields.value &&
-          appContext.authType.value &&
-          appContext.status.value ? (
-            <CodePreview />
-          ) : null}
+          {appContext.requestFields.value &&
+            appContext.authType.value &&
+            appContext.requestHeaderFields.value && <CodePreview />}
         </React.Fragment>
       )}
     </div>

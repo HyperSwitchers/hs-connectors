@@ -130,14 +130,9 @@ export default function CodePreview() {
       const modifiedRequestData = deepJsonSwap(
         deepCopy(appContext.requestFields.mapping || {})
       );
-      const modifiedResponseData = deepJsonSwap(
-        deepCopy(appContext.responseFields.mapping || {})
-      );
       const updatedTransformerState = {
         [appContext.connectorPascalCase]: {
           connectorName: appContext.connectorName,
-          authType: appContext.authType.value.type,
-          authKeys: appContext.authType.value.content,
           amount: {
             unit: appContext.currencyUnit,
             unitType: appContext.currencyUnitType,
@@ -146,8 +141,6 @@ export default function CodePreview() {
             ...transformerState[appContext.connectorPascalCase]?.flows,
             [appContext.selectedFlow]: {
               paymentsRequest: modifiedRequestData,
-              paymentsResponse: modifiedResponseData,
-              hsResponse: appContext.hsResponseFields.value || {},
             },
           },
           attemptStatus:
@@ -160,6 +153,27 @@ export default function CodePreview() {
               : flows['Refund']?.status?.value || {},
         },
       };
+      if (appContext.authType.value) {
+        if (appContext.authType.value.type)
+          updatedTransformerState[appContext.connectorPascalCase].authType =
+            appContext.authType.value.type;
+        if (appContext.authType.value.content)
+          updatedTransformerState[appContext.connectorPascalCase].authKeys =
+            appContext.authType.value.content;
+      }
+      if (appContext.responseFields.value) {
+        const modifiedResponseData = deepJsonSwap(
+          deepCopy(appContext.responseFields.mapping || {})
+        );
+        updatedTransformerState[appContext.connectorPascalCase].flows[
+          appContext.selectedFlow
+        ].paymentsResponse = modifiedResponseData;
+      }
+      if (appContext.hsResponseFields.value) {
+        updatedTransformerState[appContext.connectorPascalCase].flows[
+          appContext.selectedFlow
+        ].paymentsResponse = appContext.hsResponseFields.value;
+      }
       setTransformerState((prevState) => ({
         ...prevState,
         ...updatedTransformerState,
