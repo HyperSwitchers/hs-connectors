@@ -193,6 +193,13 @@ export default function CodePreview() {
           [appContext.selectedFlow]: {
             ...propState.flows[appContext.selectedFlow],
             enabled: enabledFlows,
+            curl: {
+              input: appContext.curlCommand,
+              body: appContext.requestFields?.value,
+              headers: appContext.requestHeaderFields?.mapping,
+              response: appContext.responseFields?.value,
+              hsResponse: appContext.hsResponseFields?.value,
+            },
           },
         },
       };

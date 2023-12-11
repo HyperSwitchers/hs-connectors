@@ -268,9 +268,9 @@ export const buildAuthHeaders = (data) => {
   for (const key in data) {
     let headers = data[key]?.curl?.headers || {};
     for (const header in headers) {
-      let auth_value = buildAuthHeaderKey(headers[header]);
+      let auth_value = buildAuthHeaderKey(headers[header].value);
       if (auth_value) {
-        let contents = headers[header].split('$');
+        let contents = headers[header].value.split('$');
         auth_value =
           contents.length > 1 && contents[0]
             ? `format!("` + contents[0] + `{}", ` + auth_value + `)`
