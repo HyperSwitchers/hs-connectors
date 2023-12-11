@@ -20,7 +20,6 @@ import {
   storeItem,
 } from './utils/common';
 import {
-  DEFAULT_APP_CONTEXT,
   DEFAULT_CONNECTOR,
   DEFAULT_CURL,
   DEFAULT_FLOW,
@@ -112,32 +111,12 @@ export default function App() {
           curlCommand: DEFAULT_CURL[newFlow.toLowerCase()] || '',
           selectedFlow: newFlow,
           description: DESCRIPTION[newFlow.toLowerCase()],
-          curlRequest: null,
-          hsResponseFields: {
-            value: {
-              status: '',
-              response: {
-                resource_id: '',
-              },
-            },
-            mapping: null,
-          },
-          requestFields: {
-            value: null,
-            mapping: null,
-          },
-          requestHeaderFields: {
-            value: null,
-            mapping: null,
-          },
-          responseFields: {
-            value: null,
-            mapping: null,
-          },
-          status: {
-            value: null,
-            mapping: null,
-          },
+          curlRequest: DEFAULT_TRANSFORMER_STATE.curlRequest,
+          hsResponseFields: DEFAULT_TRANSFORMER_STATE.hsResponseFields,
+          requestFields: DEFAULT_TRANSFORMER_STATE.requestFields,
+          requestHeaderFields: DEFAULT_TRANSFORMER_STATE.requestHeaderFields,
+          responseFields: DEFAULT_TRANSFORMER_STATE.responseFields,
+          status: DEFAULT_TRANSFORMER_STATE.status,
         });
       }
       setFlow(newFlow);

@@ -23,7 +23,7 @@ export default function HeaderNew() {
 
   const handleConnectorNameChange = (e) => {
     const connectorName = e?.target?.value;
-    if (connectorName) {
+    if (typeof connectorName === 'string') {
       setConnectorName(connectorName);
     }
   };
