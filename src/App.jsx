@@ -13,7 +13,12 @@ import {
   PROP_STATE,
   TRANSFORMER_STATE,
 } from './utils/state';
-import { addFieldsToNodes, fetchItem, storeItem } from './utils/common';
+import {
+  addFieldsToNodes,
+  fetchItem,
+  mapFieldNames,
+  storeItem,
+} from './utils/common';
 import {
   DEFAULT_APP_CONTEXT,
   DEFAULT_CONNECTOR,
@@ -210,7 +215,7 @@ export default function App() {
         ...prevState,
         hsResponseFields: {
           ...prevState.hsResponseFields,
-          mapping: addFieldsToNodes(hsResponseFields.value),
+          mapping: addFieldsToNodes(mapFieldNames(hsResponseFields.value)),
         },
       }));
     }

@@ -1,9 +1,4 @@
-const nestedStructsMap = new Map();
-const structOccurrences = new Map();
-var nestedFields = {};
-var connectorName = localStorage.app_context
-    ? JSON.parse(localStorage.app_context)?.connectorName
-    : '';
+// @ts-check
 
 const connectorImports = `use api_models::payments::Card;
 use serde::{Deserialize, Serialize};
@@ -12,7 +7,7 @@ use masking::Secret;
 use crate::{connector::utils::{self, PaymentsAuthorizeRequestData, RouterData},core::errors,types::{self,api, storage::enums::{self, Currency}}};`;
 
 
-const connectorTemplate = `//TODO: Fill the struct with respective fields
+const connectorTemplate = (connectorName) => `//TODO: Fill the struct with respective fields
 // REFUND :
 // Type definition for RefundRequest
 #[derive(Default, Debug, Serialize)]
@@ -290,7 +285,7 @@ function typeReplacement(fieldValue, fieldTypeValue) {
     // return fieldTypeValue;
 }
 
-function generateAuthType(authKeys) {
+function generateAuthType(connectorName, authKeys) {
     const jsonKeys = Object.keys(authKeys);
     const jsonValues = Object.values(authKeys);
 
@@ -366,7 +361,7 @@ impl TryFrom<&types::ConnectorAuthType> for ${connectorName}AuthType {
     }
 }
 
-function generateConnectorAmount(connectorAmount) {
+function generateConnectorAmount(connectorName, connectorAmount) {
     let amount = null;
     let unused_var = '_';
 
@@ -406,7 +401,7 @@ impl<T>
 }`;
 }
 
-function generateTryFroms(flowType, request, hsResponse) {
+function generateTryFroms(connectorName, flowType, request, hsResponse) {
     let requestRouterDataType = `PaymentsAuthorizeRouterData`;
     let responseRouterDataType = `ResponseRouterData`;
     let apiType = "Authorize";
@@ -509,7 +504,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
     return `${generatedRequestTryFrom}\n\n${generatedResponseTryFrom}`;
 }
 
-function generateStatusMapping(statusType, inputJson) {
+function generateStatusMapping(statusType, connectorName, inputJson) {
     if (Object.keys(inputJson).length == 0) {
         if (statusType == "RefundStatus") {
             return templateRefundStatus;
@@ -554,7 +549,7 @@ ${structFields.join(',\n')}
     return rustStruct;
 }
 //(toSnakeCase(amount),  {value:, optional:, ..}, $parentName)
-function generateRustStructField(fieldName, fieldValue, parentName, flow_type) {
+function generateRustStructField(connectorName, fieldName, fieldValue, parentName, flow_type, nestedStructsMap) {
     let fieldType = typeReplacement(fieldValue.value, fieldValue.type);
     if (fieldValue.value == "$status" && flow_type.toLowerCase() == "refund") {
         return `    pub ${toSnakeCase(fieldName)}: ${connectorName}RefundStatus,`;
@@ -584,7 +579,7 @@ function generateRustStructField(fieldName, fieldValue, parentName, flow_type) {
             fieldType = `Vec<${fieldType}>`;
             const structFields = Object.entries(fieldValueItem.value);
             if (!nestedStructsMap.has(structName)) {
-                nestedStructsMap.set(structName, generateRustStruct(structName, structFields));
+                nestedStructsMap.set(structName, generateRustStruct(connectorName, structName, structFields, flow_type, nestedStructsMap));
             }
         } else {
             fieldType = `Vec<${typeReplacement(fieldValueItem.value, fieldValueItem.type)}>`;
@@ -595,7 +590,7 @@ function generateRustStructField(fieldName, fieldValue, parentName, flow_type) {
         const structFields = Object.entries(fieldValue.value);
         if (!nestedStructsMap.has(structName)) {
             // console.log(`${structName}\n---------\n`)
-            nestedStructsMap.set(structName, generateRustStruct(structName, structFields));
+            nestedStructsMap.set(structName, generateRustStruct(connectorName, structName, structFields, flow_type, nestedStructsMap));
         }
     } else {
         fieldType = typeReplacement(fieldValue.value, fieldValue.type);
@@ -659,9 +654,9 @@ function addCasingHeader(fields, isEnum) {
 
 //(Name of the Struct, Array of [key, values] of fields inside that struct)
 //($parentName_structName, [[amount, {value: , optional:, ...}], [card, {value: {}, optional:, ...}] ])
-function generateRustStruct(name, fields, flow_type) {
+function generateRustStruct(connectorName, name, fields, flow_type, nestedStructsMap) {
     let structFields = fields.map(([fieldName, fieldValue]) =>  //[amount, {value:, optional:, ..}]
-        generateRustStructField(toSnakeCase(fieldName), fieldValue, name, flow_type)
+        generateRustStructField(connectorName, toSnakeCase(fieldName), fieldValue, name, flow_type, nestedStructsMap)
     );
 
     const header = addCasingHeader(fields.map(([fieldName]) => fieldName), false);
@@ -677,7 +672,7 @@ ${structFields.join('\n')}
     return rustStruct;
 }
 
-function generateNestedStructs(inputObject, parentName, flow_type) {
+function generateNestedStructs(connectorName, inputObject, parentName, flow_type, nestedStructsMap) {
     const structs = [];
 
     function processObject(inputObj, parentName) { //( { paymentsRequest: {}, paymentsResponse: {} }, ConnectorName)
@@ -695,7 +690,7 @@ function generateNestedStructs(inputObject, parentName, flow_type) {
 
                 // Generate unique field names for nested structs
                 const fullName = parentName ? `${parentName}_${structName.substring(8)}` : structName;
-                const structDefinition = generateRustStruct(toPascalCase(fullName), fields, flow_type);
+                const structDefinition = generateRustStruct(connectorName, toPascalCase(fullName), fields, flow_type, nestedStructsMap);
                 if (!nestedStructsMap.has(toPascalCase(fullName))) {
                     nestedStructsMap.set(toPascalCase(fullName), structDefinition);
                     structs.push(structDefinition);
@@ -885,8 +880,7 @@ function generatedResponseVariables(inputObject, parentName) {
     return structs;
 }
 
-function printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs) {
-
+function printTemplateCode(connectorAuthCode, connectorAmount, nestedStructsMap, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs) {
     let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${connectorAmount}\n\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}\n${errorStructs}`;
     return output;
 
@@ -895,7 +889,7 @@ function printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, co
 
 export const generateRustCode = (connector, inputJson) => {
     const inputObject = JSON.parse(inputJson);
-    connectorName = toPascalCase(connector);
+    const connectorName = toPascalCase(connector);
 
     inputObject[connectorName].attemptStatus = Object.keys(inputObject[connectorName]?.attemptStatus || {}).reduce((acc, key) => {
         if (inputObject[connectorName]?.attemptStatus[key] !== null) {
@@ -904,18 +898,19 @@ export const generateRustCode = (connector, inputJson) => {
         return acc;
     }, {});
 
-    const attemptStatusMapping = inputObject[connectorName]?.attemptStatus && generateStatusMapping("AttemptStatus", inputObject[connectorName]?.attemptStatus);
-    let refundStatusMapping = inputObject[connectorName]?.refundStatus && generateStatusMapping("RefundStatus", inputObject[connectorName]?.refundStatus);
+    const attemptStatusMapping = inputObject[connectorName]?.attemptStatus && generateStatusMapping("AttemptStatus", connectorName, inputObject[connectorName]?.attemptStatus);
+    let refundStatusMapping = inputObject[connectorName]?.refundStatus && generateStatusMapping("RefundStatus", connectorName, inputObject[connectorName]?.refundStatus);
 
     const tryFromsArray = [];
 
-    let connectorAuthCode = inputObject[connectorName]?.authKeys && generateAuthType(inputObject[connectorName]?.authKeys);
+    let connectorAuthCode = inputObject[connectorName]?.authKeys && generateAuthType(connectorName, inputObject[connectorName]?.authKeys);
 
-    let connectorAmount = generateConnectorAmount(inputObject[connectorName]?.amount);
+    let connectorAmount = generateConnectorAmount(connectorName, inputObject[connectorName]?.amount);
     // console.log(`$$$ ${inputObject2[connectorName.toLowerCase()]} ${connectorName}`);
     let refundFlag = false;
     let nestedStructs2 = [];
     let nestedStructs3 = [];
+    const nestedStructsMap = new Map();
     Object.entries(inputObject[connectorName]?.flows).forEach(([flowType, requestResposne]) => {
         if (flowType === "Refund") {
             refundFlag = true;
@@ -924,7 +919,7 @@ export const generateRustCode = (connector, inputJson) => {
             return;
         }
         let parentObjectName = `${connectorName}${flowType}`
-        const nestedStructs = generateNestedStructs(inputObject[connectorName]?.flows[flowType], `${toPascalCase(parentObjectName)}`, flowType);
+        const nestedStructs = generateNestedStructs(connectorName, inputObject[connectorName]?.flows[flowType], `${toPascalCase(parentObjectName)}`, flowType, nestedStructsMap);
         if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsRequest).length !== 0)) {
 
             nestedStructs2 = inputObject[connectorName]?.flows[flowType].paymentsRequest && generateNestedInitStructs(inputObject[connectorName]?.flows[flowType].paymentsRequest, `${toPascalCase(connectorName)}${flowType}Request`);
@@ -935,7 +930,7 @@ export const generateRustCode = (connector, inputJson) => {
 
 
         // tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, nestedStructs3));
-        tryFromsArray.push(generateTryFroms(flowType, nestedStructs2, inputObject[connectorName]?.flows[flowType].hsResponse));
+        tryFromsArray.push(generateTryFroms(connectorName, flowType, nestedStructs2, inputObject[connectorName]?.flows[flowType].hsResponse));
 
         nestedStructs2 = [];
         // nestedStructs3 = [];
@@ -952,10 +947,10 @@ export const generateRustCode = (connector, inputJson) => {
     // console.log(`${[...structOccurrences.values()]}`);
     let connectorTemplateCode = '';
     if (!refundFlag) {
-        connectorTemplateCode = connectorTemplate;
+        connectorTemplateCode = connectorTemplate(connectorName);
         refundStatusMapping = '';
     }
-    return printTemplateCode(connectorAuthCode, connectorAmount, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs);
+    return printTemplateCode(connectorAuthCode, connectorAmount, nestedStructsMap, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs);
     // console.log(nestedStructs2.join('\n'))
 
     // return nestedStructs.join('\n');

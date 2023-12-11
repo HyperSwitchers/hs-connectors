@@ -6,7 +6,7 @@ import { parse_curl } from 'curl-parser';
 import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 
-import { addFieldsToNodes, getHeaders } from 'utils/common';
+import { addFieldsToNodes, getHeaders, mapFieldNames } from 'utils/common';
 import { APP_CONTEXT } from 'utils/state';
 
 export default function CurlEditor() {
@@ -67,14 +67,14 @@ export default function CurlEditor() {
           requestFields: {
             value: requestFields,
             mapping: {
-              ...addFieldsToNodes(requestFields),
+              ...addFieldsToNodes(mapFieldNames(requestFields)),
               ...prevState.requestFields.mapping,
             },
           },
           requestHeaderFields: {
             value: requestHeaderFields,
             mapping: {
-              ...addFieldsToNodes(requestHeaderFields),
+              ...addFieldsToNodes(mapFieldNames(requestHeaderFields)),
               ...prevState.requestHeaderFields.mapping,
             },
           },
@@ -117,7 +117,7 @@ export default function CurlEditor() {
       setWait(true);
       const curlRequest = appContext.curlRequest;
       const updates = {};
-      const url = '/cors/' + curlRequest.url;
+      const url = '/cors' + curlRequest.url;
       const req = {
         method: curlRequest.method,
         url,

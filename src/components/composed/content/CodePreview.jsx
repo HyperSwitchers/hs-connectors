@@ -184,6 +184,7 @@ export default function CodePreview() {
       }
       const updatedPropState = {
         connector: appContext.connectorName,
+        connector_name: appContext.connectorName,
         url: new URL(curlRequest.url).pathname,
         content_type: headers['Content-Type'] || headers['content-type'],
         struct_name: appContext.connectorPascalCase,
