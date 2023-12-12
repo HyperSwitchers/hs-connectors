@@ -135,7 +135,7 @@ export default function HeaderNew() {
               <Dropdown
                 options={CURRENCY_UNIT}
                 handleSelectChange={handleCurrencyUnitChange}
-                selectedOption={appContext.paymentMethodType}
+                selectedOption={appContext.currencyUnit}
                 type="Currency Unit"
               />
             </div>
@@ -144,7 +144,7 @@ export default function HeaderNew() {
               <Dropdown
                 options={CURRENCY_UNIT_TYPE}
                 handleSelectChange={handleCurrencyUnitTypeChange}
-                selectedOption={appContext.paymentMethodType}
+                selectedOption={appContext.currencyUnitType}
                 type="Currency Unit Type"
               />
             </div>

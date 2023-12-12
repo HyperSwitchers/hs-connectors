@@ -331,6 +331,8 @@ export const defaultConnectorProps = (connector) => {
     content_type: '',
     struct_name: connectorPascalCase,
     connector_name: connector,
+    currency_unit: CURRENCY_UNIT[0],
+    currency_unit_type: CURRENCY_UNIT_TYPE[0],
     flows: {
       PaymentMethodToken: {
         trait_name: 'api::PaymentMethodToken',

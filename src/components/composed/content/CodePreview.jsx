@@ -82,6 +82,8 @@ export default function CodePreview() {
           connector_name: toCamelCase(propState.connector_name),
           headers: findCommonHeaders(propState.flows),
           content_type: propState.content_type,
+          currency_unit: propState.currency_unit,
+          currency_unit_type: propState.currency_unit_type,
           ...buildAuthHeaders(propState.flows),
         }) +
         Object.values(propState.flows)
@@ -91,6 +93,9 @@ export default function CodePreview() {
               connector_name: toCamelCase(propState.connector_name || ' '),
               struct_name: toPascalCase(propState.struct_name),
               content_type: propState.content_type,
+              currency_unit: propState.currency_unit,
+              currency_unit_type: propState.currency_unit_type,    
+              url_path: propState.url_path,
             })
           )
           .join('\n') +
@@ -190,21 +195,22 @@ export default function CodePreview() {
       const headers = getHeaders(curlRequest.headers);
       const enabledFlows = [];
       if (Object.keys(JSON.parse(curlRequest.data.ascii)).length > 0) {
-        enabledFlows.push('get_request_body');
-      }
-      if (appContext.responseFields.value) {
         enabledFlows.push(
+          'get_request_body',
           'get_url',
           'get_content_type',
           'get_headers',
-          'build_request',
-          'handle_response',
-          'get_error_response'
+          'build_request'
         );
+      }
+      if (appContext.responseFields.value) {
+        enabledFlows.push('handle_response', 'get_error_response');
       }
       const updatedPropState = {
         connector: appContext.connectorName,
         connector_name: appContext.connectorName,
+        currency_unit: appContext.connectorUnit,
+        currency_unit_type: appContext.connectorUnitType,
         url: new URL(curlRequest.url).pathname,
         content_type: headers['Content-Type'] || headers['content-type'],
         struct_name: appContext.connectorPascalCase,
@@ -214,6 +220,7 @@ export default function CodePreview() {
             ...propState.flows[appContext.selectedFlow],
             enabled: enabledFlows,
             http_method: toPascalCase(appContext.curlRequest?.method),
+            url_path: new URL(curlRequest.url).pathname,
             curl: {
               input: appContext.curlCommand,
               body: appContext.requestFields?.value,
