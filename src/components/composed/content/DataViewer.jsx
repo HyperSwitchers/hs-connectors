@@ -102,48 +102,69 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
     const keys = fields.flatMap((f) => [f, 'value']);
     keys.pop();
     updatedMapping = updateNestedJson(updatedMapping, keys, mapUpdates);
-    const appUpdates = {};
-
-    if (appContextField === 'hsResponseFields' && field === 'status') {
-      appUpdates.statusVariable = mapUpdates[updateField];
-      appUpdates.hsResponseFields = {
-        mapping: updatedMapping,
-        value: {
-          ...appContext.hsResponseFields.value,
-          status: mapUpdates[updateField],
-        },
-      };
-
-      const responseStatusMappingUpdate = {
-        ...keys.reduce(
-          (obj, k) => obj[k],
-          appContext.responseFields.mapping || {}
-        ),
-        type: 'enum',
-      };
-      if (
-        !Array.isArray(responseStatusMappingUpdate.value) &&
-        responseStatusMappingUpdate.value !== null &&
-        responseStatusMappingUpdate.value !== undefined
-      ) {
-        responseStatusMappingUpdate.value = [responseStatusMappingUpdate.value];
-      }
-      appUpdates.responseFields = {
-        ...appContext.responseFields,
-        mapping: {
-          ...appContext.responseFields.mapping,
-          [field]: responseStatusMappingUpdate,
-        },
-      };
-    }
-
-    setAppContext((prevState) => ({
-      ...prevState,
+    const appUpdates = {
       codeInvalidated: true,
       [appContextField]: {
-        ...prevState[appContextField],
+        ...appContext[appContextField],
         mapping: updatedMapping,
       },
+    };
+
+    if (appContextField === 'hsResponseFields') {
+      let updatedValue = { ...appContext[appContextField].value };
+      updatedValue = updateNestedJson(
+        updatedValue,
+        fields,
+        mapUpdates[updateField]
+      );
+      appUpdates.hsResponseFields.value = updatedValue;
+
+      if (field === 'status') {
+        appUpdates.statusVariable = mapUpdates[updateField];
+        const keys = (mapUpdates[updateField] || '')
+          .replace('$', '')
+          .split('.')
+          .flatMap((f) => [f, 'value']);
+        keys.pop();
+        const responseStatusMappingUpdate = {
+          ...keys.reduce(
+            (obj, k) => obj[k],
+            appContext.responseFields.mapping || {}
+          ),
+          type: 'enum',
+        };
+        if (
+          !Array.isArray(responseStatusMappingUpdate.value) &&
+          responseStatusMappingUpdate.value !== null &&
+          responseStatusMappingUpdate.value !== undefined
+        ) {
+          responseStatusMappingUpdate.value = [
+            responseStatusMappingUpdate.value,
+          ];
+        }
+        appUpdates.status = {
+          ...appContext.status,
+          value: responseStatusMappingUpdate.value.reduce((obj, m) => {
+            obj[m] = null;
+            return obj;
+          }, {}),
+        };
+        let updateResponseFieldsMapping = {
+          ...appContext.responseFields.mapping,
+        };
+        updateResponseFieldsMapping = updateNestedJson(
+          updateResponseFieldsMapping,
+          keys,
+          responseStatusMappingUpdate
+        );
+        appUpdates.responseFields = {
+          ...appContext.responseFields,
+          mapping: updateResponseFieldsMapping,
+        };
+      }
+    }
+    setAppContext((prevState) => ({
+      ...prevState,
       ...appUpdates,
     }));
   };

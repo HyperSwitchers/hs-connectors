@@ -178,7 +178,7 @@ export default function CodePreview() {
       if (appContext.hsResponseFields.value) {
         updatedTransformerState[appContext.connectorPascalCase].flows[
           appContext.selectedFlow
-        ].hsResponseFields = appContext.hsResponseFields.value;
+        ].hsResponse = appContext.hsResponseFields.value;
       }
       setTransformerState((prevState) => ({
         ...prevState,
