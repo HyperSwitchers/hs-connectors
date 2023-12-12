@@ -223,7 +223,7 @@ export default function ApiDataEditor() {
         </div>
       ) : null}
       {appContext.responseFields.value ? (
-        <div className="response-fields">
+        <div className="response-fields" id="response-fields-anchor">
           <h2>Connector Response Fields</h2>
           {appContext.responseFields.mapping && (
             <DataViewer

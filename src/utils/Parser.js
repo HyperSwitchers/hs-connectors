@@ -883,7 +883,7 @@ function generatedResponseVariables(inputObject, parentName) {
 function printTemplateCode(connectorAuthCode, connectorAmount, nestedStructsMap, tryFromsArray, connectorTemplateCode, attemptStatusMapping, refundStatusMapping, errorStructs) {
     let output = `${connectorImports}\n\n${connectorAuthCode}\n\n${connectorAmount}\n\n${[...nestedStructsMap.values()].join('')}\n${tryFromsArray.join('\n\n')}\n${attemptStatusMapping}\n\n${refundStatusMapping}\n${connectorTemplateCode}\n${errorStructs}`;
     return output;
-
+    
     // console.log(connectorImports);console.log(connectorAuthCode);console.log(connectorAmount);console.log(nestedStructsMap);console.log(tryFromsArray);console.log(attemptStatusMapping);console.log(refundStatusMapping);console.log(connectorTemplateCode);console.log(errorStructs);
 }
 
@@ -921,10 +921,9 @@ export const generateRustCode = (connector, inputJson) => {
         let parentObjectName = `${connectorName}${flowType}`
         const nestedStructs = generateNestedStructs(connectorName, inputObject[connectorName]?.flows[flowType], `${toPascalCase(parentObjectName)}`, flowType, nestedStructsMap);
         if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsRequest).length !== 0)) {
-
             nestedStructs2 = inputObject[connectorName]?.flows[flowType].paymentsRequest && generateNestedInitStructs(inputObject[connectorName]?.flows[flowType].paymentsRequest, `${toPascalCase(connectorName)}${flowType}Request`);
         }
-        if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsResponse).length !== 0)) {
+        if ((Object.keys(inputObject[connectorName]?.flows[flowType]?.paymentsResponse || {}).length !== 0)) {
             nestedStructs3 = inputObject[connectorName]?.flows[flowType].paymentsResponse && generatedResponseVariables(inputObject[connectorName]?.flows[flowType].paymentsResponse, `item.response`);
         }
 

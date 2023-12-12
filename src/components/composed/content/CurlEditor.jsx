@@ -6,7 +6,7 @@ import { parse_curl } from 'curl-parser';
 import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 
-import { addFieldsToNodes, getHeaders, mapFieldNames } from 'utils/common';
+import { addFieldsToNodes, getHeaders, mapFieldNodes } from 'utils/common';
 import { APP_CONTEXT } from 'utils/state';
 
 export default function CurlEditor() {
@@ -67,14 +67,14 @@ export default function CurlEditor() {
           requestFields: {
             value: requestFields,
             mapping: {
-              ...addFieldsToNodes(mapFieldNames(requestFields)),
+              ...mapFieldNodes(addFieldsToNodes(requestFields)),
               ...prevState.requestFields.mapping,
             },
           },
           requestHeaderFields: {
             value: requestHeaderFields,
             mapping: {
-              ...addFieldsToNodes(mapFieldNames(requestHeaderFields)),
+              ...mapFieldNodes(addFieldsToNodes(requestHeaderFields)),
               ...prevState.requestHeaderFields.mapping,
             },
           },
@@ -129,6 +129,9 @@ export default function CurlEditor() {
             mapping: addFieldsToNodes(data),
           };
           updates.codeInvalidated = true;
+          setTimeout(() => {
+            document.getElementById('response-fields-anchor')?.scrollIntoView();
+          }, 100);
         },
         error: (data) => {
           console.error(

@@ -34,17 +34,22 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
           obj[v] = (appContext.status?.value || {})[v] || '';
           return obj;
         }, {});
-        setAppContext((prevState) => ({
-          ...prevState,
+        const updates = {
           codeInvalidated: true,
-          status: {
-            value: updatedStatus,
-            mapping: addFieldsToNodes(updatedStatus),
-          },
           [appContextField]: {
             ...appContext[appContextField],
             mapping: updatedMapping,
           },
+        };
+        if (appContext.statusVariable === '$' + field) {
+          updates.status = {
+            value: updatedStatus,
+            mapping: addFieldsToNodes(updatedStatus),
+          };
+        }
+        setAppContext((prevState) => ({
+          ...prevState,
+          ...updates,
         }));
       } catch (error) {
         console.error(error);
@@ -70,17 +75,22 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
           obj[v] = (appContext.status?.value || {})[v] || '';
           return obj;
         }, {});
-        setAppContext({
-          ...appContext,
+        const updates = {
           codeInvalidated: true,
-          status: {
-            value: updatedStatus,
-            mapping: addFieldsToNodes(updatedStatus),
-          },
           [appContextField]: {
             ...appContext[appContextField],
             mapping: updatedMapping,
           },
+        };
+        if (appContext.statusVariable === '$' + field) {
+          updates.status = {
+            value: updatedStatus,
+            mapping: addFieldsToNodes(updatedStatus),
+          };
+        }
+        setAppContext({
+          ...appContext,
+          ...updates,
         });
       }
     }
@@ -181,6 +191,9 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                   obj[k] !== null || obj[k] !== undefined ? obj[k] : {},
                 mapping
               );
+              if (header === 'valueMap' && Array.isArray(currentField.value)) {
+                return <div className="table-cell"></div>;
+              }
               if (header === 'valueMap' || header === 'value') {
                 currentValue = currentField.value;
               } else {
@@ -287,7 +300,7 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                           )}
                         </React.Fragment>
                       ) : (
-                        currentValue.toString()
+                        value.toString()
                       )}
                     </div>
                   );

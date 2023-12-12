@@ -89,6 +89,8 @@ export default function CodePreview() {
             template({
               ...flow,
               connector_name: toCamelCase(propState.connector_name || ' '),
+              struct_name: toPascalCase(propState.struct_name),
+              content_type: propState.content_type,
             })
           )
           .join('\n') +
@@ -100,7 +102,11 @@ export default function CodePreview() {
         setConnectorIntegrationCode(renderedTemplate);
       }
     } catch (error) {
-      console.warn('ERROR', 'Failed to generate connector integration code');
+      console.warn(
+        'ERROR',
+        'Failed to generate connector integration code',
+        error
+      );
     }
 
     storeItem('prop_state', JSON.stringify(propState));
@@ -172,7 +178,7 @@ export default function CodePreview() {
       if (appContext.hsResponseFields.value) {
         updatedTransformerState[appContext.connectorPascalCase].flows[
           appContext.selectedFlow
-        ].paymentsResponse = appContext.hsResponseFields.value;
+        ].hsResponseFields = appContext.hsResponseFields.value;
       }
       setTransformerState((prevState) => ({
         ...prevState,
@@ -207,6 +213,7 @@ export default function CodePreview() {
           [appContext.selectedFlow]: {
             ...propState.flows[appContext.selectedFlow],
             enabled: enabledFlows,
+            http_method: toPascalCase(appContext.curlRequest?.method),
             curl: {
               input: appContext.curlCommand,
               body: appContext.requestFields?.value,
@@ -271,7 +278,8 @@ export default function CodePreview() {
   return (
     <div className="code-preview">
       <div className="code-preview-header">
-        <div
+        <a
+          href="#code-preview-anchor"
           className={`save button${
             appContext.codeInvalidated ? '' : ' disabled'
           }`}
@@ -280,7 +288,7 @@ export default function CodePreview() {
           }
         >
           {appContext.codeInvalidated ? 'Generate Code' : 'Code generated!'}
-        </div>
+        </a>
         <div
           className={`save button${showPrSteps ? ' disabled' : ''}`}
           onClick={() => handlePrSteps()}
@@ -304,7 +312,7 @@ export default function CodePreview() {
             <div className="curl">{prCurl}</div>
           </div>
         )}
-        <h2>Generated Code Snippet</h2>
+        <h2 id="code-preview-anchor">Generated Code Snippet</h2>
       </div>
       <div className="connector-integration">
         <div>

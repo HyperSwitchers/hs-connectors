@@ -43,12 +43,19 @@ export function mapFieldNodes(input) {
                 _.find(value, (synonym) => synonym === key) ? kk : undefined
               ).filter((a) => a);
             });
-            return {
-              ...value,
-              value: synonymKey[0]
-                ? '$' + synonymKey[0]
-                : mapFieldNodes(value_),
-            };
+            if (synonymKey[0]) {
+              const val = '$' + synonymKey[0];
+              return {
+                ...value,
+                secret: DEFAULT_SECRETS_IN_SYNONYMS.includes(val),
+                value: val,
+              };
+            } else {
+              return {
+                ...value,
+                value: mapFieldNodes(value_),
+              };
+            }
           }
           return mapFieldNodes(value);
         } else {
@@ -57,7 +64,19 @@ export function mapFieldNodes(input) {
               _.find(value, (synonym) => synonym === key) ? kk : undefined
             ).filter((a) => a);
           });
-          return synonymKey[0] ? '$' + synonymKey[0] : mapFieldNodes(value);
+          if (synonymKey[0]) {
+            const val = '$' + synonymKey[0];
+            return {
+              ...value,
+              secret: DEFAULT_SECRETS_IN_SYNONYMS.includes(val),
+              value: val,
+            };
+          } else {
+            return {
+              ...value,
+              value: mapFieldNodes(value),
+            };
+          }
         }
       });
       return res;
