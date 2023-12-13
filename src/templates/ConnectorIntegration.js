@@ -10,7 +10,7 @@ export const ConnectorCommon = `
 pub mod transformers;
 
 use std::fmt::Debug;
-
+use common_utils::request::RequestContent;
 use error_stack::{IntoReport, ResultExt};
 use masking::ExposeInterface;
 use transformers as {{connector_name}};
@@ -175,7 +175,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
     }
     {{/contains}}
     {{#contains enabled "get_request_body"}}
-        fn get_request_body(&self, req: &{{{router_type}}}, _connectors: &settings::Connectors,) -> CustomResult<Option<types::RequestBody>, errors::ConnectorError> {
+        fn get_request_body(&self, req: &{{{router_type}}}, _connectors: &settings::Connectors,) -> CustomResult<RequestContent, errors::ConnectorError> {
         {{#contains enabled "convert_router_amount"}} 
         let connector_router_data = {{connector_name}}::{{struct_name}}RouterData::try_from((
             &self.get_currency_unit(),
@@ -191,9 +191,7 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
         {{else}}
         let req_obj = {{connector_name}}::{{struct_name}}{{request_type}}::try_from(req)?;
         {{/contains}}
-        let {{connector_name}}_req = types::RequestBody::log_and_get_request_body(&req_obj, utils::Encode::<{{connector_name}}::{{struct_name}}{{request_type}}>::encode_to_string_of_json)
-            .change_context(errors::ConnectorError::RequestEncodingFailed)?;
-        Ok(Some({{connector_name}}_req))
+        Ok(RequestContent::Json(Box::new(req_obj)))
     }
     {{/contains}}
     {{#contains enabled "build_request"}}
@@ -213,7 +211,9 @@ export const ConnectorIntegration = `impl ConnectorIntegration<{{trait_name}}, {
                     self, req, connectors,
                 )?)
                 {{#contains enabled "get_request_body"}}
-                .body({{flow_type}}::get_request_body(self, req, connectors)?)
+                .set_body({{flow_type}}::get_request_body(
+                    self, req, connectors,
+                )?)
                 {{/contains}}
                 .build(),
         ))
