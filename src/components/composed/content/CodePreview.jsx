@@ -94,8 +94,7 @@ export default function CodePreview() {
               struct_name: toPascalCase(propState.struct_name),
               content_type: propState.content_type,
               currency_unit: propState.currency_unit,
-              currency_unit_type: propState.currency_unit_type,    
-              url_path: propState.url_path,
+              currency_unit_type: propState.currency_unit_type,
             })
           )
           .join('\n') +
@@ -193,7 +192,9 @@ export default function CodePreview() {
       // Form connector integration generator input
       const curlRequest = appContext.curlRequest;
       const headers = getHeaders(curlRequest.headers);
-      const enabledFlows = [];
+      const enabledFlows = [
+        ...(propState.flows[appContext.selectedFlow]?.enabled || []),
+      ];
       if (Object.keys(JSON.parse(curlRequest.data.ascii)).length > 0) {
         enabledFlows.push(
           'get_request_body',
@@ -209,8 +210,8 @@ export default function CodePreview() {
       const updatedPropState = {
         connector: appContext.connectorName,
         connector_name: appContext.connectorName,
-        currency_unit: appContext.connectorUnit,
-        currency_unit_type: appContext.connectorUnitType,
+        currency_unit: appContext.currencyUnit,
+        currency_unit_type: appContext.currencyUnitType,
         url: new URL(curlRequest.url).pathname,
         content_type: headers['Content-Type'] || headers['content-type'],
         struct_name: appContext.connectorPascalCase,
@@ -218,7 +219,8 @@ export default function CodePreview() {
           ...propState.flows,
           [appContext.selectedFlow]: {
             ...propState.flows[appContext.selectedFlow],
-            enabled: enabledFlows,
+            // @ts-ignore
+            enabled: [...new Set(enabledFlows)],
             http_method: toPascalCase(appContext.curlRequest?.method),
             url_path: new URL(curlRequest.url).pathname,
             curl: {
