@@ -195,14 +195,20 @@ export default function CodePreview() {
       const enabledFlows = [
         ...(propState.flows[appContext.selectedFlow]?.enabled || []),
       ];
-      if (Object.keys(JSON.parse(curlRequest.data.ascii)).length > 0) {
-        enabledFlows.push(
-          'get_request_body',
-          'get_url',
-          'get_content_type',
-          'get_headers',
-          'build_request'
-        );
+      if (curlRequest.method) {
+        enabledFlows.push('get_content_type');
+      }
+      if (curlRequest.url) {
+        enabledFlows.push('get_url');
+      }
+      if (Object.keys(curlRequest.data || {}).length > 0) {
+        enabledFlows.push('get_request_body', 'build_request');
+      }
+      if (
+        Array.isArray(curlRequest.headers) &&
+        curlRequest.headers.length > 0
+      ) {
+        enabledFlows.push('get_headers');
       }
       if (appContext.responseFields.value) {
         enabledFlows.push('handle_response', 'get_error_response');
