@@ -104,7 +104,7 @@ export const HYPERSWITCH_STATUS_LIST = {
     'Success',
     'TransactionFailure',
   ],
-  PSync: [
+  Psync: [
     'Started',
     'AuthenticationFailed',
     'RouterDeclined',
@@ -129,7 +129,7 @@ export const HYPERSWITCH_STATUS_LIST = {
     'ConfirmationAwaited',
     'DeviceDataCollectionPending',
   ],
-  RSync: [
+  Rsync: [
     'Failure',
     'ManualReview',
     'Pending',
@@ -146,8 +146,8 @@ export const FLOW_OPTIONS = [
   'Capture',
   'Void',
   'Refund',
-  'PSync',
-  'RSync',
+  'Psync',
+  'Rsync',
 ];
 
 export const PAYMENT_METHOD_OPTIONS = ['Card'];
@@ -253,8 +253,8 @@ export const SYNONYM_MAPPING = {
     refund_amount: ['refund_amount', 'authorization_amount', 'amount'],
     currency: ['currency', 'currency_code'],
   },
-  PSync: {},
-  RSync: {},
+  Psync: {},
+  Rsync: {},
 };
 
 export const TYPES_LIST = [
@@ -375,7 +375,7 @@ export const defaultConnectorProps = (connector) => {
         http_method: 'Post',
         enabled: [],
       },
-      PSync: {
+      Psync: {
         trait_name: 'api::PSync',
         data_type: 'types::PaymentsSyncData',
         router_type: 'types::PaymentsSyncRouterData',
@@ -417,7 +417,7 @@ export const defaultConnectorProps = (connector) => {
         enabled: ['convert_router_amount'],
         refund_amount: true,
       },
-      RSync: {
+      Rsync: {
         trait_name: 'api::RSync',
         data_type: 'types::RefundsData',
         router_type: `types::RefundSyncRouterData`,
