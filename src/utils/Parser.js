@@ -463,7 +463,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
 
     if (hsResponse != undefined && hsResponse.status || hsResponse.response.resource_id) {
         let redirection_data = `None`;
-        if (hsResponse.response.redirection_data &&
+        if (flowType === "Authorize" && hsResponse.response.redirection_data &&
             hsResponse.response.redirection_data.url) {
             redirection_data = `Some(services::RedirectForm::Form {
                 endpoint: ${hsResponse.response.redirection_data.url.startsWith('$') ? "item.response." + hsResponse.response.redirection_data.url.substring(1) : "item.response." + hsResponse.response.redirection_data.url},
