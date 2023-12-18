@@ -89,10 +89,7 @@ impl ConnectorCommon for {{struct_name}} {
     }
 
     fn get_currency_unit(&self) -> api::CurrencyUnit {
-        todo!()
-        //    TODO! Check connector documentation, on which unit they are processing the currency.
-        //    If the connector accepts amount in lower unit ( i.e cents for USD) then return api::CurrencyUnit::Minor,
-        //    if connector accepts amount in base unit (i.e dollars for USD) then return api::CurrencyUnit::Base
+        api::CurrencyUnit::{{currency_unit}}
     }
 
     fn base_url<'a>(&self, connectors: &'a settings::Connectors) -> &'a str {

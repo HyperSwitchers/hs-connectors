@@ -466,7 +466,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
         if (hsResponse.response.redirection_data &&
             hsResponse.response.redirection_data.url) {
             redirection_data = `Some(services::RedirectForm::Form {
-                endpoint: ${hsResponse.response.redirection_data.url}.to_string(),
+                endpoint: ${hsResponse.response.redirection_data.url.startsWith('$') ? "item.response." + hsResponse.response.redirection_data.url.substring(1) : "item.response." + hsResponse.response.redirection_data.url},
                 method: services::Method::${hsResponse.response.redirection_data.http_method},
                 form_fields: std::collections::HashMap::new(),
             })`
@@ -533,14 +533,14 @@ function generateStatusMapping(statusType, connectorName, inputJson) {
         ? '#[serde(rename_all = "camelCase")]'
         : '';
     return `#[derive(Debug, Serialize, Deserialize)]
-${header}
-pub enum ${connectorName}${statusType} {
-    ${statusArray.join(',\n\t')}
+                ${header}
+                pub enum ${connectorName}${statusType} {
+                    ${statusArray.join(',\n\t')}
 }
-impl From<${toPascalCase(connectorName)}${statusType}> for enums::${statusType} {
-    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
-        match item {
-            ${tryFromArray.join(',\n\t\t\t')}
+                impl From<${toPascalCase(connectorName)} ${statusType}> for enums::${statusType} {
+                    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
+                        match item {
+                        ${tryFromArray.join(',\n\t\t\t')}
         }
     }
 }`
@@ -551,12 +551,12 @@ function generateRustEnumStruct(name, fields) {
     const header = addCasingHeader(fields.type.map((element) => element), true);
 
     const rustStruct = `
-#[derive(Debug, Serialize, Deserialize)]
-${header}
-pub enum ${name} {
-${structFields.join(',\n')}
+                    #[derive(Debug, Serialize, Deserialize)]
+                    ${header}
+                    pub enum ${name} {
+                        ${structFields.join(',\n')}
 }
-`;
+                    `;
     return rustStruct;
 }
 //(toSnakeCase(amount),  {value:, optional:, ..}, $parentName)
@@ -618,12 +618,12 @@ function generateRustStructField(connectorName, fieldName, fieldValue, parentNam
     if (fieldName == "type") {
         fieldName = `${parentName}_${fieldName}`
         return `    #[serde(rename = "type")]
-    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
+                        pub ${toSnakeCase(fieldName)}: ${fieldType},`;
     }
     if (fieldName == "self") {
         fieldName = `${parentName}_${fieldName}`
         return `    #[serde(rename = "self")]
-    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
+                        pub ${toSnakeCase(fieldName)}: ${fieldType},`;
     }
     return `    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
 }
@@ -664,7 +664,7 @@ function addCasingHeader(fields, isEnum) {
 
 
 //(Name of the Struct, Array of [key, values] of fields inside that struct)
-//($parentName_structName, [[amount, {value: , optional:, ...}], [card, {value: {}, optional:, ...}] ])
+//($parentName_structName, [[amount, {value: , optional:, ...}], [card, {value: { }, optional:, ...}] ])
 function generateRustStruct(connectorName, name, fields, flow_type, nestedStructsMap) {
     let structFields = fields.map(([fieldName, fieldValue]) =>  //[amount, {value:, optional:, ..}]
         generateRustStructField(connectorName, toSnakeCase(fieldName), fieldValue, name, flow_type, nestedStructsMap)
@@ -673,12 +673,12 @@ function generateRustStruct(connectorName, name, fields, flow_type, nestedStruct
     const header = addCasingHeader(fields.map(([fieldName]) => fieldName), false);
 
     const rustStruct = `
-#[derive(Debug, Serialize, Deserialize)]
-${header}
-pub struct ${name} {
-${structFields.join('\n')}
+                        #[derive(Debug, Serialize, Deserialize)]
+                        ${header}
+                        pub struct ${name} {
+                            ${structFields.join('\n')}
 }
-`;
+                        `;
 
     return rustStruct;
 }
@@ -763,7 +763,7 @@ function replaceDynamicFields(value, type) {
 
 function generateNestedInitStructs(inputObject, parentName) {
     const structs = [];
-    // const structOccurrences = {};
+    // const structOccurrences = { };
     function processObject(inputObj, parentName) {
         const nestedFields = {};
         // [[key, Value], [key, Value]]
@@ -849,7 +849,7 @@ function generateNestedInitStructs(inputObject, parentName) {
 function generatedResponseVariables(inputObject, parentName) {
     const structs = [];
     function processObject(inputObj, parentName) {
-        // const nestedFields = {};
+        // const nestedFields = { };
         // [[key, Value], [key, Value]]
         const a = inputObj ? Object.entries(inputObj).forEach(([structName, structFields]) => {
             // console.log(`${structName}-----${structFields}`);
@@ -971,78 +971,78 @@ export const generateRustCode = (connector, inputJson) => {
 
 // Test case with nested structures
 const inputJson = `
-{
-    "checkout": {
-        "body":{
-            "paymentsRequest": {
-                "source": {
-                    "type": "card",
-                    "card": {
-                        "number": "4111111111111111",
+                        {
+                            "checkout": {
+                            "body":{
+                            "paymentsRequest": {
+                            "source": {
+                            "type": "card",
+                        "card": {
+                            "number": "4111111111111111",
                         "expMonth": 10,
                         "expYear": 2023,
                         "cvv": 123
                     }
                 },
-                "amount": 6500,
-                "currency": "USD",
-                "processing_channel_id": "pc_ovo75iz4hdyudnx6tu74mum3fq",
-                "reference": "ORD-5023-4E89",
-                "metadata": {
-                    "udf1": "TEST123",
-                    "coupon_code": "NY2018",
-                    "partner_id": 123989
+                        "amount": 6500,
+                        "currency": "USD",
+                        "processing_channel_id": "pc_ovo75iz4hdyudnx6tu74mum3fq",
+                        "reference": "ORD-5023-4E89",
+                        "metadata": {
+                            "udf1": "TEST123",
+                        "coupon_code": "NY2018",
+                        "partner_id": 123989
                 },
-                "customer":{
-                    "email": "ams@gmail.com"
+                        "customer":{
+                            "email": "ams@gmail.com"
                 }
             },
-            "paymentsResponse" : {
-                "id": "char_B2HjKLBZl6lz6JLCeglyAi8t",
-                "objectType": "charge",
-                "amount": 499,
-                "amountRefunded": 0,
-                "currency": "EUR",
-                "description": "asdasd",
-                "card": {
-                  "id": "card_2I5UIYmUMvKPeBfgdY3R8CTI",
-                  "cardholderName": "john",
-                  "brand": "Visa",
-                  "type": "Credit Card",
-                  "country": "CH"
+                        "paymentsResponse" : {
+                            "id": "char_B2HjKLBZl6lz6JLCeglyAi8t",
+                        "objectType": "charge",
+                        "amount": 499,
+                        "amountRefunded": 0,
+                        "currency": "EUR",
+                        "description": "asdasd",
+                        "card": {
+                            "id": "card_2I5UIYmUMvKPeBfgdY3R8CTI",
+                        "cardholderName": "john",
+                        "brand": "Visa",
+                        "type": "Credit Card",
+                        "country": "CH"
                 },
-                "captured": true,
-                "refunded": false,
-                "disputed": false,
-                "fraudDetails": {
-                  "status": "in_progress"
+                        "captured": true,
+                        "refunded": false,
+                        "disputed": false,
+                        "fraudDetails": {
+                            "status": "in_progress"
                 },
-                "status": "successful",
-                "clientObjectId": "client_char_5jxlhatBdid2UyyoOqctrXqu"
+                        "status": "successful",
+                        "clientObjectId": "client_char_5jxlhatBdid2UyyoOqctrXqu"
             }
         }
     }
 }
-`;
+                        `;
 
 const inputJson2 = `{
-    "paymentsRequest": {
-        "source":{
-            "value":{
-                "type": {"value": "card", "isOption": false, "isSecret": false, "type": "String"},
-                "number": {"value": "$card_number", "isOption": false, "isSecret": false, "type": "CardNumber"},
-                "expiry_month": {"value": "$card_exp_month", "isOption": false, "isSecret": true, "type": "String"},
-                "expiry_year": {"value": "$card_exp_year", "isOption": false, "isSecret": true, "type": "String"},
-                "name": {"value": "$card_holder_name", "isOption": false, "isSecret": true, "type": "String"},
-                "cvv": {"value": "$card_cvc", "isOption": false, "isSecret": true, "type": "String"}
+                            "paymentsRequest": {
+                            "source":{
+                            "value":{
+                            "type": {"value": "card", "isOption": false, "isSecret": false, "type": "String"},
+                        "number": {"value": "$card_number", "isOption": false, "isSecret": false, "type": "CardNumber"},
+                        "expiry_month": {"value": "$card_exp_month", "isOption": false, "isSecret": true, "type": "String"},
+                        "expiry_year": {"value": "$card_exp_year", "isOption": false, "isSecret": true, "type": "String"},
+                        "name": {"value": "$card_holder_name", "isOption": false, "isSecret": true, "type": "String"},
+                        "cvv": {"value": "$card_cvc", "isOption": false, "isSecret": true, "type": "String"}
             },
-            "isOption": false,
-            "isSecret": false,
-            "type": "Object"
+                        "isOption": false,
+                        "isSecret": false,
+                        "type": "Object"
         },
-        "amount": {"value": "$amount", "isOption": false, "isSecret": false, "type": "i64"},
-        "currency": {"value": "$currency", "isOption": false, "isSecret": false, "type": "Currency"},
-        "capture": {"value": "true", "isOption": false, "isSecret": false, "type": "bool"}
+                        "amount": {"value": "$amount", "isOption": false, "isSecret": false, "type": "i64"},
+                        "currency": {"value": "$currency", "isOption": false, "isSecret": false, "type": "Currency"},
+                        "capture": {"value": "true", "isOption": false, "isSecret": false, "type": "bool"}
     }
 }`;
 
