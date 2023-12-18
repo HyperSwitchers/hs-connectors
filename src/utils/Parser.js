@@ -533,14 +533,14 @@ function generateStatusMapping(statusType, connectorName, inputJson) {
         ? '#[serde(rename_all = "camelCase")]'
         : '';
     return `#[derive(Debug, Serialize, Deserialize)]
-                ${header}
-                pub enum ${connectorName}${statusType} {
-                    ${statusArray.join(',\n\t')}
+${header}
+pub enum ${connectorName}${statusType} {
+    ${statusArray.join(',\n\t')}
 }
-                impl From<${toPascalCase(connectorName)} ${statusType}> for enums::${statusType} {
-                    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
-                        match item {
-                        ${tryFromArray.join(',\n\t\t\t')}
+impl From<${toPascalCase(connectorName)} ${statusType}> for enums::${statusType} {
+    fn from(item: ${toPascalCase(connectorName)}${statusType}) -> Self {
+        match item {
+        ${tryFromArray.join(',\n\t\t\t')}
         }
     }
 }`
@@ -551,12 +551,12 @@ function generateRustEnumStruct(name, fields) {
     const header = addCasingHeader(fields.type.map((element) => element), true);
 
     const rustStruct = `
-                    #[derive(Debug, Serialize, Deserialize)]
-                    ${header}
-                    pub enum ${name} {
-                        ${structFields.join(',\n')}
+#[derive(Debug, Serialize, Deserialize)]
+${header}
+pub enum ${name} {
+    ${structFields.join(',\n')}
 }
-                    `;
+`;
     return rustStruct;
 }
 //(toSnakeCase(amount),  {value:, optional:, ..}, $parentName)
@@ -618,12 +618,12 @@ function generateRustStructField(connectorName, fieldName, fieldValue, parentNam
     if (fieldName == "type") {
         fieldName = `${parentName}_${fieldName}`
         return `    #[serde(rename = "type")]
-                        pub ${toSnakeCase(fieldName)}: ${fieldType},`;
+    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
     }
     if (fieldName == "self") {
         fieldName = `${parentName}_${fieldName}`
         return `    #[serde(rename = "self")]
-                        pub ${toSnakeCase(fieldName)}: ${fieldType},`;
+    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
     }
     return `    pub ${toSnakeCase(fieldName)}: ${fieldType},`;
 }
@@ -673,12 +673,12 @@ function generateRustStruct(connectorName, name, fields, flow_type, nestedStruct
     const header = addCasingHeader(fields.map(([fieldName]) => fieldName), false);
 
     const rustStruct = `
-                        #[derive(Debug, Serialize, Deserialize)]
-                        ${header}
-                        pub struct ${name} {
-                            ${structFields.join('\n')}
+#[derive(Debug, Serialize, Deserialize)]
+${header}
+pub struct ${name} {
+    ${structFields.join('\n')}
 }
-                        `;
+`;
 
     return rustStruct;
 }
