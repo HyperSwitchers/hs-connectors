@@ -155,7 +155,6 @@ const replacements = {
     email_Email: `item.router_data.request.get_email()?`,
     currency: "item.router_data.request.currency",
     currency_Currency: "item.router_data.request.currency",
-    router_return_url: `item.router_data.request.get_return_url()?`,
     webhook_url: `item.router_data.request.get_webhook_url()?`,
     complete_authorize_url: `item.router_data.request.complete_authotrize_url`,
     browser_info_accept_header: `item.router_data.request.get_browser_info()?.get_accept_header()?`,
@@ -167,8 +166,10 @@ const replacements = {
     browser_info_time_zone_i32: `item.router_data.request.get_browser_info()?.get_time_zone()?`,
     browser_info_java_enabled_bool: `item.router_data.request.get_browser_info()?.get_java_enabled()?`,
     browser_info_java_script_enabled_bool: `item.router_data.request.get_browser_info()?.get_java_script_enabled()?`,
+    customer_id: `item.get_customer_id()?`,
     description: `item.get_description()?`,
     return_url: `item.get_return_url()?`,
+    router_return_url: `item.router_data.request.get_router_return_url()?`,
     billing_country: `item.router_data.request.billing.address.get_country()?`,
     billing_country_CountryAlpha2: `item.router_data.request.billing.address.get_country()?`,
     billing_address_line1: `item.router_data.request.billing.address.get_line1()?`,
@@ -461,6 +462,15 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
     }
 
     if (hsResponse != undefined && hsResponse.status || hsResponse.response.resource_id) {
+        let redirection_data = `None`;
+        if (hsResponse.response.redirection_data &&
+            hsResponse.response.redirection_data.url) {
+            redirection_data = `Some(services::RedirectForm::Form {
+                endpoint: ${hsResponse.response.redirection_data.url}.to_string(),
+                method: services::Method::${hsResponse.response.redirection_data.http_method},
+                form_fields: std::collections::HashMap::new(),
+            })`
+        }
         generatedResponseTryFrom = `impl TryFrom<types::${responseRouterDataType}<${connectorName}${flowType}Response>> 
     for types::${requestRouterDataType}
 {
@@ -471,7 +481,7 @@ impl TryFrom<&${connectorName}RouterData<&types::PaymentsAuthorizeRouterData>> f
             status: enums::AttemptStatus::${hsResponse.status.startsWith('$') ? "from(item.response." + hsResponse.status.substring(1) + ")" : "Pending"},
             response: Ok(types::PaymentsResponseData::TransactionResponse {
                 resource_id: types::ResponseId::ConnectorTransactionId(item.response.${hsResponse.response.resource_id.substring(1)}),
-                redirection_data:  None,
+                redirection_data:  ${redirection_data},
                 mandate_reference: None,
                 connector_metadata: None,
                 network_txn_id: None,
