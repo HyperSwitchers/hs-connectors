@@ -480,6 +480,10 @@ export const DEFAULT_APP_CONTEXT = {
       status: '',
       response: {
         resource_id: '',
+        redirection_data: {
+          url: '',
+          http_method: '',
+        },
       },
     },
     mapping: null,
@@ -546,3 +550,5 @@ export const AUTH_KEYS_INFO = {
 
 export const CURL_FOR_PR =
   'curl https://raw.githubusercontent.com/HyperSwitchers/hs-connectors/main/src/raise_connector_pr.sh | sh -s -- {{connector_pascal_case}} {{base_url}}';
+
+export const SUPPORTED_HTTP_METHODS = ['GET', 'POST'];

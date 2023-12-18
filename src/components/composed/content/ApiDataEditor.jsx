@@ -202,7 +202,7 @@ export default function ApiDataEditor() {
 
   return (
     <div className="api-data-editor">
-      {appContext.requestFields.value ? (
+      {Object.keys(appContext.requestFields?.value || {}).length > 0 ? (
         <div className="request-body">
           <h2>Connector Request Body Fields</h2>
           <DataViewer

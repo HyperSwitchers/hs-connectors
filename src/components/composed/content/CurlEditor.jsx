@@ -66,17 +66,11 @@ export default function CurlEditor() {
           ...prevState,
           requestFields: {
             value: requestFields,
-            mapping: {
-              ...mapFieldNodes(addFieldsToNodes(requestFields)),
-              ...prevState.requestFields.mapping,
-            },
+            mapping: mapFieldNodes(addFieldsToNodes(requestFields)),
           },
           requestHeaderFields: {
             value: requestHeaderFields,
-            mapping: {
-              ...mapFieldNodes(addFieldsToNodes(requestHeaderFields)),
-              ...prevState.requestHeaderFields.mapping,
-            },
+            mapping: mapFieldNodes(addFieldsToNodes(requestHeaderFields)),
           },
         }));
       } catch (error) {

@@ -192,26 +192,46 @@ export default function CodePreview() {
       // Form connector integration generator input
       const curlRequest = appContext.curlRequest;
       const headers = getHeaders(curlRequest.headers);
-      const enabledFlows = [
-        ...(propState.flows[appContext.selectedFlow]?.enabled || []),
-      ];
+      const enabledFlows = {};
+      (propState.flows[appContext.selectedFlow]?.enabled || []).map(
+        (enabled) => {
+          enabledFlows[enabled] = true;
+        }
+      );
       if (curlRequest.method) {
-        enabledFlows.push('get_content_type');
+        enabledFlows['get_content_type'] = true;
+      } else {
+        delete enabledFlows['get_content_type'];
       }
       if (curlRequest.url) {
-        enabledFlows.push('get_url');
+        enabledFlows['get_url'] = true;
+      } else {
+        delete enabledFlows['get_url'];
       }
-      if (Object.keys(curlRequest.data || {}).length > 0) {
-        enabledFlows.push('get_request_body', 'build_request');
+      if (
+        Object.keys(JSON.parse(curlRequest?.data?.ascii || '{}') || {}).length >
+        0
+      ) {
+        enabledFlows['get_request_body'] = true;
+        enabledFlows['build_request'] = true;
+      } else {
+        delete enabledFlows['get_request_body'];
+        delete enabledFlows['build_request'];
       }
       if (
         Array.isArray(curlRequest.headers) &&
         curlRequest.headers.length > 0
       ) {
-        enabledFlows.push('get_headers');
+        enabledFlows['get_headers'] = true;
+      } else {
+        delete enabledFlows['get_headers'];
       }
       if (appContext.responseFields.value) {
-        enabledFlows.push('handle_response', 'get_error_response');
+        enabledFlows['handle_response'] = true;
+        enabledFlows['get_error_response'] = true;
+      } else {
+        delete enabledFlows['handle_response'];
+        delete enabledFlows['get_error_response'];
       }
       const updatedPropState = {
         connector: appContext.connectorName,
@@ -226,7 +246,7 @@ export default function CodePreview() {
           [appContext.selectedFlow]: {
             ...propState.flows[appContext.selectedFlow],
             // @ts-ignore
-            enabled: [...new Set(enabledFlows)],
+            enabled: Object.keys(enabledFlows),
             http_method: toPascalCase(appContext.curlRequest?.method),
             url_path: new URL(curlRequest.url).pathname,
             curl: {

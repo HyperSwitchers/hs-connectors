@@ -3,6 +3,7 @@ import Dropdown from 'components/atomic/Dropdown';
 import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { addFieldsToNodes, deepCopy, updateNestedJson } from 'utils/common';
+import { SUPPORTED_HTTP_METHODS } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 
 export default function DataViewer({ appContextField, headers, fieldNames }) {
@@ -198,10 +199,16 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                       obj[k] !== null || obj[k] !== undefined ? obj[k] : {},
                     content
                   ),
-                fieldSuggestions = [...(headers[header].suggestions || [])],
+                fieldSuggestions =
+                  field === 'response.redirection_data.http_method'
+                    ? SUPPORTED_HTTP_METHODS
+                    : [...(headers[header].suggestions || [])],
                 updateField = headers[header].update;
 
-              if (header !== 'type') {
+              if (
+                header !== 'type' &&
+                field !== 'response.redirection_data.http_method'
+              ) {
                 fieldSuggestions.push(value);
               }
               let currentValue = [];
