@@ -7,19 +7,27 @@ $silver: #CBBFB9
 $smoky-black: #100C05
 $off-white: #FEFEFE
 $crimson-red: #D32240
+$almost-white: #F5F5F5
+
+// Fonts
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700")
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700")
+
+html, body, #root
+  margin: 0px
+  padding: 0px
+  max-height: 100vh
+  max-width: 100vw
+  scroll-behavior: smooth
 
 body
-  margin: 0
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif
+  font-family: "Montserrat"
   -webkit-font-smoothing: antialiased
   -moz-osx-font-smoothing: grayscale
-  padding: 5px
-  background-color: $platinum
 
 code
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace
 
 @import ./common
 @import ./composed/app
-@import ./composed/AuthType
-
+@import ./composed/auth-type

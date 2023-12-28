@@ -1,4 +1,5 @@
-import { Checkbox } from '@mui/material';
+import { Checkbox, Switch, styled } from '@mui/material';
+import AntSwitch from 'components/atomic/AntSwitch';
 import Dropdown from 'components/atomic/Dropdown';
 import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
@@ -232,6 +233,8 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                   return (
                     <div key={`${header}-${i}`} className="table-cell">
                       <Checkbox
+                        size="small"
+                        color="success"
                         checked={currentValue}
                         onChange={(e, newValue) => {
                           const updates = {
@@ -257,6 +260,22 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
                         }}
                         selectedOption={currentValue}
                         type={null}
+                      />
+                    </div>
+                  );
+                case 'switch':
+                  return (
+                    <div key={`${header}-${i}`} className="table-cell">
+                      <AntSwitch
+                        value={currentValue}
+                        size="small"
+                        onChange={(e, newValue) => {
+                          const updates = {
+                            ...currentField,
+                            [updateField]: newValue,
+                          };
+                          updateFields(field, updateField, updates);
+                        }}
                       />
                     </div>
                   );

@@ -1,7 +1,6 @@
 // @ts-check
 
 import { Paper } from '@mui/material';
-import $ from 'jquery';
 import { parse_curl } from 'curl-parser';
 import React, { useEffect, useState } from 'react';
 import { useRecoilState } from 'recoil';
@@ -12,7 +11,6 @@ import { APP_CONTEXT } from 'utils/state';
 export default function CurlEditor() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [curlCommand, setCurlCommand] = useState(appContext.curlCommand);
-  const [wait, setWait] = useState(false);
 
   // Set local curlCommand on state update
   useEffect(() => {
@@ -106,56 +104,15 @@ export default function CurlEditor() {
     }
   };
 
-  const serveCurlRequest = async () => {
-    if (appContext.curlRequest) {
-      setWait(true);
-      const curlRequest = appContext.curlRequest;
-      const updates = {};
-      const url = '/cors/' + curlRequest.url;
-      const req = {
-        method: curlRequest.method,
-        url,
-        headers: getHeaders(curlRequest.headers),
-        data: curlRequest.data.ascii,
-        success: (data) => {
-          updates.responseFields = {
-            value: data,
-            mapping: addFieldsToNodes(data),
-          };
-          updates.codeInvalidated = true;
-          setTimeout(() => {
-            document.getElementById('response-fields-anchor')?.scrollIntoView();
-          }, 100);
-        },
-        error: (data) => {
-          console.error(
-            'ERROR',
-            `Failed to make API request ${curlRequest.method} ${curlRequest.url}`,
-            data
-          );
-        },
-      };
-
-      $.ajax(url, req).always(() => {
-        setAppContext((prevState) => ({ ...prevState, ...updates }));
-        setWait(false);
-      });
-    }
-  };
-
   return (
     <div className="curl-request-editor">
       <Paper elevation={0} className="curl-input-section">
-        <h3>cURL Request</h3>
         <textarea
           value={curlCommand}
           onBlur={handleCurlUpdate}
           onChange={handleCurlChange}
           placeholder="Enter your cURL request here..."
         />
-        <button onClick={serveCurlRequest} disabled={wait}>
-          {wait ? <div className="loader"></div> : 'Send Request'}
-        </button>
       </Paper>
     </div>
   );

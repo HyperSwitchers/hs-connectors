@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom/client';
 import { RecoilRoot } from 'recoil';
 
 // userdef modules
-import './index.sass';
+import './styles/styles.sass';
 import App from './App.jsx';
 import reportWebVitals from './reportWebVitals';
 
