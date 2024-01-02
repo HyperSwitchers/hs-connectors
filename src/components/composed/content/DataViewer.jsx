@@ -7,7 +7,12 @@ import { addFieldsToNodes, deepCopy, updateNestedJson } from 'utils/common';
 import { SUPPORTED_HTTP_METHODS } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 
-export default function DataViewer({ appContextField, headers, fieldNames }) {
+export default function DataViewer({
+  appContextField,
+  emptyText,
+  fieldNames,
+  headers,
+}) {
   let [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
   const [headerFields, setHeaderFields] = useState([]);
   const [variantRequestor, setVariantRequestor] = useState(null);
@@ -109,6 +114,13 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
       [appContextField]: {
         ...appContext[appContextField],
         mapping: updatedMapping,
+        value: {
+          ...appContext[appContextField]?.value,
+          [field]:
+            appContextField === 'status'
+              ? mapUpdates.value
+              : appContext[appContextField]?.value?.[field],
+        },
       },
     };
 
@@ -174,187 +186,200 @@ export default function DataViewer({ appContextField, headers, fieldNames }) {
   return (
     <div className="data-viewer">
       <div className="table">
-        <div className="table-row">
-          {headerFields.map((header) => (
-            <div key={header} className="table-cell">
-              {headers[header].value}
+        {fieldNames.length === 0 ? (
+          <div className="empty">{emptyText}</div>
+        ) : (
+          <React.Fragment>
+            <div className="table-row">
+              {headerFields.map((header) => (
+                <div key={header} className="table-cell">
+                  {headers[header].value}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        {fieldNames.map((field) => (
-          <div key={field} className="table-row">
-            {headerFields.map((header, i) => {
-              if (i === 0)
-                return (
-                  <div key={`${header}-${i}`} className="table-cell">
-                    {field}
-                  </div>
-                );
-              const mapping = appContext[appContextField].mapping,
-                content = appContext[appContextField].value,
-                fieldType = headers[header].type,
-                value = field
-                  .split('.')
-                  .reduce(
-                    (obj, k) =>
-                      obj[k] !== null || obj[k] !== undefined ? obj[k] : {},
-                    content
-                  ),
-                fieldSuggestions =
-                  field === 'response.redirection_data.http_method'
-                    ? SUPPORTED_HTTP_METHODS
-                    : [...(headers[header].suggestions || [])],
-                updateField = headers[header].update;
+            {fieldNames.map((field) => (
+              <div key={field} className="table-row">
+                {headerFields.map((header, i) => {
+                  if (i === 0)
+                    return (
+                      <div key={`${header}-${i}`} className="table-cell">
+                        {field}
+                      </div>
+                    );
+                  const mapping = appContext[appContextField].mapping,
+                    content = appContext[appContextField].value,
+                    fieldType = headers[header].type,
+                    value = field
+                      .split('.')
+                      .reduce(
+                        (obj, k) =>
+                          obj[k] !== null || obj[k] !== undefined ? obj[k] : {},
+                        content
+                      ),
+                    fieldSuggestions =
+                      field === 'response.redirection_data.http_method'
+                        ? SUPPORTED_HTTP_METHODS
+                        : [...(headers[header].suggestions || [])],
+                    updateField = headers[header].update;
 
-              if (
-                header !== 'type' &&
-                field !== 'response.redirection_data.http_method'
-              ) {
-                fieldSuggestions.push(value);
-              }
-              let currentValue = [];
-              const fields = field.split('.').flatMap((f) => [f, 'value']);
-              fields.pop();
-              const currentField = fields.reduce(
-                (obj, k) =>
-                  obj[k] !== null || obj[k] !== undefined ? obj[k] : {},
-                mapping
-              );
-              if (header === 'valueMap' && Array.isArray(currentField.value)) {
-                return <div className="table-cell"></div>;
-              }
-              if (header === 'valueMap' || header === 'value') {
-                currentValue = currentField.value;
-              } else {
-                currentValue = currentField[header];
-              }
-              switch (fieldType) {
-                case 'checkbox':
-                  return (
-                    <div key={`${header}-${i}`} className="table-cell">
-                      <Checkbox
-                        size="small"
-                        color="success"
-                        checked={currentValue}
-                        onChange={(e, newValue) => {
-                          const updates = {
-                            ...currentField,
-                            [updateField]: newValue,
-                          };
-                          updateFields(field, updateField, updates);
-                        }}
-                      />
-                    </div>
+                  if (
+                    header !== 'type' &&
+                    field !== 'response.redirection_data.http_method'
+                  ) {
+                    fieldSuggestions.push(value);
+                  }
+                  let currentValue = [];
+                  const fields = field.split('.').flatMap((f) => [f, 'value']);
+                  fields.pop();
+                  const currentField = fields.reduce(
+                    (obj, k) =>
+                      obj[k] === null || obj[k] === undefined ? {} : obj[k],
+                    mapping
                   );
-                case 'dropdown':
-                  return (
-                    <div key={`${header}-${i}`} className="table-cell">
-                      <Dropdown
-                        options={fieldSuggestions}
-                        handleSelectChange={(e) => {
-                          const updates = {
-                            ...currentField,
-                            [updateField]: e.target.value,
-                          };
-                          updateFields(field, updateField, updates);
-                        }}
-                        selectedOption={currentValue}
-                        type={null}
-                      />
-                    </div>
-                  );
-                case 'switch':
-                  return (
-                    <div key={`${header}-${i}`} className="table-cell">
-                      <AntSwitch
-                        value={currentValue}
-                        size="small"
-                        onChange={(e, newValue) => {
-                          const updates = {
-                            ...currentField,
-                            [updateField]: newValue,
-                          };
-                          updateFields(field, updateField, updates);
-                        }}
-                      />
-                    </div>
-                  );
-                default:
-                  return (
-                    <div key={`${header}-${i}`} className="table-cell">
-                      {header === 'value' && currentField.type === 'enum' ? (
-                        <React.Fragment>
-                          {currentValue !== null ||
-                          currentValue !== undefined ? (
-                            Array.isArray(currentValue) ? (
-                              currentValue.map((v) => (
-                                <div
-                                  key={`variant-${i}-${v}`}
-                                  className="variant-wrap"
-                                >
-                                  {v}
-                                  <div
-                                    className="variant-delete"
-                                    onClick={() =>
-                                      handleVariantDeletion(
-                                        field,
-                                        v,
-                                        currentField
-                                      )
-                                    }
-                                  >
-                                    x
+                  if (
+                    header === 'valueMap' &&
+                    Array.isArray(currentField.value)
+                  ) {
+                    return <div className="table-cell"></div>;
+                  }
+                  if (header === 'valueMap' || header === 'value') {
+                    currentValue = currentField.value;
+                  } else {
+                    currentValue = currentField[header];
+                  }
+                  switch (fieldType) {
+                    case 'checkbox':
+                      return (
+                        <div key={`${header}-${i}`} className="table-cell">
+                          <Checkbox
+                            size="small"
+                            color="success"
+                            checked={currentValue}
+                            onChange={(e, newValue) => {
+                              const updates = {
+                                ...currentField,
+                                [updateField]: newValue,
+                              };
+                              updateFields(field, updateField, updates);
+                            }}
+                          />
+                        </div>
+                      );
+                    case 'dropdown':
+                      return (
+                        <div key={`${header}-${i}`} className="table-cell">
+                          <Dropdown
+                            options={fieldSuggestions}
+                            handleSelectChange={(e) => {
+                              const updates = {
+                                ...currentField,
+                                [updateField]: e.target.value,
+                              };
+                              updateFields(field, updateField, updates);
+                            }}
+                            selectedOption={currentValue}
+                            type={null}
+                          />
+                        </div>
+                      );
+                    case 'switch':
+                      return (
+                        <div key={`${header}-${i}`} className="table-cell">
+                          <AntSwitch
+                            value={currentValue}
+                            size="small"
+                            onChange={(e, newValue) => {
+                              const updates = {
+                                ...currentField,
+                                [updateField]: newValue,
+                              };
+                              updateFields(field, updateField, updates);
+                            }}
+                          />
+                        </div>
+                      );
+                    default:
+                      return (
+                        <div key={`${header}-${i}`} className="table-cell">
+                          {header === 'value' &&
+                          currentField.type === 'enum' ? (
+                            <React.Fragment>
+                              {currentValue !== null ||
+                              currentValue !== undefined ? (
+                                Array.isArray(currentValue) ? (
+                                  currentValue.map((v) => (
+                                    <div
+                                      key={`variant-${i}-${v}`}
+                                      className="variant-wrap"
+                                    >
+                                      {v}
+                                      <div
+                                        className="variant-delete"
+                                        onClick={() =>
+                                          handleVariantDeletion(
+                                            field,
+                                            v,
+                                            currentField
+                                          )
+                                        }
+                                      >
+                                        x
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="variant-wrap">
+                                    {currentValue.toString()}
+                                    <div
+                                      className="variant-delete"
+                                      onClick={() =>
+                                        handleVariantDeletion(
+                                          field,
+                                          currentValue,
+                                          currentField
+                                        )
+                                      }
+                                    >
+                                      x
+                                    </div>
                                   </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="variant-wrap">
-                                {currentValue.toString()}
-                                <div
-                                  className="variant-delete"
-                                  onClick={() =>
-                                    handleVariantDeletion(
-                                      field,
-                                      currentValue,
-                                      currentField
-                                    )
+                                )
+                              ) : null}
+                              {variantRequestor === field ? (
+                                <input
+                                  placeholder="Eg: INR,GBP,USD"
+                                  className="material-input variant-input"
+                                  id={`variant-input-${field}`}
+                                  type="text"
+                                  onKeyUp={(e) =>
+                                    e.key === 'Enter'
+                                      ? handleVariantAddition(
+                                          field,
+                                          currentField
+                                        )
+                                      : null
                                   }
+                                />
+                              ) : (
+                                <div
+                                  className="variant-add"
+                                  onClick={() => setVariantRequestor(field)}
                                 >
-                                  x
+                                  + Add more variants
                                 </div>
-                              </div>
-                            )
-                          ) : null}
-                          {variantRequestor === field ? (
-                            <input
-                              placeholder="Eg: INR,GBP,USD"
-                              className="material-input variant-input"
-                              id={`variant-input-${field}`}
-                              type="text"
-                              onKeyUp={(e) =>
-                                e.key === 'Enter'
-                                  ? handleVariantAddition(field, currentField)
-                                  : null
-                              }
-                            />
+                              )}
+                            </React.Fragment>
                           ) : (
-                            <div
-                              className="variant-add"
-                              onClick={() => setVariantRequestor(field)}
-                            >
-                              + Add more variants
-                            </div>
+                            value.toString()
                           )}
-                        </React.Fragment>
-                      ) : (
-                        value.toString()
-                      )}
-                    </div>
-                  );
-              }
-            })}
-          </div>
-        ))}
+                        </div>
+                      );
+                  }
+                })}
+              </div>
+            ))}
+          </React.Fragment>
+        )}
       </div>
     </div>
   );

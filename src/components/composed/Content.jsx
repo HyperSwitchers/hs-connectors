@@ -101,8 +101,18 @@ export default function Content() {
         ),
       },
     },
+    status: {
+      field: {
+        value: 'Connector Status',
+      },
+      mapping: {
+        value: 'HyperSwitch Mapping',
+        type: 'dropdown',
+        update: 'value',
+        suggestions: HYPERSWITCH_STATUS_LIST[appContext.selectedFlow],
+      },
+    },
   });
-  const [showSuggestions, setShowSuggestions] = useState('');
   const [wait, setWait] = useState(false);
 
   useEffect(() => {
@@ -172,48 +182,18 @@ export default function Content() {
           return obj;
         }, {}),
       });
+      setColumns((prevState) => ({
+        ...prevState,
+        status: {
+          ...prevState.status,
+          mapping: {
+            ...prevState.status.mapping,
+            suggestions: HYPERSWITCH_STATUS_LIST[appContext.selectedFlow],
+          },
+        },
+      }));
     }
   }, [appContext.responseFields.mapping, appContext.hsResponseFields.mapping]);
-
-  const renderSuggestions = (field, suggestions) => {
-    const suggestionContainer = document.getElementById(`suggestions-${field}`);
-    const inputField = document.getElementById(`input-${field}`);
-    if (
-      suggestionContainer instanceof HTMLDivElement &&
-      inputField instanceof HTMLInputElement
-    ) {
-      suggestionContainer.innerHTML = '';
-      setShowSuggestions(field);
-      if (suggestions.length === 0) {
-        setShowSuggestions(null);
-      }
-      const statusMappingUpdates = {};
-      suggestions.map((suggestion) => {
-        const div = document.createElement('div');
-        div.textContent = suggestion;
-        div.id = `suggestion-${suggestion}`;
-        const updatedStatus = {
-          ...(appContext.status.value || {}),
-          [field]: suggestion,
-        };
-        div.addEventListener('click', function (e) {
-          inputField.value = suggestion;
-          suggestionContainer.innerHTML = '';
-          setShowSuggestions(null);
-          statusMappingUpdates[field] = suggestion;
-          setAppContext((prevState) => ({
-            ...prevState,
-            codeInvalidated: true,
-            status: {
-              value: updatedStatus,
-              mapping: addFieldsToNodes(updatedStatus),
-            },
-          }));
-        });
-        suggestionContainer.appendChild(div);
-      });
-    }
-  };
 
   const serveCurlRequest = async () => {
     if (appContext.curlRequest) {
@@ -285,6 +265,7 @@ export default function Content() {
                   fieldNames={flattenObject(
                     appContext.requestHeaderFields.value
                   )}
+                  emptyText="No request headers found in the cURL request"
                 />
               </div>
               <div className="request-body">
@@ -296,6 +277,7 @@ export default function Content() {
                   appContextField="requestFields"
                   headers={columns.requestFields}
                   fieldNames={flattenObject(appContext.requestFields.value)}
+                  emptyText="No request body found in the cURL request"
                 />
               </div>
             </div>
@@ -321,6 +303,7 @@ export default function Content() {
                     appContextField="responseFields"
                     headers={columns.responseFields}
                     fieldNames={flattenObject(appContext.responseFields.value)}
+                    emptyText="No response body found in connector's response"
                   />
                 )}
               </div>
@@ -339,57 +322,22 @@ export default function Content() {
                       fieldNames={flattenObject(
                         appContext.hsResponseFields.value
                       )}
+                      emptyText="No response mapping configured for HyperSwitch's application response"
                     />
                   )}
                 </div>
-                {typeof appContext.hsResponseFields.mapping.status.value ===
-                  'string' &&
-                appContext.hsResponseFields.mapping.status.value !== '' &&
-                Object.keys(statusMapping).length > 0 ? (
-                  <div className="hs-status-mapping">
-                    <div className="data-header">
-                      <h2>Connector Status Mapping</h2>
-                      <img src={ArrowDown} alt="" />
-                    </div>
-                    <div className="data-viewer">
-                      {Object.keys(statusMapping).map((f) => (
-                        <React.Fragment key={f}>
-                          <div className="status">{f}</div>
-                          <div className="autocomplete">
-                            <div className="input">
-                              <input
-                                id={`input-${f}`}
-                                className="material-input status-mapping-input"
-                                type="text"
-                                value={(appContext?.status?.value || {})[f]}
-                              />
-                              <div
-                                className="status-dropdown"
-                                onClick={() => {
-                                  setShowSuggestions(f);
-                                  renderSuggestions(
-                                    f,
-                                    !showSuggestions
-                                      ? HYPERSWITCH_STATUS_LIST[
-                                          appContext.selectedFlow
-                                        ]
-                                      : []
-                                  );
-                                }}
-                              >
-                                {showSuggestions === f ? 'x' : '...'}
-                              </div>
-                            </div>
-                            <div
-                              className="suggestions"
-                              id={`suggestions-${f}`}
-                            ></div>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
+                <div className="hs-status-mapping">
+                  <div className="data-header">
+                    <h2>Connector Status Mapping</h2>
+                    <img src={ArrowDown} alt="" />
                   </div>
-                ) : null}
+                  <DataViewer
+                    appContextField="status"
+                    headers={columns.status}
+                    fieldNames={Object.keys(statusMapping)}
+                    emptyText="Map the status field in connector's response before configuring the status"
+                  />
+                </div>
               </div>
             </div>
           </div>

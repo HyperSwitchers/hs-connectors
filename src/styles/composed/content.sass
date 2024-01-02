@@ -52,6 +52,10 @@
           background-color: $off-white
           &:last-child
             border: 0 !important
+            .table-cell:first-child
+              margin-left: 5px
+            .table-cell:last-child
+              margin-right: 5px
           &:first-child
             font-weight: 800
             font-size: 14px
@@ -156,41 +160,6 @@
     margin-right: 20px
   .hs-status-mapping
     margin-top: 50px
-    .data-viewer
-      display: grid
-      grid-template-columns: repeat(2, max-content)
-      grid-auto-flow: row
-      gap: 10px
-      .input
-        display: flex
-        .status-dropdown
-          width: 25px
-          cursor: pointer
-          background-color: #e6e6e6
-          display: flex
-          justify-content: center
-          align-items: center
-          border-radius: 0 3px 3px 0
-      .suggestions
-        position: absolute
-        z-index: 1
-        background-color: #f1f1f1
-        width: 191px
-        max-height: 150px
-        overflow-y: auto
-      .suggestions div
-        padding: 3px 7px
-        cursor: pointer
-        font-size: 12px
-      .suggestions div:hover
-        background-color: #ddd
-      & > :nth-child(odd)
-        align-self: center
-        justify-self: center
-    .footer
-      margin-top: 20px
-      display: flex
-      justify-content: flex-end
 
 .code-preview
   display: grid
