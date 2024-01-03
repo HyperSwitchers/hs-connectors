@@ -89,26 +89,28 @@ export default function HeaderNew() {
           </div>
         ))}
       </div>
-      <div className="main">
-        Try
-        <span>
-          <Dropdown
-            options={FLOW_OPTIONS}
-            handleSelectChange={handleFlowChange}
-            selectedOption={appContext.selectedFlow}
-            type="Flow Type"
-          />
-        </span>
-        flow with HyperSwitch for
-        <span>
-          <Dropdown
-            options={PAYMENT_METHOD_OPTIONS}
-            handleSelectChange={handlePaymentMethodChange}
-            selectedOption={appContext.paymentMethodType}
-            type="Payment Method"
-          />
-        </span>
-      </div>
+      {appContext.currentStep !== 'AuthType' ? (
+        <div className="main">
+          Try
+          <span>
+            <Dropdown
+              options={FLOW_OPTIONS}
+              handleSelectChange={handleFlowChange}
+              selectedOption={appContext.selectedFlow}
+              type="Flow Type"
+            />
+          </span>
+          flow with HyperSwitch for
+          <span>
+            <Dropdown
+              options={PAYMENT_METHOD_OPTIONS}
+              handleSelectChange={handlePaymentMethodChange}
+              selectedOption={appContext.paymentMethodType}
+              type="Payment Method"
+            />
+          </span>
+        </div>
+      ) : null}
       <div className="__legacy_node__ app-header-drop-downs">
         <div className="connector-name">
           <label>Connector</label>

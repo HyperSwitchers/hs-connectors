@@ -2,6 +2,7 @@
   display: flex
   flex-flow: column
   gap: 30px
+  padding: 30px
 
   &-subheader > code
     color: $gray
@@ -12,7 +13,16 @@
       & > option:first-child
         font-size: 13px
   &-content
+    width: max-content
     display: flex
+    flex-flow: column
+    border: 1px solid $platinum
+    border-radius: 8px
+    padding: 40px 40px 50px 40px
+    gap: 30px
+
+    .label
+      margin-bottom: 20px
 
   .header
     font-size: 30px
@@ -27,14 +37,8 @@
     overflow: hidden
     transition: width 0.3s ease
     border-radius: 5px
-    border: 1px solid $silver
-    margin-right: 30px
-    & > div
-      padding: 25px
     .header
       font-size: 20px
-      border-bottom: 1px solid $silver
-      background-color: $platinum
       .subheading
         font-size: 15px
         font-weight: 400
@@ -46,9 +50,9 @@
       gap: 20px
       .auth-key
         &-field
+          margin-top: 20px
           display: flex
-          align-items: center
-          margin-right: 20px
+          flex-flow: column
           &-value
             margin-right: 5px
             font-weight: 600
@@ -56,9 +60,15 @@
             display: flex
             flex-flow: column
           &-info
-            font-size: 12px
+            margin-top: 4px
+            font-size: 13px
+            max-width: 75ch
+            min-width: 35ch
+      input
+        margin-top: 20px
     .footer
       display: flex
+      margin-top: 40px
       font-size: 15px
       justify-content: flex-end
 
