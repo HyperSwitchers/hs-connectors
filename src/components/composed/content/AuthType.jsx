@@ -158,6 +158,7 @@ export default function AuthType() {
         processor to ensure smooth and secure payment processing through
         Hyperswitch.
       </div>
+      <div className="current-step-tag">Step 1: Map Identifiers</div>
       <div className="auth-type-content">
         <div className="connector-name">
           <div className="label">Enter the name of your connector</div>

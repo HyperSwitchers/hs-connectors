@@ -107,9 +107,14 @@
   grid-auto-flow: row
   margin-bottom: calc(76px + 20px)
 
+  .current-step-tag
+    grid-column: 1 / -1
+
+  & > div
+    margin-left: 50px
+
   .header
     grid-column: 1 / -1
-    padding: 0 20px
     font-size: 16px
   .heading
     font-size: 16px
@@ -121,7 +126,6 @@
     border: 1px solid $platinum
     border-radius: 4px
     padding: 30px
-    margin-left: 20px
 
     .curl-input-section
       margin-top: 20px
@@ -143,27 +147,31 @@
         color: $off-white
 
   .submit
-    padding: 0
     position: fixed
     bottom: 0
+    margin: 0
+    padding: 20px
     background-color: $off-white
     box-shadow: 0 0 10px $platinum
     width: calc(100% - 40px)
-    padding: 20px
     button
       align-self: flex-end
 
 .response-body-wrap
-  .data:first-child
-    margin-left: 20px
+  .current-step-tag
+    grid-column: 1 / -1
+    margin-left: 50px
+  .data:nth-child(2)
+    margin-left: 50px !important
   .data:last-child
     margin-right: 20px
   .hs-status-mapping
     margin-top: 50px
 
 .code-preview
+  margin-left: 50px
   display: grid
-  padding: 30px
+  // padding: 30px
   grid-template-columns: repeat(2, auto)
   grid-template-rows: auto 1fr
   overflow: hidden

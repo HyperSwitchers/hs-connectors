@@ -1,9 +1,10 @@
 .auth-type
   display: flex
   flex-flow: column
-  gap: 30px
-  padding: 30px
+  padding: 30px 30px 30px 10vw
 
+  &-subheader
+    margin-bottom: 80px
   &-subheader > code
     color: $gray
   &-flow-type > .dropdown
@@ -13,6 +14,7 @@
       & > option:first-child
         font-size: 13px
   &-content
+    margin-top: 30px
     width: max-content
     display: flex
     flex-flow: column
@@ -60,8 +62,8 @@
             display: flex
             flex-flow: column
           &-info
-            margin-top: 4px
-            font-size: 13px
+            margin-top: 8px
+            font-size: 14px
             max-width: 75ch
             min-width: 35ch
       input

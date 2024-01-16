@@ -231,7 +231,6 @@ export default function Content() {
       });
     }
   };
-
   const renderAppContent = () => {
     switch (appContext.currentStep) {
       case 'AuthType': {
@@ -246,41 +245,48 @@ export default function Content() {
               ready for your chosen processor to ensure smooth and secure
               payment processing through Hyperswitch.
             </div>
+            <div className="current-step-tag">
+              {appContext.curlCommand === ''
+                ? 'Step 2.1: cURL Request'
+                : 'Step 2.2: Request mapping'}
+            </div>
             <div className="curl">
               <h2 className="heading">Enter your cURL request here</h2>
               <CurlEditor />
             </div>
-            <div className="data">
-              <h2 className="heading">
-                Map your Connector header and body to Hyperswitch fields
-              </h2>
-              <div className="request-header">
-                <div className="data-header">
-                  <h2>Header</h2>
-                  <img src={ArrowDown} alt="" />
+            {appContext.curlCommand !== '' ? (
+              <div className="data">
+                <h2 className="heading">
+                  Map your Connector header and body to Hyperswitch fields
+                </h2>
+                <div className="request-header">
+                  <div className="data-header">
+                    <h2>Header</h2>
+                    <img src={ArrowDown} alt="" />
+                  </div>
+                  <DataViewer
+                    appContextField="requestHeaderFields"
+                    headers={columns.requestHeaders}
+                    fieldNames={flattenObject(
+                      appContext.requestHeaderFields.value
+                    )}
+                    emptyText="No request headers found in the cURL request"
+                  />
                 </div>
-                <DataViewer
-                  appContextField="requestHeaderFields"
-                  headers={columns.requestHeaders}
-                  fieldNames={flattenObject(
-                    appContext.requestHeaderFields.value
-                  )}
-                  emptyText="No request headers found in the cURL request"
-                />
-              </div>
-              <div className="request-body">
-                <div className="data-header">
-                  <h2>Body</h2>
-                  <img src={ArrowDown} alt="" />
+                <div className="request-body">
+                  <div className="data-header">
+                    <h2>Body</h2>
+                    <img src={ArrowDown} alt="" />
+                  </div>
+                  <DataViewer
+                    appContextField="requestFields"
+                    headers={columns.requestFields}
+                    fieldNames={flattenObject(appContext.requestFields.value)}
+                    emptyText="No request body found in the cURL request"
+                  />
                 </div>
-                <DataViewer
-                  appContextField="requestFields"
-                  headers={columns.requestFields}
-                  fieldNames={flattenObject(appContext.requestFields.value)}
-                  emptyText="No request body found in the cURL request"
-                />
               </div>
-            </div>
+            ) : null}
             <div className="submit">
               <button onClick={serveCurlRequest} disabled={wait}>
                 {wait ? <div className="loader"></div> : 'Send Request'}
@@ -292,6 +298,9 @@ export default function Content() {
       case 'ResponseMap': {
         return (
           <div className="response-body-wrap main">
+            <div className="current-step-tag">
+              Step 3.1: Response fields mapping
+            </div>
             <div className="data">
               <div className="response-fields" id="response-fields-anchor">
                 <div className="data-header">
@@ -346,9 +355,10 @@ export default function Content() {
       case 'GeneratedCode': {
         return <CodePreview />;
       }
-    }
 
-    return <AuthType />;
+      default:
+        return <AuthType />;
+    }
   };
 
   return <div className="app-content">{renderAppContent()}</div>;
