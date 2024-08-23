@@ -9,6 +9,7 @@ import {
   CURRENCY_UNIT_TYPE,
   FLOW_OPTIONS,
   PAYMENT_METHOD_OPTIONS,
+  STEPS,
   TOOLTIPS,
 } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
@@ -75,9 +76,42 @@ export default function HeaderNew() {
     }
   };
 
+  const handleStepChange = (newStep) => {
+    setAppContext((prevState) => ({ ...prevState, currentStep: newStep }));
+  };
+
   return (
     <div className="app-header">
-      <div className="app-header-drop-downs">
+      <div className="app-header-steps">
+        {STEPS.map((step) => (
+          <div key={step} className="step" onClick={() => handleStepChange(step)}>
+            {step}
+          </div>
+        ))}
+      </div>
+      {appContext.currentStep !== 'AuthType' ? (
+        <div className="main">
+          Try
+          <span>
+            <Dropdown
+              options={FLOW_OPTIONS}
+              handleSelectChange={handleFlowChange}
+              selectedOption={appContext.selectedFlow}
+              type="Flow Type"
+            />
+          </span>
+          flow with HyperSwitch for
+          <span>
+            <Dropdown
+              options={PAYMENT_METHOD_OPTIONS}
+              handleSelectChange={handlePaymentMethodChange}
+              selectedOption={appContext.paymentMethodType}
+              type="Payment Method"
+            />
+          </span>
+        </div>
+      ) : null}
+      <div className="__legacy_node__ app-header-drop-downs">
         <div className="connector-name">
           <label>Connector</label>
           <input

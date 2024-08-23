@@ -1,7 +1,7 @@
 .material-input
   padding: 10px 15px
   font-size: 16px
-  border: 1px solid #ccc
+  border: 1px solid $platinum
   border-radius: 3px
   transition: border-color 0.3s ease, box-shadow 0.3s ease
   font-size: 13px
@@ -12,6 +12,17 @@
   border-color: #007bff
   box-shadow: 0 0 2px rgba(0, 123, 255, 0.5)
 
+.current-step-tag
+  background-color: $blue-lighter
+  color: $blue
+  padding: 8px 20px
+  width: max-content
+  width: max-content
+  height: min-content
+  border-radius: 100px
+  font-size: 14px
+  font-weight: 600
+
 button
   background-color: $blue
   color: #fff
@@ -19,7 +30,6 @@ button
   border: none
   border-radius: 5px
   cursor: pointer
-  margin-top: 10px
   max-width: 250px
 
   &:hover
@@ -59,6 +69,14 @@ textarea
   width: 1ch
   height: 1ch
   animation: spin 1s linear infinite
+
+.dropdown
+  select
+    cursor: pointer
+    background-color: white
+    border: 1px solid $platinum
+    padding: 8px 10px
+    border-radius: 4px
 
 @keyframes spin
   0%

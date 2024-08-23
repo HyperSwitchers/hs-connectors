@@ -9,6 +9,7 @@ import Dropdown from 'components/atomic/Dropdown';
 import { AUTH_KEYS, AUTH_KEYS_INFO, DEFAULT_AUTH_TYPE } from 'utils/constants';
 import { APP_CONTEXT } from 'utils/state';
 import { useEffect } from 'react';
+import { toPascalCase } from 'utils/Parser';
 
 export default function AuthType() {
   const [appContext, setAppContext] = useRecoilState(APP_CONTEXT);
@@ -19,6 +20,9 @@ export default function AuthType() {
   );
   const [authType, setAuthType] = useState(
     appContext.authType.value?.type || DEFAULT_AUTH_TYPE
+  );
+  const [connectorName, setConnectorName] = useState(
+    appContext.connectorName.toString()
   );
   const [totalKeys, setTotalKeys] = useState(
     AUTH_TYPES.indexOf(appContext.authType.value?.type || DEFAULT_AUTH_TYPE) + 1
@@ -48,6 +52,22 @@ export default function AuthType() {
     }
   }, [authType, authTypeContent]);
 
+  const handleConnectorNameChange = (e) => {
+    const connectorName = e?.target?.value;
+    if (typeof connectorName === 'string') {
+      setConnectorName(connectorName);
+    }
+  };
+
+  const handleConnectorNameUpdate = () => {
+    setAppContext((prevState) => ({
+      ...prevState,
+      connectorName,
+      connectorPascalCase: toPascalCase(connectorName),
+      codeInvalidated: true,
+    }));
+  };
+
   const handleAuthTypeChange = (e) => {
     try {
       const totalKeys = parseInt(e.target.value);
@@ -57,6 +77,12 @@ export default function AuthType() {
           ...AUTH_KEYS[authType],
           ...authTypeContent,
         };
+        const newKeys = Object.keys(AUTH_KEYS[authType]);
+        Object.keys(updatedAuthTypeContent).map((key) => {
+          if (!newKeys.includes(key)) {
+            delete updatedAuthTypeContent[key];
+          }
+        });
         setAuthType(authType);
         setAuthTypeContent(updatedAuthTypeContent);
         setTotalKeys(totalKeys);
@@ -71,14 +97,17 @@ export default function AuthType() {
       <React.Fragment key={key}>
         <div className="auth-key-field">
           <div className="auth-key-field-value">{key}</div>
-          <Tooltip title={AUTH_KEYS_INFO[authType][key]} placement="right">
+          <div className="auth-key-field-info">
+            {AUTH_KEYS_INFO[authType][key]}
+          </div>
+          {/* <Tooltip title={AUTH_KEYS_INFO[authType][key]} placement="right">
             <InfoIcon
               style={{
                 height: '15px',
                 width: '15px',
               }}
             />
-          </Tooltip>
+          </Tooltip> */}
         </div>
         <input
           id={`${key}-input`}
@@ -121,39 +150,41 @@ export default function AuthType() {
   return (
     <div className="auth-type">
       <div className="auth-type-header header">
-        Processor Authorization Mapping
+        Map your connector to HyperSwitch
       </div>
       <div className="auth-type-subheader">
-        When using Hyperswitch as your payment processor, it's important to
-        understand the identifiers required for the Authorization Header. <br />{' '}
-        <br />
-        These identifiers are essential for secure and authenticated
-        transactions. Each processor may have different requirements. For
-        example, the Noon processor requires three identifiers:
-        BusinessIdentifier, ApplicationIdentifier, and ApplicationKey. These
-        three identifiers will be internally mapped to (api_key, key1, and
-        api_secret) on Hyperswitch's end.
-        <br /> <br />
+        Identifiers are essential for secure and authenticated transactions.
         Please make sure you have the correct identifiers ready for your chosen
         processor to ensure smooth and secure payment processing through
         Hyperswitch.
       </div>
-      <div className="auth-type-flow-type">
-        <div className="flow-type-header">Identifiers in Auth Header</div>
-        <Dropdown
-          options={[1, 2, 3, 4]}
-          selectedOption={totalKeys}
-          handleSelectChange={handleAuthTypeChange}
-          type="number of identifiers"
-        />
-      </div>
+      <div className="current-step-tag">Step 1: Map Identifiers</div>
       <div className="auth-type-content">
+        <div className="connector-name">
+          <div className="label">Enter the name of your connector</div>
+          <input
+            type="text"
+            className="material-input"
+            placeholder="Enter Connector Name"
+            value={connectorName}
+            onChange={handleConnectorNameChange}
+            onBlur={handleConnectorNameUpdate}
+          />
+        </div>
+        <div className="auth-flow-type">
+          <div className="label">
+            Identifiers in Auth Header of your connecotr
+          </div>
+          <Dropdown
+            options={[1, 2, 3, 4]}
+            selectedOption={totalKeys}
+            handleSelectChange={handleAuthTypeChange}
+            type="number of identifiers"
+          />
+        </div>
         <div className="auth-type-header-map">
           <div className="header">
-            <div className="heading">Authorization Header Mapping</div>
-            <div className="subheading">
-              Map processor identifiers to HyperSwitch identifiers
-            </div>
+            Enter connector identifiers to map to HyperSwitch
           </div>
           <div className="content">{renderAuthKeyFields(authTypeContent)}</div>
           <div className="footer">

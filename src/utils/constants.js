@@ -458,6 +458,8 @@ export const DESCRIPTION = {
       <p>Hyperswitch acts as the intermediary, facilitating the communication between your system and the payment processor, ensuring that the authorization process is secure and compliant. Understanding the request and response body mapping is crucial for successful payment authorizations through Hyperswitch.</p></div>`,
 };
 
+export const STEPS = ["AuthType", "RequestMap", "ResponseMap", "GeneratedCode"];
+
 export const DEFAULT_APP_CONTEXT = {
   connectorName: DEFAULT_CONNECTOR,
   connectorPascalCase: DEFAULT_CONNECTOR,
@@ -465,6 +467,7 @@ export const DEFAULT_APP_CONTEXT = {
   curlRequest: null,
   currencyUnit: 'Minor',
   currencyUnitType: 'i64',
+  currentStep: STEPS[0],
   paymentMethodType: null,
   statusVariable: null,
   selectedFlow: DEFAULT_FLOW,

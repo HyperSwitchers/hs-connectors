@@ -1,0 +1,237 @@
+.main
+  grid-column: 1 / -1
+  display: grid
+  grid-template-columns: minmax(60vw, 1fr) 1fr
+  gap: 20px
+  margin-bottom: 50px
+  & > .header
+    margin-bottom: 30px
+  & > div
+    display: flex
+    flex-flow: column
+  .request-header, .response-mapping
+    grid-column: 2 / 3
+
+  .data
+    border: 1px solid $platinum
+    border-radius: 4px
+    padding: 30px
+    max-width: max-content
+    &-header
+      display: flex
+      border-bottom: 2px solid $almost-white
+      padding-bottom: 15px
+      h2
+        margin: 0
+        font-size: 20px
+      img
+        margin-left: auto
+        cursor: pointer
+    & > div
+      max-width: max-content
+    .request-header
+      margin-top: 50px
+    .request-body
+      margin-top: 50px
+    .data-viewer
+      overflow: scroll
+      margin-top: 20px
+      max-height: 80vh
+      max-width: max-content
+      .table
+        display: grid
+        grid-auto-flow: row
+        max-width: max-content
+        border-radius: 5px
+        &-row
+          padding: 0 10px
+          display: grid
+          grid-auto-columns: minmax(100px, 1fr)
+          grid-auto-flow: column
+          column-gap: 5px
+          background-color: $off-white
+          &:last-child
+            border: 0 !important
+            .table-cell:first-child
+              margin-left: 5px
+            .table-cell:last-child
+              margin-right: 5px
+          &:first-child
+            font-weight: 800
+            font-size: 14px
+            background-color: $almost-white
+            padding: 5px 0
+            border-radius: 4px
+
+        &-cell:has(.MuiSwitch-root)
+          display: flex
+          align-items: center
+          justify-content: center
+        &-cell
+          margin: 6px 0
+          width: 100%
+          align-self: center
+          justify-self: center
+          text-align: center
+          overflow-wrap: break-word
+          .dropdown
+            select
+              max-width: 100%
+              min-width: 50px
+              & > option:first-child
+                font-size: 13px
+          .variant-wrap
+            display: flex
+            border: 1px solid #1a1a1a
+            padding-left: 5px
+            border-radius: 3px
+            margin: 10px
+            justify-content: space-around
+            width: min-content
+            .variant-delete
+              cursor: pointer
+              padding: 0 5px
+            .variant-input
+              margin-top: 5px
+          .variant-add
+            cursor: pointer
+            border: 1px solid #1a1a1a
+            padding: 2px 5px
+            border-radius: 3px
+            margin: 5px
+            font-size: 12px
+
+.request-body-wrapper
+  display: grid
+  grid-template-columns: minmax(300px, 30vw) auto
+  grid-auto-flow: row
+  margin-bottom: calc(76px + 20px)
+
+  .current-step-tag
+    grid-column: 1 / -1
+
+  & > div
+    margin-left: 50px
+
+  .header
+    grid-column: 1 / -1
+    font-size: 16px
+  .heading
+    font-size: 16px
+    font-weight: 600
+    margin: 0
+  .data
+    margin-right: 20px
+  .curl
+    border: 1px solid $platinum
+    border-radius: 4px
+    padding: 30px
+
+    .curl-input-section
+      margin-top: 20px
+      width: auto
+      display: flex
+      align-items: center
+      flex-flow: column
+      textarea
+        min-height: 50ch
+        max-height: 100ch
+        height: 70ch
+        width: calc(100% - 40px)
+        min-width: calc(100% - 40px)
+        max-width: calc(100% - 40px)
+        padding: 20px
+        overflow: scroll
+        border: 0
+        background-color: $smoky-black
+        color: $off-white
+
+  .submit
+    position: fixed
+    bottom: 0
+    margin: 0
+    padding: 20px
+    background-color: $off-white
+    box-shadow: 0 0 10px $platinum
+    width: calc(100% - 40px)
+    button
+      align-self: flex-end
+
+.response-body-wrap
+  .current-step-tag
+    grid-column: 1 / -1
+    margin-left: 50px
+  .data:nth-child(2)
+    margin-left: 50px !important
+  .data:last-child
+    margin-right: 20px
+  .hs-status-mapping
+    margin-top: 50px
+
+.code-preview
+  margin-left: 50px
+  display: grid
+  // padding: 30px
+  grid-template-columns: repeat(2, auto)
+  grid-template-rows: auto 1fr
+  overflow: hidden
+  gap: 20px
+  &-header
+    width: min-content
+    overflow: hidden
+    grid-column: 1 / -1
+    display: grid
+    grid-template-columns: min-content max-content
+    gap: 0
+    .button:first-child
+      margin-right: 10px
+    h2
+      grid-column: 1 / -1
+    .pr-steps
+      grid-column: 1 / -1
+      max-width: 80%
+      background-color: $off-white
+      padding: 10px
+      border-radius: 5px
+      margin-top: 20px
+      display: grid
+      grid-template-columns: 1fr repeat(2, min-content)
+      .button
+        font-size: 10px
+        padding: 5px 10px
+        margin-left: 20px
+        font-weight: 500
+        &:hover
+          background-color: $silver
+      .close:hover
+        background-color: $crimson-red
+        color: $off-white
+      .curl
+        grid-column: 1 / -1
+        font-weight: 600
+        font-family: monospace
+        font-size: 16px
+        margin-top: 10px
+  .connector-integration, .transformer-integration
+    & > div
+      display: flex
+      .filename
+        font-size: 18px
+        font-family: monospace
+        font-weight: 900
+      .button
+        font-size: 10px
+        padding: 5px 10px
+        margin-left: 20px
+        font-weight: 500
+        &:hover
+          background-color: $silver
+  #connectors, #transformers
+    overflow: scroll
+    max-width: calc(50vw - 80px)
+    border-radius: 3px
+    padding: 20px !important
+    display: block
+    & code
+      overflow-wrap: break-word
+      max-width: calc(50vw - 80px)

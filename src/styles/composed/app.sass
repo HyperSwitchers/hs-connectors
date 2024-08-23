@@ -1,9 +1,9 @@
 .app
   display: flex
   flex-flow: column
-  padding: 0 20px
   &-header
-    padding: 10px 0
+    @import ./header
+    padding: 20px
     &-drop-downs
       display: flex
       & > div
@@ -18,8 +18,9 @@
           margin-right: 5px
 
   &-content
+    height: auto
     display: grid
     grid-template-columns: auto 1fr
-    grid-auto-rows: auto
     gap: 20px
-    @import ./Content
+    overflow: scroll
+    @import ./content
