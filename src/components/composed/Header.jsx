@@ -84,7 +84,7 @@ export default function HeaderNew() {
     <div className="app-header">
       <div className="app-header-steps">
         {STEPS.map((step) => (
-          <div className="step" onClick={() => handleStepChange(step)}>
+          <div key={step} className="step" onClick={() => handleStepChange(step)}>
             {step}
           </div>
         ))}
